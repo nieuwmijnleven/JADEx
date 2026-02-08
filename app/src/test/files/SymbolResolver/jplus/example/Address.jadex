@@ -1,0 +1,9 @@
+package jplus.example;
+
+class Address {
+    Street? street;
+
+    Address(String street) {
+        this.street = new Street(street);
+    }
+}

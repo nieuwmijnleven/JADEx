@@ -1,0 +1,11 @@
+package jplus.example;
+
+import org.jspecify.annotations.Nullable;
+
+class AddressAnnotation {
+    @Nullable StreetAnnotation street;
+
+    AddressAnnotation(String street) {
+        this.street = new StreetAnnotation(street);
+    }
+}

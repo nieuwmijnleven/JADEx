@@ -1,0 +1,35 @@
+package jplus.example;
+
+class User {
+    // Name is required
+    final String name;
+    // Address can be null
+    Address address;
+
+    User(String name, Address address) {
+        this.name = name;
+        this.address = address;
+    }
+
+    // Safely get the city name of the address
+    String getStreet() {
+        return address.street.name;
+    }
+
+    // Get the display name of the user
+    String getDisplayName() {
+        return name;
+    }
+
+    public static void main(String[] args) {
+        // Null-safe object creation
+        User user1 = new User("Jeroen", new Address("New Amsterdam"));
+        User user2 = new User("Jane Smith", null);
+        User user3 = new User(null, new Address(null));
+
+        // Null-safe access
+        System.out.println(user1.getDisplayName() + "'s city: " + user1.getStreet()); // Jeroen's city: New Amsterdam
+        System.out.println(user2.getDisplayName() + "'s city: " + user2.getStreet()); // Jane Smith's city: No Address
+        System.out.println(user3.getDisplayName() + "'s city: " + user3.getStreet()); // No Name's city: No Address
+    }
+}

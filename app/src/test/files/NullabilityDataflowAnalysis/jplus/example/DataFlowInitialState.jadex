@@ -1,0 +1,50 @@
+package jplus.example;
+public class DataFlowInitialState {
+    public static void main(String[] args) {
+        String? s = null;       // s=NULL
+        String t = "jplus";    // t=NON_NULL
+        String u;              // u=UNKNOWN
+
+        s = new String();
+
+        int p = s.length();
+        int q = t.length();
+        int r = u.length();
+
+        s = null;
+        p = s.length();
+
+        if (s != null && s.toString() != null) {
+            p = s.length();
+        } else {
+            p = s.length();
+        }
+
+        if (s == null || s.length() > 0) {
+            p = s.length();
+        } else {
+            p = s.length();
+        }
+
+        s = t;
+        p = s.length();
+
+        if (s == null) {
+            return;
+        }
+
+        p = s.length();
+
+        if (s != null) {
+            return;
+        }
+
+        p = s.length();
+
+        if (s instanceof String) {
+            p = s.length();
+        } else {
+            p = s.length();
+        }
+    }
+}

@@ -1,0 +1,13 @@
+package jplus.example;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+public class StaticFieldInitialization {
+
+	public static final Path DATABASE_HOME_PATH = Paths.get(".");
+
+	private static final String JDBC_PREFIX = "jdbc:jadex:";
+
+	public static final String JDBC_URL = JDBC_PREFIX + DATABASE_HOME_PATH;
+}

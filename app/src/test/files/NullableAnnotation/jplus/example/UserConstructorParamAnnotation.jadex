@@ -1,0 +1,37 @@
+package jplus.example;
+
+import org.jspecify.annotations.Nullable;
+
+class UserConstructorParamAnnotation {
+    // Name is required
+    final String name;
+    // Address can be null
+    AddressAnnotation address;
+
+    UserConstructorParamAnnotation(String name, @Nullable AddressAnnotation addr) {
+        this.name = name;
+        this.address = addr;
+    }
+
+    // Safely get the city name of the address
+    String getStreet() {
+        return address.street.name;
+    }
+
+    // Get the display name of the user
+    String getDisplayName() {
+        return name;
+    }
+
+    public static void main(String[] args) {
+        // Null-safe object creation
+        UserConstructorParamAnnotation user1 = new UserConstructorParamAnnotation("Jeroen", new AddressAnnotation("New Amsterdam"));
+        UserConstructorParamAnnotation user2 = new UserConstructorParamAnnotation("Jane Smith", null);
+        UserConstructorParamAnnotation user3 = new UserConstructorParamAnnotation(null, new AddressAnnotation(null));
+
+        // Null-safe access
+        System.out.println(user1.getDisplayName() + "'s city: " + user1.getStreet()); // Jeroen's city: New Amsterdam
+        System.out.println(user2.getDisplayName() + "'s city: " + user2.getStreet()); // Jane Smith's city: No Address
+        System.out.println(user3.getDisplayName() + "'s city: " + user3.getStreet()); // No Name's city: No Address
+    }
+}

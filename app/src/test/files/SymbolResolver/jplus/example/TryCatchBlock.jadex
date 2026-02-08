@@ -1,0 +1,25 @@
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
+
+public class TryCatchBlock {
+
+    public static void main(String[] args) {
+
+        try (
+            StringReader reader = new StringReader("jadex");
+            BufferedReader br = new BufferedReader(reader)
+        ) {
+            String line = br.readLine();   // try-block local
+            System.out.println(line);
+
+        } catch (IOException e) {
+            String msg = e.getMessage();   // catch parameter + local
+            System.err.println(msg);
+
+        } finally {
+            int x = 42;                    // finally local
+            System.out.println(x);
+        }
+    }
+}

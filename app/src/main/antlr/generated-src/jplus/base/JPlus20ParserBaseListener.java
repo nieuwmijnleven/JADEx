@@ -437,18 +437,6 @@ public class JPlus20ParserBaseListener implements JPlus20ParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterAmbiguousName(JPlus20Parser.AmbiguousNameContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitAmbiguousName(JPlus20Parser.AmbiguousNameContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterCompilationUnit(JPlus20Parser.CompilationUnitContext ctx) { }
 	/**
 	 * {@inheritDoc}

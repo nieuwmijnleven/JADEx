@@ -358,16 +358,6 @@ public interface JPlus20ParserListener extends ParseTreeListener {
 	 */
 	void exitMethodName(JPlus20Parser.MethodNameContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link JPlus20Parser#ambiguousName}.
-	 * @param ctx the parse tree
-	 */
-	void enterAmbiguousName(JPlus20Parser.AmbiguousNameContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link JPlus20Parser#ambiguousName}.
-	 * @param ctx the parse tree
-	 */
-	void exitAmbiguousName(JPlus20Parser.AmbiguousNameContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link JPlus20Parser#compilationUnit}.
 	 * @param ctx the parse tree
 	 */

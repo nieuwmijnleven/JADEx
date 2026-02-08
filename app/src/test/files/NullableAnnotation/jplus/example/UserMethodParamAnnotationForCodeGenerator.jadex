@@ -1,0 +1,215 @@
+package jplus.example;
+
+import org.jspecify.annotations.Nullable;
+
+class UserMethodParamAnnotationForCodeGenerator {
+    // Name is required
+    final String name;
+    // Address can be null
+    AddressAnnotation address;
+
+    UserMethodParamAnnotationForCodeGenerator(String name, AddressAnnotation address) {
+        this.name = name;
+        this.address = address;
+    }
+
+    void updateAddress(AddressAnnotation address) {
+        this.address = address;
+    }
+
+    // Safely get the city name of the address
+    String getStreet() {
+        return address.street.name;
+    }
+
+    String getStreet_ExpressionName() {
+        return address.street.name;
+    }
+
+    String getStreet_ExpressionName_AddressNullsafety() {
+        return java.util.Optional.ofNullable(address).map(t0 -> t0.street.name).orElse(null);//return address?.street.name;
+    }
+
+    String? getStreet_ExpressionName_StreetNullsafety() {
+        return address.street?.name;
+    }
+
+    String getStreet_ExpressionName_AddressStreetNullsatey() {
+        return address?.street?.name;
+    }
+
+    String getStreet_FieldAccess() {
+        return this.address.street.name;
+    }
+
+    String getStreet_FieldAccess_AddressNullsafety() {
+        return this.address?.street.name;
+    }
+
+    String getStreet_FieldAccess_StreetNullsafety() {
+        return this.address.street?.name;
+    }
+
+    String getStreet_FieldAccess_AddressStreetNullsatey() {
+        return this.address?.street?.name;
+    }
+
+    String getStreet_MethodInvocation_Primary_AddressNullsafety() {
+        return this.address?.street.name();
+    }
+
+    String getStreet_MethodInvocation_Primary_StreetNullsafety() {
+        return this.address.street?.name();
+    }
+
+    String getStreet_MethodInvocation_Primary_AddressStreetNullsafety() {
+        return this.address?.street?.name();
+    }
+
+    String getStreet_MethodInvocation_ExpressionName() {
+        return address.street.name();
+    }
+
+    String getStreet_MethodInvocation_ExpressionName_AddressNullsafety() {
+        return address?.street.name();
+    }
+
+    String getStreet_MethodInvocation_ExpressionName_StreetNullsafety() {
+        return address.street?.name();
+    }
+
+    String getStreet_MethodInvocation_ExpressionName_AddressStreetNullsafety() {
+        return address?.street?.name();
+    }
+
+    void getStreet_MethodInvocationStatement_ExpressionName() {
+        address.street.name();
+    }
+
+    void getStreet_MethodInvocationStatement_ExpressionName_AddressNullsafety() {
+        address?.street.name();
+    }
+
+    void getStreet_MethodInvocationStatement_ExpressionName_StreetNullsafety() {
+        address.street?.name();
+    }
+
+    void getStreetMethodInvocationStatement_ExpressionName_AddressStreetNullsafety() {
+        address?.street?.name();
+    }
+
+    String getStreet_TypeNameFieldAccess() {
+        return UserMethodParamAnnotationForCodeGenerator.this.address.street.name;
+    }
+
+    String getStreet_TypeNameFieldAccess_AddressNullsafety() {
+        return jplus.example.UserMethodParamAnnotationForCodeGenerator.this.address?.street.name;
+    }
+
+    String getStreet_TypeNameFieldAccess_StreetNullsafety() {
+        return UserMethodParamAnnotationForCodeGenerator.this.address.street?.name;
+    }
+
+    String getStreet_TypeNameFieldAccess_AddressStreetNullsatey() {
+        return UserMethodParamAnnotationForCodeGenerator.this.address?.street?.name;
+    }
+
+    String getStreet_MethodInvocation_TypeNamePrimary() {
+        return jplus.example.UserMethodParamAnnotationForCodeGenerator.this.address.street.name();
+    }
+
+    String getStreet_MethodInvocation_TypeNamePrimary_AddressNullsafety() {
+        return this.address?.street.name();
+    }
+
+    String getStreet_MethodInvocation_TypeNamePrimary_StreetNullsafety() {
+        return UserMethodParamAnnotationForCodeGenerator.this.address.street?.name();
+    }
+
+    String getStreet_MethodInvocation_TypeNamePrimary_AddressStreetNullsafety() {
+        return UserMethodParamAnnotationForCodeGenerator.this.address?.street?.name();
+    }
+
+    String getDisplayName() {
+        return name;
+    }
+
+    String getStreet_FieldAccess_WithParenthesis() {
+        return (this.address.street.name);
+    }
+
+    String getStreet_FieldAccess_WithParenthesis_UtilStreet() {
+        return (this.address.street).name;
+    }
+
+    UserMethodParamAnnotationForCodeGenerator createUser() {
+        return new UserMethodParamAnnotationForCodeGenerator("Jane Smith", null);
+    }
+
+    String createUserWithChaining() {
+        return new UserMethodParamAnnotationForCodeGenerator("Jane Smith", null).address.street.name;
+    }
+
+    UserMethodParamAnnotationForCodeGenerator createUserWithQualifiedClassName() {
+        return new jplus.example.UserMethodParamAnnotationForCodeGenerator("Jane Smith", null);
+    }
+
+    String createUserWithQualifiedClassNameAndChaining() {
+        return new jplus.example.UserMethodParamAnnotationForCodeGenerator("Jane Smith", null).address.street.name;
+    }
+
+
+    String createUserArrayWithChaining() {
+        UserMethodParamAnnotationForCodeGenerator[] userArr = new UserMethodParamAnnotationForCodeGenerator[]{new UserMethodParamAnnotationForCodeGenerator("Jeroen", new AddressAnnotation("New Amsterdam")), new jplus.example.UserMethodParamAnnotationForCodeGenerator("Jane Smith", null)};
+        return userArr[0].address.street.name;
+    }
+
+    String createUserArrayWithInitializer() {
+        return new UserMethodParamAnnotationForCodeGenerator[]{new UserMethodParamAnnotationForCodeGenerator("Jeroen", new AddressAnnotation("New Amsterdam")), new jplus.example.UserMethodParamAnnotationForCodeGenerator("Jane Smith", null)}[0].address.street.name;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    public static void main(String[] args) {
+        // Null-safe object creation
+        UserMethodParamAnnotationForCodeGenerator user1 = new UserMethodParamAnnotationForCodeGenerator("Jeroen", new AddressAnnotation("New Amsterdam"));
+        UserMethodParamAnnotationForCodeGenerator user2 = new UserMethodParamAnnotationForCodeGenerator("Jane Smith", null);
+        UserMethodParamAnnotationForCodeGenerator user3 = new UserMethodParamAnnotationForCodeGenerator(null, new AddressAnnotation(null));
+
+//        user2.updateAddress(new AddressAnnotation("Boston"));
+        user2.updateAddress(null);
+
+        new UserMethodParamAnnotationForCodeGenerator("Jane Smith", null).updateAddress(null);
+
+        // Null-safe access
+        System.out.println(user1.getDisplayName() + "'s city: " + user1.getStreet()); // Jeroen's city: New Amsterdam
+        System.out.println(user2.getDisplayName() + "'s city: " + user2.getStreet()); // Jane Smith's city: No Address
+        System.out.println(user3.getDisplayName() + "'s city: " + user3.getStreet()); // No Name's city: No Address
+    }
+}

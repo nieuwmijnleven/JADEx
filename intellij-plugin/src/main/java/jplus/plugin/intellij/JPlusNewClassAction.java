@@ -1,3 +1,29 @@
+/*
+ * JADEx - Java Advanced Development Extension
+ *
+ * Copyright (C) 2026 Cheol Jeon <nieuwmijnleven@outlook.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 only,
+ * as published by the Free Software Foundation.
+ *
+ * Alternatively, this software may be used under a commercial license
+ * from Cheol Jeon.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * See the GNU General Public License version 2 for more details:
+ * <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
+ *
+ * For commercial licensing, please contact <nieuwmijnleven@outlook.com>.
+ *
+ * Contributors to this project must sign a Contributor License Agreement (CLA)
+ * granting Cheol Jeon the right to relicense their contributions under
+ * a commercial license. See the CLA file in the project root for details.
+ */
+
 package jplus.plugin.intellij;
 
 import com.intellij.icons.AllIcons;
@@ -28,14 +54,14 @@ import java.io.IOException;
 public class JPlusNewClassAction extends CreateFileFromTemplateAction implements DumbAware {
 
     public JPlusNewClassAction() {
-        super("JPlus Class", "Create a new JPlus Class", AllIcons.Nodes.Class);
+        super("Jadex Class", "Create a new Jadex Class", AllIcons.Nodes.Class);
     }
 
     @Override
     protected void buildDialog(@NotNull final Project project, @NotNull PsiDirectory directory,
                                @NotNull CreateFileFromTemplateDialog.Builder builder) {
         builder
-                .setTitle("New JPlus Class")
+                .setTitle("New Jadex Class")
                 .addKind("Class", AllIcons.Nodes.Class, "Class")
                 .addKind("Interface", AllIcons.Nodes.Interface, "Interface")
                 .addKind("Enum", AllIcons.Nodes.Enum, "Enum")
@@ -99,7 +125,7 @@ public class JPlusNewClassAction extends CreateFileFromTemplateAction implements
             WriteCommandAction.runWriteCommandAction(project, () -> {
                 try {
                     VirtualFile parent = originalVFile.getParent();
-                    String newFileName = originalVFile.getNameWithoutExtension() + ".jplus";
+                    String newFileName = originalVFile.getNameWithoutExtension() + ".jadex";
                     VirtualFile jplusFile = parent.findChild(newFileName);
 
                     if (jplusFile == null) {
@@ -113,7 +139,7 @@ public class JPlusNewClassAction extends CreateFileFromTemplateAction implements
                             FileEditorManager.getInstance(project).openFile(finalJplusFile, true));
 
                 } catch (IOException e) {
-                    Messages.showErrorDialog(project, e.getMessage(), "Error Creating .jplus File");
+                    Messages.showErrorDialog(project, e.getMessage(), "Error Creating .jadex File");
                 }
             });
         });

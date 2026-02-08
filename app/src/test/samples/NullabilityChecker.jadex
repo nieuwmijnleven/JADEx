@@ -6,7 +6,7 @@ public class User {
     private int age;
 
     public void setName(String? fullname) {
-        String[] tokens = fullname.split(fullname, ",");
+        String[] tokens = fullname.split(",");
         firstname = tokens[0];
         this.firstname = tokens[0];
         User.this.firstname = tokens[0];

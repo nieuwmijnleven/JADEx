@@ -1,0 +1,25 @@
+import java.util.ArrayList;
+import java.util.List;
+
+apply getter;
+
+public class Container<T> {
+    private T value;
+    private List<T> items;
+
+    public Container(T value) {
+        this.value = value;
+        this.items = new ArrayList<>();
+    }
+
+    public void addItem(T item) {
+        items.add(item);
+    }
+
+    public void printItems() {
+        System.out.println("Items in Container:");
+        for (T item : items) {
+            System.out.println(item);
+        }
+    }
+}

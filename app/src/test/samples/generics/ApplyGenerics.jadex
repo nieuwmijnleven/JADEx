@@ -1,0 +1,54 @@
+import java.util.ArrayList;
+import java.util.List;
+
+public class Container<T> {
+    private T value;
+    private List<T> items;
+
+    public Container(T value) {
+        this.value = value;
+        this.items = new ArrayList<>();
+    }
+
+    public T getValue() {
+        return value;
+    }
+
+    public void setValue(T value) {
+        this.value = value;
+    }
+
+    public void addItem(T item) {
+        items.add(item);
+    }
+
+    public List<T> getItems() {
+        return items;
+    }
+
+    public void printItems() {
+        System.out.println("Items in Container:");
+        for (T item : items) {
+            System.out.println(item);
+        }
+    }
+
+    public static void main(String[] args) {
+        Container<Integer> intContainer = new Container<>(10);
+        intContainer.addItem(20);
+        intContainer.addItem(30);
+        System.out.println("Value: " + intContainer.getValue()); // 10
+        intContainer.printItems(); // 20, 30
+
+        Container<String> strContainer = new Container<>("Hello");
+        strContainer.addItem("World");
+        strContainer.addItem("Generics");
+        System.out.println("Value: " + strContainer.getValue()); // Hello
+        strContainer.printItems(); // World, Generics
+
+        Container<List<Double>> listContainer = new Container<>(List.of(1.1, 2.2));
+        listContainer.addItem(List.of(3.3, 4.4));
+        System.out.println("Value: " + listContainer.getValue()); // [1.1, 2.2]
+        listContainer.printItems(); // [3.3, 4.4]
+    }
+}

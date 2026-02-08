@@ -1,0 +1,44 @@
+package jplus.example;
+
+import org.jspecify.annotations.Nullable;
+
+class UserMethodParamAnnotation {
+    // Name is required
+    final String name;
+    // Address can be null
+    AddressAnnotation address;
+
+    UserMethodParamAnnotation(String name, AddressAnnotation address) {
+        this.name = name;
+        this.address = address;
+    }
+
+    void updateAddress(AddressAnnotation address) {
+        this.address = address;
+    }
+
+    // Safely get the city name of the address
+    String getStreet() {
+        return address.street.name;
+    }
+
+    // Get the display name of the user
+    String getDisplayName() {
+        return name;
+    }
+
+    public static void main(String[] args) {
+        // Null-safe object creation
+        UserMethodParamAnnotation user1 = new UserMethodParamAnnotation("Jeroen", new AddressAnnotation("New Amsterdam"));
+        UserMethodParamAnnotation user2 = new UserMethodParamAnnotation("Jane Smith", null);
+        UserMethodParamAnnotation user3 = new UserMethodParamAnnotation(null, new AddressAnnotation(null));
+
+//        user2.updateAddress(new AddressAnnotation("Boston"));
+        user2.updateAddress(null);
+
+        // Null-safe access
+        System.out.println(user1.getDisplayName() + "'s city: " + user1.getStreet()); // Jeroen's city: New Amsterdam
+        System.out.println(user2.getDisplayName() + "'s city: " + user2.getStreet()); // Jane Smith's city: No Address
+        System.out.println(user3.getDisplayName() + "'s city: " + user3.getStreet()); // No Name's city: No Address
+    }
+}

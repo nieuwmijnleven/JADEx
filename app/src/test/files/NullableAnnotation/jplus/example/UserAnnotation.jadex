@@ -1,0 +1,35 @@
+package jplus.example;
+
+class UserAnnotation {
+    // Name is required
+    final String name;
+    // Address can be null
+    AddressAnnotation address;
+
+    UserAnnotation(String name, AddressAnnotation address) {
+        this.name = name;
+        this.address = address;
+    }
+
+    // Safely get the city name of the address
+    String getStreet() {
+        return address.street.name;
+    }
+
+    // Get the display name of the user
+    String getDisplayName() {
+        return name;
+    }
+
+    public static void main(String[] args) {
+        // Null-safe object creation
+        UserAnnotation user1 = new UserAnnotation("Jeroen", new AddressAnnotation("New Amsterdam"));
+        UserAnnotation user2 = new UserAnnotation("Jane Smith", null);
+        UserAnnotation user3 = new UserAnnotation(null, new AddressAnnotation(null));
+
+        // Null-safe access
+        System.out.println(user1.getDisplayName() + "'s city: " + user1.getStreet()); // Jeroen's city: New Amsterdam
+        System.out.println(user2.getDisplayName() + "'s city: " + user2.getStreet()); // Jane Smith's city: No Address
+        System.out.println(user3.getDisplayName() + "'s city: " + user3.getStreet()); // No Name's city: No Address
+    }
+}

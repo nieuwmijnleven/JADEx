@@ -1,0 +1,16 @@
+package jplus.example;
+import org.jspecify.annotations.Nullable;
+
+public class Constructors {
+    int age;
+    String name;
+
+    Constructors (int age) {
+        this(age, "jadex");
+    }
+
+    Constructors (int age, String name) {
+        this.age = age;
+        this.name = name;
+    }
+}

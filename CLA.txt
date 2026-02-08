@@ -1,0 +1,14 @@
+Contributor License Agreement (CLA) for JADEx
+
+By signing this agreement, you grant Cheol Jeon the right to
+use, modify, and relicense your contributions to JADEx
+under a commercial license, in addition to the existing GPL v2 only license.
+
+Contributor Name: ___________________________
+Email: ___________________________
+Date: ___________________________
+
+Signature: ___________________________
+
+This agreement allows Cheol Jeon to safely distribute
+a commercial version of JADEx including your contributions.

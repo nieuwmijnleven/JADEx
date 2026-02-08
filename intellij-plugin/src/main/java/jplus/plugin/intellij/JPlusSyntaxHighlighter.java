@@ -1,3 +1,29 @@
+/*
+ * JADEx - Java Advanced Development Extension
+ *
+ * Copyright (C) 2026 Cheol Jeon <nieuwmijnleven@outlook.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 only,
+ * as published by the Free Software Foundation.
+ *
+ * Alternatively, this software may be used under a commercial license
+ * from Cheol Jeon.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * See the GNU General Public License version 2 for more details:
+ * <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>.
+ *
+ * For commercial licensing, please contact <nieuwmijnleven@outlook.com>.
+ *
+ * Contributors to this project must sign a Contributor License Agreement (CLA)
+ * granting Cheol Jeon the right to relicense their contributions under
+ * a commercial license. See the CLA file in the project root for details.
+ */
+
 package jplus.plugin.intellij;
 
 import com.intellij.lexer.Lexer;
@@ -6,8 +32,8 @@ import com.intellij.openapi.editor.HighlighterColors;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.fileTypes.SyntaxHighlighterBase;
 import com.intellij.psi.tree.IElementType;
-import jplus.base.JPlus20Lexer;
-import jplus.base.JPlus20Parser;
+import jplus.base.JPlus25Lexer;
+import jplus.base.JPlus25Parser;
 import jplus.plugin.intellij.adapter.JPlusLexerAdapter;
 import jplus.plugin.intellij.psi.MethodPsiElement;
 import org.antlr.intellij.adaptor.lexer.RuleIElementType;
@@ -47,18 +73,18 @@ public class JPlusSyntaxHighlighter extends SyntaxHighlighterBase {
 //
 //        if (tokenType instanceof RuleIElementType ruleIElementType) {
 //            switch(ruleIElementType.getRuleIndex()) {
-//                case JPlus20Parser.RULE_methodDeclarator ->
+//                case JPlus25Parser.RULE_methodDeclarator ->
 //            }
 //        }
 
 
-        if (tokenType == JPlusTokenTypes.TOKEN_ELEMENT_TYPES.get(JPlus20Lexer.StringLiteral)) {
+        if (tokenType == JPlusTokenTypes.TOKEN_ELEMENT_TYPES.get(JPlus25Lexer.StringLiteral)) {
             return STRING_KEYS;
         }
-        else if (tokenType == JPlusTokenTypes.TOKEN_ELEMENT_TYPES.get(JPlus20Lexer.COMMENT)) {
+        else if (tokenType == JPlusTokenTypes.TOKEN_ELEMENT_TYPES.get(JPlus25Lexer.COMMENT)) {
             return COMMENT_KEYS;
         }
-        else if (tokenType == JPlusTokenTypes.TOKEN_ELEMENT_TYPES.get(JPlus20Lexer.LINE_COMMENT)) {
+        else if (tokenType == JPlusTokenTypes.TOKEN_ELEMENT_TYPES.get(JPlus25Lexer.LINE_COMMENT)) {
             return COMMENT_KEYS;
         }
         else if (tokenType == JPlusTokenTypes.BAD_TOKEN_TYPE) {

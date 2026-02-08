@@ -221,12 +221,6 @@ public interface JPlus20ParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitMethodName(JPlus20Parser.MethodNameContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link JPlus20Parser#ambiguousName}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitAmbiguousName(JPlus20Parser.AmbiguousNameContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link JPlus20Parser#compilationUnit}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
