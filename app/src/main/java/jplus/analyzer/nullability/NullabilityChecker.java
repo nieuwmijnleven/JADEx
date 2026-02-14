@@ -47,6 +47,7 @@ import jplus.base.JPlus25Parser;
 import jplus.base.JPlus25ParserBaseVisitor;
 import jplus.base.JavaMethodInvocationManager;
 import jplus.base.MethodInvocationInfo;
+import jplus.base.Modifier;
 import jplus.base.SymbolInfo;
 import jplus.base.SymbolTable;
 import jplus.base.TypeInfo;
@@ -94,7 +95,13 @@ public class NullabilityChecker extends JPlus25ParserBaseVisitor<Void> {
     private String packageName;
     private boolean hasPassed = true;
 
-    public record NullabilityIssue(int line, int column, int offset, String message) implements Comparable<NullabilityIssue> {
+    public enum IssueCode {
+        NULLABLE_DEREFERENCE,
+        PRIMITIVE_RESULT_SAFE_NAVIGATION_REQUIRES_ELVIS,
+        UNINITIALIZED_NONNULL_VARIABLE,
+    }
+
+    public record NullabilityIssue(IssueCode issueCode, int line, int column, int offset, String message) implements Comparable<NullabilityIssue> {
 
         @Override
         public int compareTo(NullabilityIssue other) {
@@ -128,14 +135,22 @@ public class NullabilityChecker extends JPlus25ParserBaseVisitor<Void> {
         currentSymbolTable = currentSymbolTable.getParent();
     }
 
+    private void reportIssue(IssueCode issueCode, Token token, String msg) {
+        issues.add(new NullabilityIssue(issueCode, token.getLine(), token.getCharPositionInLine(), token.getStartIndex(), msg));
+        hasPassed = false;
+    }
+
     private void reportIssue(Token token, String msg) {
-        issues.add(new NullabilityIssue(token.getLine(), token.getCharPositionInLine(), token.getStartIndex(), msg));
+        reportIssue(null, token, msg);
+    }
+
+    private void reportIssue(IssueCode issueCode, int line, int column, int offset, String msg) {
+        issues.add(new NullabilityIssue(issueCode, line, column, offset, msg));
         hasPassed = false;
     }
 
     private void reportIssue(int line, int column, int offset, String msg) {
-        issues.add(new NullabilityIssue(line, column, offset, msg));
-        hasPassed = false;
+        reportIssue(null, line, column, offset, msg);
     }
 
     @Override
@@ -431,10 +446,40 @@ public class NullabilityChecker extends JPlus25ParserBaseVisitor<Void> {
 
             if (decl.variableInitializer() != null) {
 
+                visit(decl.variableInitializer());
+
                 NullState rhsState = evalRHS(decl.variableInitializer(), currentSymbolTable);
-                if (!typeInfo.isNullable() && rhsState != NullState.NON_NULL) {
-                    reportIssue(ctx.getStart(), symbol + " is a non-nullable variable. But null value is assigned to it.");
+                System.err.println("[NullabilityChecker][FieldDeclaration] rhsState = " + rhsState);
+
+
+                var unInitNonNullVariableIssueOpt = issues.stream().filter(issue -> issue.offset == decl.variableInitializer().getStart().getStartIndex() && issue.issueCode == IssueCode.UNINITIALIZED_NONNULL_VARIABLE).findFirst();
+
+                unInitNonNullVariableIssueOpt.ifPresent(issue -> issues.remove(issue));
+
+                if (typeInfo.getType() == TypeInfo.Type.Primitive && rhsState != NullState.NON_NULL) {
+
+                    var nullaleDereferencingIssueOpt = issues.stream().filter(issue -> issue.offset == decl.variableInitializer().getStart().getStartIndex() && issue.issueCode == IssueCode.NULLABLE_DEREFERENCE).findFirst();
+
+                    if (!nullaleDereferencingIssueOpt.isPresent() && !unInitNonNullVariableIssueOpt.isPresent() && !isTopLevelNullCoalescing(decl.variableInitializer().expression())) {
+
+                        //issues.remove(nullaleDereferencingIssueOpt.get());
+                        reportIssue(
+                                ctx.getStart(),
+                                "Nullable result of safe access(?.) assigned to primitive type '%s' may cause NullPointerException due to auto-unboxing. Use '?:' to provide a default value.".formatted(typeInfo.getName())
+                        );
+                    }
+
+                } else {
+
+                    if (!typeInfo.isNullable() && rhsState == NullState.NULL) {
+                        reportIssue(ctx.getStart(), symbol + " is a non-nullable variable. But null value is assigned to it.");
+                    }
+
+                    if (!typeInfo.isNullable() && rhsState == NullState.UNKNOWN) {
+                        reportIssue(ctx.getStart(), String.format("%s is a non-nullable variable. But nullable value is assigned to it. Change the type to %s? or add a null check.", symbol, CodeUtils.getSimpleName(typeInfo.getName())));
+                    }
                 }
+
 
                 SymbolInfo updated = symbolInfo.toBuilder()
                         .nullState(rhsState)
@@ -854,13 +899,41 @@ public class NullabilityChecker extends JPlus25ParserBaseVisitor<Void> {
                 NullState rhsState = evalRHS(decl.variableInitializer(), currentSymbolTable);
                 System.err.println("[NullabilityChecker][LocalVariable] rhsState = " + rhsState);
 
-                if (!typeInfo.isNullable() && rhsState == NullState.NULL) {
+                var unInitNonNullVariableIssueOpt = issues.stream().filter(issue -> issue.offset == decl.variableInitializer().getStart().getStartIndex() && issue.issueCode == IssueCode.UNINITIALIZED_NONNULL_VARIABLE).findFirst();
+
+                unInitNonNullVariableIssueOpt.ifPresent(issue -> issues.remove(issue));
+
+                if (typeInfo.getType() == TypeInfo.Type.Primitive && rhsState != NullState.NON_NULL) {
+
+                    var nullaleDereferencingIssueOpt = issues.stream().filter(issue -> issue.offset == decl.variableInitializer().getStart().getStartIndex() && issue.issueCode == IssueCode.NULLABLE_DEREFERENCE).findFirst();
+
+                    if (!nullaleDereferencingIssueOpt.isPresent() && !unInitNonNullVariableIssueOpt.isPresent() && !isTopLevelNullCoalescing(decl.variableInitializer().expression())) {
+
+                        //issues.remove(nullaleDereferencingIssueOpt.get());
+                        reportIssue(
+                                ctx.getStart(),
+                                "Nullable result of safe access(?.) assigned to primitive type '%s' may cause NullPointerException due to auto-unboxing. Use '?:' to provide a default value.".formatted(typeInfo.getName())
+                        );
+                    }
+
+                } else {
+
+                    if (!typeInfo.isNullable() && rhsState == NullState.NULL) {
+                        reportIssue(ctx.getStart(), symbol + " is a non-nullable variable. But null value is assigned to it.");
+                    }
+
+                    if (!typeInfo.isNullable() && rhsState == NullState.UNKNOWN) {
+                        reportIssue(ctx.getStart(), String.format("%s is a non-nullable variable. But nullable value is assigned to it. Change the type to %s? or add a null check.", symbol, CodeUtils.getSimpleName(typeInfo.getName())));
+                    }
+                }
+
+                /*if (typeInfo.getType() != TypeInfo.Type.Primitive && !typeInfo.isNullable() && rhsState == NullState.NULL) {
                     reportIssue(ctx.getStart(), symbol + " is a non-nullable variable. But null value is assigned to it.");
                 }
 
                 if (typeInfo.getType() != TypeInfo.Type.Primitive && !typeInfo.isNullable() && rhsState == NullState.UNKNOWN) {
                     reportIssue(ctx.getStart(), String.format("%s is a non-nullable variable. But nullable value is assigned to it. Change the type to %s? or add a null check.", symbol, CodeUtils.getSimpleName(typeInfo.getName())));
-                }
+                }*/
 
                 SymbolInfo updated = symbolInfo.toBuilder()
                         .nullState(rhsState)
@@ -890,6 +963,47 @@ public class NullabilityChecker extends JPlus25ParserBaseVisitor<Void> {
 
         //return super.visitLocalVariableDeclaration(ctx);
         return null;
+    }
+
+    public boolean isTopLevelNullCoalescing(JPlus25Parser.ExpressionContext ctx) {
+
+        ParseTree node = ctx;
+
+        node = unwrapParentheses(node);
+        System.err.println("[isTopLevelNullCoalescing] isTopLevelNullCoalescing = " + node.getClass().getSimpleName());
+
+        if (node instanceof JPlus25Parser.ExpressionContext unwrappedExprCtx) {
+
+            var assignExprCtx = unwrappedExprCtx.assignmentExpression();
+            if (assignExprCtx == null) {
+                return false;
+            }
+
+            var assignCtx = unwrappedExprCtx.assignmentExpression().assignment();
+            if (assignCtx != null) {
+                return false;
+            }
+
+            var cond = assignExprCtx.conditionalExpression();
+            if (cond != null) {
+
+                var nullCoal = cond.nullCoalescingExpression();
+                return nullCoal.ELVIS() != null;
+            }
+        }
+
+        return false;
+    }
+
+    private ParseTree unwrapParentheses(ParseTree node) {
+        while (true) {
+            if (node instanceof JPlus25Parser.PrimaryNoNewArrayParenExpressionContext p) {
+                node = p.expression();
+                continue;
+            }
+            break;
+        }
+        return node;
     }
 
     @Override
@@ -923,9 +1037,43 @@ public class NullabilityChecker extends JPlus25ParserBaseVisitor<Void> {
 
         NullState rhsState = evalRHS(ctx.expression(), currentSymbolTable);
         log("[NullabilityChecker][Assignment] rhsState = " + rhsState);
-        if (typeInfo.getType() == TypeInfo.Type.Reference && !typeInfo.isNullable() && rhsState != NullState.NON_NULL) {
+
+        var unInitNonNullVariableIssueOpt = issues.stream().filter(issue -> issue.offset == ctx.expression().getStart().getStartIndex() && issue.issueCode == IssueCode.UNINITIALIZED_NONNULL_VARIABLE).findFirst();
+
+        unInitNonNullVariableIssueOpt.ifPresent(issue -> issues.remove(issue));
+
+        if (typeInfo.getType() == TypeInfo.Type.Primitive && rhsState != NullState.NON_NULL) {
+
+            var nullaleDereferencingIssueOpt = issues.stream().filter(issue -> issue.offset == ctx.expression().getStart().getStartIndex() && issue.issueCode == IssueCode.NULLABLE_DEREFERENCE).findFirst();
+
+            if (!nullaleDereferencingIssueOpt.isPresent() && !isTopLevelNullCoalescing(ctx.expression())) {
+
+                //issues.remove(nullaleDereferencingIssueOpt.get());
+                reportIssue(
+                        ctx.getStart(),
+                        "Nullable result of safe access(?.) assigned to primitive type '%s' may cause NullPointerException due to auto-unboxing. Use '?:' to provide a default value.".formatted(typeInfo.getName())
+                );
+            }
+
+        } else {
+
+            if (!typeInfo.isNullable() && rhsState == NullState.NULL) {
+                reportIssue(ctx.getStart(), symbol + " is a non-nullable variable. But null value is assigned to it.");
+            }
+
+            if (!typeInfo.isNullable() && rhsState == NullState.UNKNOWN) {
+                reportIssue(ctx.getStart(), String.format("%s is a non-nullable variable. But nullable value is assigned to it. Change the type to %s? or add a null check.", symbol, CodeUtils.getSimpleName(typeInfo.getName())));
+            }
+        }
+
+
+       /* if (typeInfo.getType() == TypeInfo.Type.Reference && !typeInfo.isNullable() && rhsState != NullState.NON_NULL) {
             reportIssue(ctx.getStart(), symbol + " is a non-nullable variable. But null value is assigned to it.");
         }
+
+        if (typeInfo.getType() == TypeInfo.Type.Primitive && rhsState != NullState.NON_NULL) {
+            reportIssue(ctx.getStart(), symbol + " is a primitive type. Safe navigation on a primitive result requires an explicit default value. Use the Elvis operator (?:) to prevent auto-unboxing of null.");
+        }*/
 
         SymbolInfo updated = symbolInfo.toBuilder()
                 .nullState(rhsState)
@@ -2064,8 +2212,17 @@ public class NullabilityChecker extends JPlus25ParserBaseVisitor<Void> {
         boolean useNullsafeOperator = (ctx.NULLSAFE() != null);
         if (receiverTypeInfo.isNullable() && nullState != NullState.NON_NULL && !useNullsafeOperator) {
             reportIssue(
+                    IssueCode.NULLABLE_DEREFERENCE,
                     ctx.getStart(),
                     String.format("%s is a nullable variable. But it directly accesses %s(). Consider using null-safe operator(?.).", receiverName, methodName)
+            );
+        }
+
+        if (symbolInfo != null && !receiverTypeInfo.isNullable() && nullState == NullState.UNKNOWN) {
+            reportIssue(
+                    IssueCode.UNINITIALIZED_NONNULL_VARIABLE,
+                    ctx.getStart(),
+                    String.format("Variable '%s' might not have been initialized.", receiverName)
             );
         }
 

@@ -952,6 +952,22 @@ This difference is immediately noticeable in daily development.
 
 ---
 
+#### Q: Does JADEx attempt to transform Java into a fully sound null-safe type language?
+
+**A:** JADEx is not an attempt to redesign Java into a theoretically sound null-safe type system, nor is it trying to create a world where "Optional wins".
+
+The goal of JADEx is to provide a practical tool that incrementally strengthens null-safety at the source-code level, while preserving the existing Java ecosystem.
+
+---
+
+#### Q: Is JADEx Optional-based?
+
+**A:** JADEx does not enforce the use of Optional and does not attempt to redefine existing APIs.
+
+Instead, it makes nullability explicit at the usage boundary and enforces safe access through operators like ?. and ?:.
+
+---
+
 #### Q: Is JADEx trying to replace Kotlin or Java?
 
 **A:** No.
@@ -977,6 +993,7 @@ JADEx does **not aim to replace Java**; it simply **extends Java**, making it sa
 - JADEx improves **null-safety at the source level**, **without affecting runtime performance**.  
 - Developers can safely adopt JADEx while ensuring that the resulting code runs as efficiently as standard Java code.
 
+---
 
 #### Q: How can you say "enhance your code’s safety and without rewriting it" when in all of the examples there require new syntax to make it work.
 **A:** The main point is that **you no longer need to write repetitive boilerplate code to handle null values**.

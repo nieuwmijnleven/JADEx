@@ -103,6 +103,28 @@ class JPlusTest {
         assertEquals("Error: (line:8, column:8) s1 is a nullable variable. But it directly accesses length(). Consider using null-safe operator(?.).\n", outContent.toString());
     }
 
+    @Test
+    void SafeNavigationPrimitiveRequiresElvis() throws Exception {
+        //JPlusProcessor processor = new JPlusProcessor(null, Path.of("./src/test/samples/NullableType2.jadex"));
+
+        Project project = new Project(Path.of("./src/test/samples"));
+        //JPlusProcessor processor = new JPlusProcessor(null, Path.of("./src/test/samples/NullabilityCheckerLocalVariable.jadex"));
+        JPlusProcessor processor = new JPlusProcessor(project, "", "SafeNavigationPrimitiveRequiresElvis");
+
+        processor.process();
+        processor.analyzeSymbols();
+
+        //System.err.println("[parseTreeString] " + processor.getParseTreeString());
+
+        var issues = processor.checkNullability();
+        if (!issues.isEmpty()) {
+            issues.forEach(nullabilityIssue -> {
+                System.out.printf("Error: (line:%d, column:%d) %s\n", nullabilityIssue.line(), nullabilityIssue.column(), nullabilityIssue.message());
+            });
+        }
+
+        assertEquals("Error: (line:5, column:8) Nullable result of safe access(?.) assigned to primitive type 'int' may cause NullPointerException due to auto-unboxing. Use '?:' to provide a default value.\n", outContent.toString());
+    }
 
     @Test
     void testNullabilityChecker() throws Exception {
@@ -180,7 +202,7 @@ class JPlusTest {
         }
 
         String expected = "Error: (line:4, column:4) Non-null field 'name' is not initialized in one or more constructors of class 'User'\n" +
-                "Error: (line:8, column:8) this.name is a non-nullable variable. But null value is assigned to it.\n";
+                "Error: (line:8, column:8) this.name is a non-nullable variable. But nullable value is assigned to it. Change the type to String? or add a null check.\n";
         assertEquals(expected, outContent.toString());
     }
 
