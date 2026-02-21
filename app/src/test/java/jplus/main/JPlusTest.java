@@ -227,8 +227,8 @@ class JPlusTest {
         String expected = "Error: (line:18, column:8) The method(getCity) is declared to return a non-null value, but this return statement may return null.\n" +
                 "Error: (line:18, column:15) address is a nullable variable. But it directly accesses city. Consider using null-safe operator(?.).\n" +
                 "Error: (line:37, column:8) Variable 'nickName' might not have been initialized.\n" +
-                "Error: (line:42, column:21) The 1st argument of the jplus.example.User constructor is a non-nullable variable, but a null value is assigned to it.\n" +
-                "Error: (line:42, column:36) The 1st argument of the jplus.example.User.Address constructor is a non-nullable variable, but a null value is assigned to it.\n";
+                "Error: (line:42, column:30) The 1st argument of the jplus.example.User constructor is a non-nullable variable, but a null value is assigned to it.\n" +
+                "Error: (line:42, column:48) The 1st argument of the jplus.example.User.Address constructor is a non-nullable variable, but a null value is assigned to it.\n";
         assertEquals(expected, outContent.toString());
     }
 
