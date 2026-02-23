@@ -1121,7 +1121,7 @@ public class JavaSymbolAnalyzer extends TreePathScanner<Void, Void> {
                 .map(a -> a.getAnnotationType().toString())
                 .anyMatch(name ->
                         name.endsWith(".Nullable")
-                                || name.equals("org.jspecify.annotations.Nullable")
+                                //|| name.equals("org.jspecify.annotations.Nullable")
                 );
         //System.err.println("[processCallable] isNullableReturn = " + isNullableReturn);
 
@@ -1208,7 +1208,7 @@ public class JavaSymbolAnalyzer extends TreePathScanner<Void, Void> {
                 .map(a -> a.getAnnotationType().toString())
                 .anyMatch(name ->
                         name.endsWith(".Nullable")
-                                || name.equals("org.jspecify.annotations.Nullable")
+                                //|| name.equals("org.jspecify.annotations.Nullable")
                 );
 
         System.err.println("[handleLocalVariable] contextString = " + node.toString());

@@ -50,8 +50,11 @@ public class SemanticCodeGenDelegate extends BasicCodeGenDelegate {
         if (processed) return updatedContextString;
         processed = true;
 
+        /*if (ctx instanceof JPlus25Parser.OrdinaryCompilationUnitContext ordCompUnitCtx) {
+            return processOrdinaryCompilationUnit(ordCompUnitCtx);
+        } else*/
+
         if (ctx instanceof ApplyDeclarationContext applyDeclarationCtx) {
-            //System.err.println("[ApplyDeclarationCtx] code = " + Utils.getTokenString(applyDeclarationCtx));
             return replaceApplyStatementWithComment(applyDeclarationCtx);
         } else if (ctx instanceof UnannTypeContext unannTypeCtx && unannTypeCtx.unannReferenceType() != null) {
             return replaceNullType(unannTypeCtx);
@@ -101,7 +104,8 @@ public class SemanticCodeGenDelegate extends BasicCodeGenDelegate {
         //System.err.println("[replaceElvisOperator] contextString = " + Utils.getTokenString(ctx));
         ensureChildTextInitialized();
 
-        String conditionalOrExpressionString = Utils.getTokenString(ctx.conditionalOrExpression());
+        //String conditionalOrExpressionString = Utils.getTokenString(ctx.conditionalOrExpression());
+        String conditionalOrExpressionString = ctx.conditionalOrExpression().getText();
         //String rhsExpressionString = ctx.nullCoalescingExpression() != null ? Utils.getTokenString(ctx.nullCoalescingExpression()) : Utils.getTokenString(ctx.lambdaExpression());
         String rhsExpressionString = ctx.nullCoalescingExpression() != null ? ctx.nullCoalescingExpression().getText() : Utils.getTokenString(ctx.lambdaExpression());
 
@@ -124,20 +128,14 @@ public class SemanticCodeGenDelegate extends BasicCodeGenDelegate {
         ensureChildTextInitialized();
 
         if (ctx instanceof JPlus25Parser.Start_Context) {
+
             FragmentedText fragmentedText = getCurrentFragmentedText();
             //System.err.println("debugString = " + fragmentedText.debugString());
+            
+            return this.updatedContextString = fragmentedText.toString();
 
-
-            /*var contextString = fragmentedText.toString();
-            var range = Utils.computeTextChangeRange(contextString,0, contextString.length() - 1);
-
-            FragmentedText appendedfragmentedText = new FragmentedText(range, contextString);
-            appendedfragmentedText.appendTextFromEndParenthesis("static <T> T __elvis(T... args) { return null; }}");*/
-
-            //this.updatedContextString = appendedfragmentedText.toString();
-            this.updatedContextString = fragmentedText.toString();
-            return this.updatedContextString;
         } else {
+
             return forceUpdateContextString(ctx);
         }
     }

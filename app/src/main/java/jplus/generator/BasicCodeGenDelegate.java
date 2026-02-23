@@ -62,8 +62,11 @@ public class BasicCodeGenDelegate implements CodeGenDelegate {
         if (processed) return updatedContextString;
         processed = true;
 
+        /*if (ctx instanceof JPlus25Parser.OrdinaryCompilationUnitContext ordCompUnitCtx) {
+            return processOrdinaryCompilationUnit(ordCompUnitCtx);
+        } else*/
+
         if (ctx instanceof ApplyDeclarationContext applyDeclarationCtx) {
-            //System.err.println("[ApplyDeclarationCtx] code = " + Utils.getTokenString(applyDeclarationCtx));
             return replaceApplyStatementWithComment(applyDeclarationCtx);
         } else if (ctx instanceof UnannTypeContext unannTypeCtx && unannTypeCtx.unannReferenceType() != null) {
             return replaceNullType(unannTypeCtx);
@@ -81,6 +84,35 @@ public class BasicCodeGenDelegate implements CodeGenDelegate {
 
         return processDefaultText();
     }
+
+    /*protected String processOrdinaryCompilationUnit(JPlus25Parser.OrdinaryCompilationUnitContext ordCompUnitCtx) {
+        String replaced = "";
+
+        if (ordCompUnitCtx.packageDeclaration() != null) {
+            replaced += Utils.getTokenString(ordCompUnitCtx.packageDeclaration());
+            replaced += "\n\n";
+        }
+
+        for (var importDeclarationContext : ordCompUnitCtx.importDeclaration()) {
+            replaced += Utils.getTokenString(importDeclarationContext) + "\n";
+        }
+        if (!ordCompUnitCtx.importDeclaration().isEmpty()) replaced += "\n";
+
+        replaced += "import jadex.runtime.SafeAccess;\n";
+        replaced += "import org.jspecify.annotations.Nullable;\n";
+        replaced += "\n";
+
+        for (var applyDeclarationContext : ordCompUnitCtx.applyDeclaration()) {
+            replaced += Utils.getTokenString(applyDeclarationContext) + "\n";
+        }
+        if (!ordCompUnitCtx.applyDeclaration().isEmpty()) replaced += "\n";
+
+        for (var topLevelClassOrInterfaceDeclarationContext : ordCompUnitCtx.topLevelClassOrInterfaceDeclaration()) {
+            replaced += topLevelClassOrInterfaceDeclarationContext.getText();
+        }
+
+        return updateContextString(ordCompUnitCtx, replaced);
+    }*/
 
     private String processMethodInvocation(MethodInvocationContext methodInvocationCtx) {
         //System.err.println("[processMethodInvocation] contextString = " + Utils.getTokenString(methodInvocationCtx));
@@ -203,6 +235,7 @@ public class BasicCodeGenDelegate implements CodeGenDelegate {
         //System.err.println("[processNullSafety] identifier = " + identifier);
         //String replaced = "java.util.Optional.ofNullable(" + identifier;
         String replaced = "jadex.runtime.SafeAccess.ofNullable(" + identifier;
+        //String replaced = "SafeAccess.ofNullable(" + identifier;
         int i = 0;
         while (!expressionNameContextDeque.isEmpty()) {
             String curTVar = "t" + i;
@@ -275,6 +308,7 @@ public class BasicCodeGenDelegate implements CodeGenDelegate {
         String unannTypeText = Utils.getTokenString(ctx);
         if (ctx.QUESTION() != null) {
             String replaced = "@org.jspecify.annotations.Nullable " + unannTypeText.substring(0, unannTypeText.length()-1);
+            //String replaced = "@Nullable " + unannTypeText.substring(0, unannTypeText.length()-1);
             return updateContextString(ctx, replaced);
         }
         return null;
@@ -294,6 +328,7 @@ public class BasicCodeGenDelegate implements CodeGenDelegate {
         } else {
             //replaced = "java.util.Optional.ofNullable(";
             replaced = "jadex.runtime.SafeAccess.ofNullable(";
+            //replaced = "SafeAccess.ofNullable(";
             replaced += conditionalOrExpressionString.orElse("null") + ")";
             replaced += ".orElseGet(() -> " + rhsExpressionString.orElse("null") + ")";
         }
@@ -346,10 +381,12 @@ public class BasicCodeGenDelegate implements CodeGenDelegate {
 
             //return "java.util.Optional.ofNullable(" + instance + ").map(t0 -> t0." + member +  replacePNNAWithOptional(PNNAContextAdapter.from(ctx.pNNA()), 1, ruleCtx);
             return "jadex.runtime.SafeAccess.ofNullable(" + instance + ").map(t0 -> t0." + member +  replacePNNAWithOptional(PNNAContextAdapter.from(ctx.pNNA()), 1, ruleCtx);
+            //return "SafeAccess.ofNullable(" + instance + ").map(t0 -> t0." + member +  replacePNNAWithOptional(PNNAContextAdapter.from(ctx.pNNA()), 1, ruleCtx);
         }
 
         //return "java.util.Optional.ofNullable(" + base + replacePNNAWithOptional(PNNAContextAdapter.from(ctx.pNNA()), 0, ruleCtx);
         return "jadex.runtime.SafeAccess.ofNullable(" + base + replacePNNAWithOptional(PNNAContextAdapter.from(ctx.pNNA()), 0, ruleCtx);
+        //return "SafeAccess.ofNullable(" + base + replacePNNAWithOptional(PNNAContextAdapter.from(ctx.pNNA()), 0, ruleCtx);
     }
 
     private String replacePNNAWithOptional(PNNAContextAdapter ctx, int index, ParserRuleContext ruleCtx) {
@@ -400,12 +437,14 @@ public class BasicCodeGenDelegate implements CodeGenDelegate {
     private String replaceNullsafeOperator(ParserRuleContext ctx, String lhs, String rhs) {
         //String replaced = "java.util.Optional.ofNullable(" + lhs + ").map(t0 -> t0." + rhs + ").orElse(null)";
         String replaced = "jadex.runtime.SafeAccess.ofNullable(" + lhs + ").map(t0 -> t0." + rhs + ").orElse(null)";
+        //String replaced = "SafeAccess.ofNullable(" + lhs + ").map(t0 -> t0." + rhs + ").orElse(null)";
         return updateContextString(ctx, replaced);
     }
 
     private String replaceNullsafeOperatorWithOptionalIfPresent(ParserRuleContext ctx, String lhs, String rhs) {
         //String replaced = "java.util.Optional.ofNullable(" + lhs + ").ifPresent(t0 -> t0." + rhs + ")";
         String replaced = "jadex.runtime.SafeAccess.ofNullable(" + lhs + ").ifPresent(t0 -> t0." + rhs + ")";
+        //String replaced = "SafeAccess.ofNullable(" + lhs + ").ifPresent(t0 -> t0." + rhs + ")";
         return updateContextString(ctx, replaced);
     }
 
@@ -433,11 +472,14 @@ public class BasicCodeGenDelegate implements CodeGenDelegate {
         ensureChildTextInitialized();
 
         if (ctx instanceof JPlus25Parser.Start_Context) {
+
             FragmentedText fragmentedText = getCurrentFragmentedText();
             //System.err.println("debugString = " + fragmentedText.debugString());
-            this.updatedContextString = fragmentedText.toString();
-            return this.updatedContextString;
+
+            return this.updatedContextString = fragmentedText.toString();
+
         } else {
+
             return forceUpdateContextString(ctx);
         }
     }

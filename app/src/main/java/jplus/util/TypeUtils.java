@@ -74,7 +74,7 @@ public class TypeUtils {
 
                     boolean isNullable = typeMirror.getAnnotationMirrors().stream()
                             .map(annotationMirror -> annotationMirror.getAnnotationType().toString())
-                            .anyMatch(annName -> annName.endsWith(".Nullable") || annName.equals("org.jspecify.annotations.Nullable"));
+                            .anyMatch(annName -> annName.endsWith(".Nullable") /*|| annName.equals("org.jspecify.annotations.Nullable")*/);
 
                     //System.err.println("[fromTypeMirror] isNullable = " + isNullable);
 

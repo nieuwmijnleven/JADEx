@@ -58,16 +58,12 @@ public class JPlusSymbolTableTest {
         Project project = new Project(Path.of("./src/test/files/SymbolResolver"));
         JPlusProcessor processor = new JPlusProcessor(project, "jplus.example", "User");
         processor.process();
-//        System.err.println(processor.getParseTreeString());
         processor.analyzeSymbols();
 
         var issues = processor.checkNullability();
-        if (!issues.isEmpty()) {
-            issues.forEach(nullabilityIssue -> {
-                System.out.printf("Error: (line:%d, column:%d) %s\n", nullabilityIssue.line(), nullabilityIssue.column(), nullabilityIssue.message());
-//                System.err.printf("Error: (line:%d, column:%d) %s\n", nullabilityIssue.getLine(), nullabilityIssue.getColumn(), nullabilityIssue.getMessage());
-            });
-        }
+        issues.forEach(nullabilityIssue -> {
+            System.out.printf("Error: (line:%d, column:%d) %s\n", nullabilityIssue.line(), nullabilityIssue.column(), nullabilityIssue.message());
+        });
 
         assertEquals("Error: (line:16, column:8) The method(getStreet) is declared to return a non-null value, but this return statement may return null.\n" +
                 "Error: (line:16, column:15) street is a nullable variable. But it directly accesses name. Consider using null-safe operator(?.).\n" +

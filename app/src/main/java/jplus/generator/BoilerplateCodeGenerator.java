@@ -57,6 +57,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class BoilerplateCodeGenerator extends JPlus25ParserBaseVisitor<Void> {
 
@@ -224,6 +226,41 @@ public class BoilerplateCodeGenerator extends JPlus25ParserBaseVisitor<Void> {
             }
         }
 
-        return fragmentedText.toString();
+        return fragmentedText.toString()
+                .transform(generated -> generated.replace("org.jspecify.annotations.", ""))
+                .transform(generated -> generated.replace("jadex.runtime.", ""))
+                .transform(generated -> addImport(generated, "org.jspecify.annotations.Nullable"))
+                .transform(generated -> addImport(generated, "jadex.runtime.SafeAccess"));
+
+    }
+
+    private String addImport(String source, String newImport) {
+
+        Pattern importPattern = Pattern.compile("(?m)^import\\s+[^;]+;");
+        Matcher matcher = importPattern.matcher(source);
+
+        int lastImportEnd = -1;
+
+        while (matcher.find()) {
+            lastImportEnd = matcher.end();
+        }
+
+        if (lastImportEnd != -1) {
+            return source.substring(0, lastImportEnd)
+                    + "\nimport " + newImport + ";"
+                    + source.substring(lastImportEnd);
+        }
+
+        Pattern packagePattern = Pattern.compile("(?m)^package\\s+[^;]+;");
+        Matcher pkgMatcher = packagePattern.matcher(source);
+
+        if (pkgMatcher.find()) {
+            int packageEnd = pkgMatcher.end();
+            return source.substring(0, packageEnd)
+                    + "\n\nimport " + newImport + ";"
+                    + source.substring(packageEnd);
+        }
+
+        return "import " + newImport + ";\n" + source;
     }
 }
