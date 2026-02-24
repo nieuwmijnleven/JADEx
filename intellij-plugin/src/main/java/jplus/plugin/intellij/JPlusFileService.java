@@ -26,6 +26,9 @@
 
 package jplus.plugin.intellij;
 
+import com.intellij.codeInsight.daemon.impl.DaemonCodeAnalyzerImpl;
+import com.intellij.codeInsight.daemon.impl.HighlightInfo;
+import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
@@ -44,6 +47,7 @@ import jplus.processor.JPlusProcessor;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 public class JPlusFileService {
 
@@ -57,20 +61,15 @@ public class JPlusFileService {
 
         try {
 
-            //PsiFile file = PsiManager.getInstance(project).findFile(jplusFile);
-            //if (file == null) return;
+            boolean hasError = hasErrorInProblems(file);
+            if (hasErrorInProblems(file)) return;
 
             Project ideaProject = file.getProject();
+
 
             Module module = ModuleUtilCore.findModuleForFile(file.getVirtualFile(), ideaProject);
             jplus.base.Project jplusProject = JPlusIntelliJProjectUtil.buildJPlusProject(ideaProject, module);
 
-            //String className = file.getVirtualFile().getNameWithoutExtension();
-
-            //String packageName = JPlusIntelliJProjectUtil.resolvePackageName(ideaProject, file);
-
-
-            //JPlusProcessor processor = new JPlusProcessor(jplusCode);
             JPlusProcessor processor = new JPlusProcessor(jplusProject, jplusCode);
 
             indicator.setText("Parsing");
@@ -132,5 +131,17 @@ public class JPlusFileService {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private boolean hasErrorInProblems(PsiFile file) {
+
+        List<HighlightInfo> infos = DaemonCodeAnalyzerImpl.getHighlights(
+                file.getViewProvider().getDocument(),
+                HighlightSeverity.ERROR,
+                project
+        );
+
+        return infos.stream()
+                .anyMatch(info -> info.getSeverity() == HighlightSeverity.ERROR);
     }
 }

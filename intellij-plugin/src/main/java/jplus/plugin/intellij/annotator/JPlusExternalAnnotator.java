@@ -38,6 +38,7 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiFile;
 import jplus.analyzer.nullability.NullabilityChecker;
 import jplus.analyzer.nullability.issue.NullabilityIssue;
+import jplus.analyzer.nullability.issue.Severity;
 import jplus.plugin.intellij.JPlusFile;
 import jplus.processor.JPlusProcessor;
 import org.jetbrains.annotations.NotNull;
@@ -132,11 +133,21 @@ public class JPlusExternalAnnotator
 
         for (NullabilityIssue issue : result.issues()) {
             holder.newAnnotation(
-                            HighlightSeverity.WARNING,
+                            convertSeverity(issue.severity()),
                             issue.message()
                     )
                     .range(TextRange.create(issue.offset(), issue.offset()))
                     .create();
         }
+    }
+
+    private HighlightSeverity convertSeverity(Severity severity) {
+
+        return switch(severity) {
+            case Severity.WARNING -> HighlightSeverity.WARNING;
+            case Severity.INFO -> HighlightSeverity.INFORMATION;
+            case Severity.ERROR -> HighlightSeverity.ERROR;
+            default ->  HighlightSeverity.WARNING;
+        };
     }
 }
