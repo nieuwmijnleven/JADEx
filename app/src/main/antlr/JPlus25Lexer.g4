@@ -57,6 +57,7 @@ INSTANCEOF   : 'instanceof';
 INT          : 'int';
 INTERFACE    : 'interface';
 LONG         : 'long';
+MUTABLE      : 'mutable';
 NATIVE       : 'native';
 NEW          : 'new';
 PACKAGE      : 'package';

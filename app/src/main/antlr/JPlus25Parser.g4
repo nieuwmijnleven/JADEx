@@ -491,6 +491,7 @@ fieldModifier
     | 'private'
     | 'static'
     | 'final'
+    | 'mutable'
     | 'transient'
     | 'volatile'
     ;
@@ -615,6 +616,7 @@ variableArityParameter
 variableModifier
     : annotation
     | 'final'
+    | 'mutable'
     ;
 
 throwsT

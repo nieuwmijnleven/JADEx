@@ -47,8 +47,8 @@ import jplus.analyzer.nullability.dataflow.context.SwitchContext;
 import jplus.analyzer.nullability.issue.IssueCode;
 import jplus.analyzer.nullability.issue.NullabilityIssue;
 import jplus.analyzer.nullability.module.ConditionVisitor;
+import jplus.base.JADEx25ParserBaseVisitor;
 import jplus.base.JPlus25Parser;
-import jplus.base.JPlus25ParserBaseVisitor;
 import jplus.base.JavaMethodInvocationManager;
 import jplus.base.MethodInvocationInfo;
 import jplus.base.SymbolInfo;
@@ -80,7 +80,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class NullabilityChecker extends JPlus25ParserBaseVisitor<Void> {
+public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
 
     private final SymbolTable globalSymbolTable;
     private final Set<SourceMappingEntry> sourceMappingEntrySet;
