@@ -27,6 +27,7 @@
 package jplus.processor;
 
 import jplus.analyzer.nullability.NullabilityChecker;
+import jplus.analyzer.nullability.issue.NullabilityIssue;
 import jplus.base.SymbolTable;
 
 import java.io.IOException;
@@ -67,7 +68,7 @@ public class ProjectProcessor {
         return globalSymbolTable;
     }
 
-    public List<NullabilityChecker.NullabilityIssue> checkNullability(Path sourcePath) {
+    public List<NullabilityIssue> checkNullability(Path sourcePath) {
         JPlusProcessor processor = jPlusProcessorMap.get(sourcePath);
         if (processor == null) {
             throw new IllegalArgumentException("There is no analyzed source file : " + sourcePath.toAbsolutePath());

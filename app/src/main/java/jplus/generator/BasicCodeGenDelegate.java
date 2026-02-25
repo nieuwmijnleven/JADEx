@@ -42,8 +42,11 @@ import jplus.util.Utils;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class BasicCodeGenDelegate implements CodeGenDelegate {
 
@@ -59,30 +62,43 @@ public class BasicCodeGenDelegate implements CodeGenDelegate {
 
     @Override
     public String getText() {
+
         if (processed) return updatedContextString;
         processed = true;
 
-        /*if (ctx instanceof JPlus25Parser.OrdinaryCompilationUnitContext ordCompUnitCtx) {
-            return processOrdinaryCompilationUnit(ordCompUnitCtx);
-        } else*/
+        return switch (ctx) {
 
-        if (ctx instanceof ApplyDeclarationContext applyDeclarationCtx) {
-            return replaceApplyStatementWithComment(applyDeclarationCtx);
-        } else if (ctx instanceof UnannTypeContext unannTypeCtx && unannTypeCtx.unannReferenceType() != null) {
-            return replaceNullType(unannTypeCtx);
-        } else if (ctx instanceof NullCoalescingExpressionContext nullCoalescingCtx && nullCoalescingCtx.ELVIS() != null) {
-            return replaceElvisOperator(nullCoalescingCtx);
-        } else if (ctx instanceof PrimaryNoNewArrayContext primaryNoNewArrayCtx) {
-            return processPrimaryNoNewArray(primaryNoNewArrayCtx);
-        } else if (ctx instanceof ExpressionNameContext expressionNameCtx) {
-            return processExpressionName(expressionNameCtx);
-        } else if (ctx instanceof FieldAccessContext fieldAccessCtx) {
-            return processFieldAccess(fieldAccessCtx);
-        } else if (ctx instanceof MethodInvocationContext methodInvocationCtx) {
-            return processMethodInvocation(methodInvocationCtx);
-        }
+            case ApplyDeclarationContext applyDeclarationCtx -> {
+                checkImmutableMode(applyDeclarationCtx);
+                yield replaceApplyStatementWithComment(applyDeclarationCtx);
+            }
 
-        return processDefaultText();
+            case JPlus25Parser.FieldDeclarationContext fieldDeclCtx
+                    -> processFieldDeclarationContext(fieldDeclCtx);
+
+            case JPlus25Parser.LocalVariableDeclarationContext locDeclCtx
+                    -> processLocalVariableDeclarationContext(locDeclCtx);
+
+            case UnannTypeContext unannTypeCtx when unannTypeCtx.unannReferenceType() != null
+                    -> replaceNullType(unannTypeCtx);
+
+            case NullCoalescingExpressionContext nullCoalescingCtx when nullCoalescingCtx.ELVIS() != null
+                    -> replaceElvisOperator(nullCoalescingCtx);
+
+            case PrimaryNoNewArrayContext primaryNoNewArrayCtx
+                    -> processPrimaryNoNewArray(primaryNoNewArrayCtx);
+
+            case ExpressionNameContext expressionNameCtx
+                    -> processExpressionName(expressionNameCtx);
+
+            case FieldAccessContext fieldAccessCtx
+                    -> processFieldAccess(fieldAccessCtx);
+
+            case MethodInvocationContext methodInvocationCtx
+                    -> processMethodInvocation(methodInvocationCtx);
+
+            default -> processDefaultText();
+        };
     }
 
     /*protected String processOrdinaryCompilationUnit(JPlus25Parser.OrdinaryCompilationUnitContext ordCompUnitCtx) {
@@ -113,6 +129,156 @@ public class BasicCodeGenDelegate implements CodeGenDelegate {
 
         return updateContextString(ordCompUnitCtx, replaced);
     }*/
+
+    protected void checkImmutableMode(ApplyDeclarationContext applyDeclarationCtx) {
+
+        if (!(applyDeclarationCtx.applyStatement() instanceof JPlus25Parser.ApplyStatementContext applyStmtCtx)) return;
+
+        for (var applyFeatureContext : applyStmtCtx.applyFeatureList().applyFeature()) {
+
+            if ( "immutability".equalsIgnoreCase(Utils.getTokenString(applyFeatureContext.identifier())) ) {
+
+                var codeGenCtx = CodeGenContext.current();
+                codeGenCtx.setImmutableMode(true);
+
+                System.err.println("immutability feature detected. Setting mutable mode.");
+                break;
+            }
+        }
+    }
+
+    protected String processFieldDeclarationContext(JPlus25Parser.FieldDeclarationContext fieldDeclCtx) {
+
+        var codeGenCtx = CodeGenContext.current();
+        if (!codeGenCtx.isImmutableMode()) {
+            return processDefaultText();
+        }
+
+        ensureChildTextInitialized();
+
+        List<String> modifierList = new ArrayList<>();
+
+        boolean hasFinal = false;
+        boolean hasMutable = false;
+
+        for (var fieldModifierContext : fieldDeclCtx.fieldModifier()) {
+
+            if (fieldModifierContext.MUTABLE() != null) {
+                hasMutable = true;
+                //updateContextString(fieldModifierContext, "");
+
+                var modifierRange = Utils.getTextChangeRange(getOriginalText(), fieldModifierContext);
+                var mutableModifierRange = new TextChangeRange(modifierRange.startLine(), modifierRange.startIndex(), modifierRange.endLine(), modifierRange.inclusiveEndIndex() + 1);
+
+                //updateContextString(locVarModifierContext, "");
+                updateFragmentedText(mutableModifierRange, "");
+
+                continue;
+            }
+
+            if (fieldModifierContext.FINAL() != null) hasFinal = true;
+            modifierList.add(Utils.getTokenString(fieldModifierContext));
+        }
+
+        if (!hasMutable && !hasFinal) {
+            modifierList.add("final");
+
+            TextChangeRange modifierRange = null;
+            TextChangeRange finalModifierRange = null;
+            if (!fieldDeclCtx.fieldModifier().isEmpty()) {
+                modifierRange = Utils.getTextChangeRange(getOriginalText(), fieldDeclCtx.fieldModifier().getLast());
+                finalModifierRange = new TextChangeRange(modifierRange.endLine(), modifierRange.inclusiveEndIndex() + 1, modifierRange.endLine(), modifierRange.inclusiveEndIndex() + 1);
+
+                updateFragmentedText(finalModifierRange, " final ");
+            } else {
+//                modifierRange = Utils.getTextChangeRange(getOriginalText(), fieldDeclCtx);
+//                finalModifierRange = new TextChangeRange(modifierRange.startLine(), modifierRange.startIndex(), modifierRange.startLine(), modifierRange.startIndex());
+                updateContextString(fieldDeclCtx.unannType(), "final " + Utils.getTokenString(fieldDeclCtx.unannType()));
+            }
+        }
+
+        String replaced =
+                modifierList.stream()
+                        .collect(Collectors.joining(" "));
+        replaced += " ";
+
+        //replaced += Utils.getTokenString(fieldDeclCtx.unannType());
+
+//        if (fieldDeclCtx.unannType().unannReferenceType() != null) {
+//            replaced += replaceNullType(fieldDeclCtx.unannType());
+//        } else {
+//            replaced += Utils.getTokenString(fieldDeclCtx.unannType());
+//        }
+        replaced += Utils.getTokenString(fieldDeclCtx.unannType());
+        replaced += " ";
+
+        replaced += fieldDeclCtx.variableDeclaratorList().getText();
+        replaced += ";";
+
+        return updateContextString(fieldDeclCtx, replaced);
+    }
+
+    protected String processLocalVariableDeclarationContext(JPlus25Parser.LocalVariableDeclarationContext locDeclCtx) {
+
+        var codeGenCtx = CodeGenContext.current();
+        if (!codeGenCtx.isImmutableMode()) {
+            return processDefaultText();
+        }
+
+        ensureChildTextInitialized();
+
+        List<String> modifierList = new ArrayList<>();
+
+        boolean hasFinal = false;
+        boolean hasMutable = false;
+
+        for (var locVarModifierContext : locDeclCtx.variableModifier()) {
+
+            if (locVarModifierContext.MUTABLE() != null) {
+                hasMutable = true;
+                var modifierRange = Utils.getTextChangeRange(getOriginalText(), locVarModifierContext);
+                var mutableModifierRange = new TextChangeRange(modifierRange.startLine(), modifierRange.startIndex(), modifierRange.endLine(), modifierRange.inclusiveEndIndex() + 1);
+
+                //updateContextString(locVarModifierContext, "");
+                updateFragmentedText(mutableModifierRange, "");
+                continue;
+            }
+
+            if (locVarModifierContext.FINAL() != null) hasFinal = true;
+            modifierList.add(Utils.getTokenString(locVarModifierContext));
+        }
+
+        if (!hasMutable && !hasFinal) {
+            modifierList.add("final");
+
+            TextChangeRange modifierRange = null;
+            TextChangeRange finalModifierRange = null;
+            if (!locDeclCtx.variableModifier().isEmpty()) {
+                modifierRange = Utils.getTextChangeRange(getOriginalText(), locDeclCtx.variableModifier().getLast());
+                finalModifierRange = new TextChangeRange(modifierRange.endLine(), modifierRange.inclusiveEndIndex() + 1, modifierRange.endLine(), modifierRange.inclusiveEndIndex() + 1);
+
+                updateFragmentedText(finalModifierRange, " final ");
+            } else {
+                //updateContextString(locDeclCtx, Utils.getTokenString(locDeclCtx));
+                //modifierRange = Utils.getTextChangeRange(getOriginalText(), locDeclCtx.localVariableType());
+                //finalModifierRange = new TextChangeRange(modifierRange.startLine(), modifierRange.startIndex() - 1, modifierRange.startLine(), modifierRange.startIndex() - 1);
+
+                updateContextString(locDeclCtx.localVariableType(), "final " + Utils.getTokenString(locDeclCtx.localVariableType()));
+            }
+        }
+
+        String replaced =
+                modifierList.stream()
+                        .collect(Collectors.joining(" "));
+        replaced += " ";
+
+        replaced += Utils.getTokenString(locDeclCtx.localVariableType());
+        replaced += " ";
+
+        replaced += locDeclCtx.variableDeclaratorList().getText();
+
+        return updateContextString(locDeclCtx, replaced);
+    }
 
     private String processMethodInvocation(MethodInvocationContext methodInvocationCtx) {
         //System.err.println("[processMethodInvocation] contextString = " + Utils.getTokenString(methodInvocationCtx));
@@ -296,11 +462,17 @@ public class BasicCodeGenDelegate implements CodeGenDelegate {
     }
 
     protected String replaceApplyStatementWithComment(ApplyDeclarationContext ApplyDeclarationCtx) {
-        String originalText = getOriginalText();
-        TextChangeRange range = Utils.getTextChangeRange(originalText, ApplyDeclarationCtx);
-        String replaced = Utils.getTokenString(ApplyDeclarationCtx).replaceFirst("^", "//").replaceAll("\n", "\n//");
+
+        TextChangeRange range = Utils.getTextChangeRange(getOriginalText(), ApplyDeclarationCtx);
+
+        String replaced =
+                Utils.getTokenString(ApplyDeclarationCtx)
+                        .transform(s -> s.replaceFirst("^", "//"))
+                        .transform(s -> s.replaceAll("\n", "\n//"));
+
         updateFragmentedText(range, replaced);
         this.updatedContextString = replaced;
+
         return null;
     }
 
@@ -311,7 +483,7 @@ public class BasicCodeGenDelegate implements CodeGenDelegate {
             //String replaced = "@Nullable " + unannTypeText.substring(0, unannTypeText.length()-1);
             return updateContextString(ctx, replaced);
         }
-        return null;
+        return unannTypeText;
     }
 
     protected String replaceElvisOperator(NullCoalescingExpressionContext ctx) {

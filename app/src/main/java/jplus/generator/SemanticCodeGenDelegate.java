@@ -35,42 +35,53 @@ import jplus.base.JPlus25Parser.NullCoalescingExpressionContext;
 import jplus.base.JPlus25Parser.PrimaryNoNewArrayContext;
 import jplus.base.JPlus25Parser.UnannTypeContext;
 import jplus.editor.FragmentedText;
-import jplus.util.ParserUtils;
 import jplus.util.Utils;
 
-import java.util.Optional;
-
 public class SemanticCodeGenDelegate extends BasicCodeGenDelegate {
+
     public SemanticCodeGenDelegate(JPlusParserRuleContext ctx) {
         super(ctx);
     }
 
     @Override
     public String getText() {
+
         if (processed) return updatedContextString;
         processed = true;
 
-        /*if (ctx instanceof JPlus25Parser.OrdinaryCompilationUnitContext ordCompUnitCtx) {
-            return processOrdinaryCompilationUnit(ordCompUnitCtx);
-        } else*/
+        return switch (ctx) {
 
-        if (ctx instanceof ApplyDeclarationContext applyDeclarationCtx) {
-            return replaceApplyStatementWithComment(applyDeclarationCtx);
-        } else if (ctx instanceof UnannTypeContext unannTypeCtx && unannTypeCtx.unannReferenceType() != null) {
-            return replaceNullType(unannTypeCtx);
-        } else if (ctx instanceof NullCoalescingExpressionContext nullCoalescingCtx && nullCoalescingCtx.ELVIS() != null) {
-            return replaceElvisOperator(nullCoalescingCtx);
-        } else if (ctx instanceof PrimaryNoNewArrayContext primaryNoNewArrayCtx) {
-            return processPrimaryNoNewArray(primaryNoNewArrayCtx);
-        } else if (ctx instanceof ExpressionNameContext expressionNameCtx) {
-            return processExpressionName(expressionNameCtx);
-        } else if (ctx instanceof FieldAccessContext fieldAccessCtx) {
-            return processFieldAccess(fieldAccessCtx);
-        } else if (ctx instanceof MethodInvocationContext methodInvocationCtx) {
-            return processMethodInvocation(methodInvocationCtx);
-        }
+            case ApplyDeclarationContext applyDeclarationCtx -> {
+                checkImmutableMode(applyDeclarationCtx);
+                yield replaceApplyStatementWithComment(applyDeclarationCtx);
+            }
 
-        return processDefaultText();
+            case JPlus25Parser.FieldDeclarationContext fieldDeclCtx
+                    -> processFieldDeclarationContext(fieldDeclCtx);
+
+            case JPlus25Parser.LocalVariableDeclarationContext locDeclCtx
+                    -> processLocalVariableDeclarationContext(locDeclCtx);
+
+            case UnannTypeContext unannTypeCtx when unannTypeCtx.unannReferenceType() != null
+                    -> replaceNullType(unannTypeCtx);
+
+            case NullCoalescingExpressionContext nullCoalescingCtx when nullCoalescingCtx.ELVIS() != null
+                    -> replaceElvisOperator(nullCoalescingCtx);
+
+            case PrimaryNoNewArrayContext primaryNoNewArrayCtx
+                    -> processPrimaryNoNewArray(primaryNoNewArrayCtx);
+
+            case ExpressionNameContext expressionNameCtx
+                    -> processExpressionName(expressionNameCtx);
+
+            case FieldAccessContext fieldAccessCtx
+                    -> processFieldAccess(fieldAccessCtx);
+
+            case MethodInvocationContext methodInvocationCtx
+                    -> processMethodInvocation(methodInvocationCtx);
+
+            default -> processDefaultText();
+        };
     }
 
     private String processMethodInvocation(MethodInvocationContext methodInvocationCtx) {

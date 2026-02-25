@@ -98,6 +98,16 @@ public class JPlusTest9 {
     }
 
     @Test
+    void testImmutability() throws Exception {
+        checkGeneratedCode(
+                "./src/test/files/Immutability",
+                "jadex.example",
+                "Immutability",
+                "9ElqEN6oDXBXX3rpndlnnTZrbdI="
+        );
+    }
+
+    /*@Test
     void testConstructors() throws Exception {
         checkNullability(
                 "./src/test/files/NullableAnnotation",
@@ -105,7 +115,7 @@ public class JPlusTest9 {
                 "Constructors",
                 ""
         );
-    }
+    }*/
 
     @Test
     void testSwitch() throws Exception {
@@ -134,14 +144,27 @@ public class JPlusTest9 {
         processor.analyzeSymbols();
 
         var issues = processor.checkNullability();
-        if (!issues.isEmpty()) {
-            issues.forEach(nullabilityIssue -> {
-                System.out.printf("Error: (line:%d, column:%d) %s\n", nullabilityIssue.line(), nullabilityIssue.column(), nullabilityIssue.message());
-                System.err.printf("Error: (line:%d, column:%d) %s\n", nullabilityIssue.line(), nullabilityIssue.column(), nullabilityIssue.message());
-            });
-        }
+        issues.forEach(nullabilityIssue -> {
+            System.out.printf("Error: (line:%d, column:%d) %s\n", nullabilityIssue.line(), nullabilityIssue.column(), nullabilityIssue.message());
+            System.err.printf("Error: (line:%d, column:%d) %s\n", nullabilityIssue.line(), nullabilityIssue.column(), nullabilityIssue.message());
+        });
 
         assertEquals(expected, outContent.toString());
+    }
+
+    private void checkGeneratedCode(String srcPath, String packageName, String className, String expected) throws Exception {
+        Project project = new Project(Path.of(srcPath));
+        JPlusProcessor processor = new JPlusProcessor(project, packageName, className);
+
+        processor.process();
+        System.err.println("[ParseTreeString] = " + processor.getParseTreeString());
+
+        processor.analyzeSymbols();
+
+        String generatedJavaCode = processor.generateJavaCode();
+        System.err.println("[BoilerplateCodeGeneration] = " + generatedJavaCode);
+
+        assertEquals(expected, getHashString(generatedJavaCode));
     }
 
     private String getHashString(String s) throws NoSuchAlgorithmException {

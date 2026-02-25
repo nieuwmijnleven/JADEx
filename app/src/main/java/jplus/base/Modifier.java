@@ -40,6 +40,7 @@ public enum Modifier {
         }
     },
     FINAL,
+    MUTABLE,
     TRANSIENT,
     VOLATILE,
     SYNCHRONIZED,

@@ -42,6 +42,8 @@ public class CodeGenContext {
 
     private boolean semanticMode = false;
 
+    private boolean immutableMode = false;
+
     private CodeGenContext() {}
 
     public static CodeGenContext current() {
@@ -71,6 +73,14 @@ public class CodeGenContext {
 
     public void setSemanticMode(boolean semanticMode) {
         this.semanticMode = semanticMode;
+    }
+
+    public boolean isImmutableMode() {
+        return immutableMode;
+    }
+
+    public void setImmutableMode(boolean immutableMode) {
+        this.immutableMode = immutableMode;
     }
 
     public void addSourceMappingEntry(SourceMappingEntry entry) {

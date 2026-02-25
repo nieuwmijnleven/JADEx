@@ -29,13 +29,13 @@ package jplus.analyzer.nullability.module;
 import jplus.analyzer.nullability.NullabilityChecker;
 import jplus.analyzer.nullability.dataflow.NullState;
 import jplus.base.JPlus25Parser;
-import jplus.base.JPlus25ParserBaseVisitor;
+import jplus.base.JADEx25ParserBaseVisitor;
 import jplus.base.SymbolTable;
 import jplus.util.Utils;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-public class ConditionVisitor extends JPlus25ParserBaseVisitor<ConditionResult> {
+public class ConditionVisitor extends JADEx25ParserBaseVisitor<ConditionResult> {
 
     private final NullabilityChecker nullabilityChecker;
 

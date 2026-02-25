@@ -26,14 +26,15 @@
 
 package jplus.generator;
 
+import jplus.base.JADEx25ParserBaseVisitor;
 import jplus.base.JPlus25Parser.ApplyBlockContext;
 import jplus.base.JPlus25Parser.ApplyDeclarationContext;
 import jplus.base.JPlus25Parser.ApplyFeatureListContext;
 import jplus.base.JPlus25Parser.ApplyStatementContext;
-import jplus.base.JPlus25ParserBaseVisitor;
 import jplus.base.SymbolInfo;
 import jplus.base.SymbolTable;
 import jplus.base.TypeInfo;
+import jplus.editor.FragmentedText;
 import jplus.generator.apply.ApplyFeature;
 import jplus.generator.apply.ApplyFeatureProcessingContext;
 import jplus.generator.apply.ApplyFeatureProcessor;
@@ -48,7 +49,6 @@ import jplus.generator.apply.HashCodeFeatureProcessor;
 import jplus.generator.apply.SetterFeatureProcessor;
 import jplus.generator.apply.ToBuilderFeatureProcessor;
 import jplus.generator.apply.ToStringFeatureProcessor;
-import jplus.editor.FragmentedText;
 import jplus.util.Utils;
 
 import java.util.ArrayList;
@@ -56,11 +56,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class BoilerplateCodeGenerator extends JPlus25ParserBaseVisitor<Void> {
+public class BoilerplateCodeGenerator extends JADEx25ParserBaseVisitor<Void> {
 
     private final SymbolTable symbolTable;
     private final FragmentedText fragmentedText;
@@ -206,9 +207,16 @@ public class BoilerplateCodeGenerator extends JPlus25ParserBaseVisitor<Void> {
             });
 
             for (ApplyFeature feature : applyStatement.getFeatureList()) {
+
                 String action = feature.getAction();
+
                 ApplyFeatureProcessor processor = strategyMap.get(action.toLowerCase());
-                if (processor == null) throw new IllegalArgumentException("Unsupported action: " + action + " in feature " + feature + " at class " + qualifiedName);
+                if (processor == null) {
+
+                    if (Objects.equals("immutability", action.toLowerCase())) continue;
+
+                    throw new IllegalArgumentException("Unsupported action: " + action + " in feature " + feature + " at class " + qualifiedName);
+                }
 
                 context.setFeature(feature);
                 processor.process(context);
