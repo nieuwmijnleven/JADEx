@@ -30,6 +30,7 @@ import com.intellij.codeInsight.daemon.impl.DaemonCodeAnalyzerImpl;
 import com.intellij.codeInsight.daemon.impl.HighlightInfo;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.module.Module;
@@ -61,11 +62,10 @@ public class JPlusFileService {
 
         try {
 
-            boolean hasError = hasErrorInProblems(file);
-            if (hasErrorInProblems(file)) return;
+            boolean hasError = ReadAction.compute(() -> hasErrorInProblems(file));
+            if (hasError) return;
 
             Project ideaProject = file.getProject();
-
 
             Module module = ModuleUtilCore.findModuleForFile(file.getVirtualFile(), ideaProject);
             jplus.base.Project jplusProject = JPlusIntelliJProjectUtil.buildJPlusProject(ideaProject, module);
