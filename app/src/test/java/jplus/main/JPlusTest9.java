@@ -98,16 +98,28 @@ public class JPlusTest9 {
     }
 
     @Test
-    void testImmutability() throws Exception {
+    void testCodeGenImmutability() throws Exception {
         checkGeneratedCode(
                 "./src/test/files/Immutability",
                 "jadex.example",
                 "Immutability",
-                "9ElqEN6oDXBXX3rpndlnnTZrbdI="
+                "f/aRHgiR9KpGPA5WL1+HE5Jix4g="
         );
     }
 
-    /*@Test
+    @Test
+    void testValidImmutability() throws Exception {
+        checkNullability(
+                "./src/test/files/Immutability",
+                "jadex.example",
+                "Immutability",
+                "Error: (line:11, column:4) Final field 'uninitializedMsg' is not initialized in one or more constructors of class 'Immutability'\n" +
+                        "Error: (line:18, column:9) cannot assign a value to final variable capacity\n" +
+                        "Error: (line:19, column:9) cannot assign a value to final variable msg\n"
+        );
+    }
+
+    @Test
     void testConstructors() throws Exception {
         checkNullability(
                 "./src/test/files/NullableAnnotation",
@@ -115,7 +127,7 @@ public class JPlusTest9 {
                 "Constructors",
                 ""
         );
-    }*/
+    }
 
     @Test
     void testSwitch() throws Exception {

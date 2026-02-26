@@ -122,6 +122,10 @@ public class SymbolInfo {
         return modifierList.contains(Modifier.STATIC);
     }
 
+    public boolean isFinal() {
+        return modifierList.contains(Modifier.FINAL);
+    }
+
     public SymbolTable getSymbolTable() {
         return symbolTable;
     }

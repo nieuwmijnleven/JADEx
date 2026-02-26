@@ -252,9 +252,10 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
                 for (SymbolInfo fieldInfo : classContext.getUninitializedFieldList()) {
 
                     reportIssue(
-                            IssueCode.UNINITIALIZED_NONNULL_FIELD,
+                            (fieldInfo.isFinal()) ? IssueCode.UNINITIALIZED_FINAL_FIELD : IssueCode.UNINITIALIZED_NONNULL_FIELD,
                             fieldInfo.getRange().startLine(),
                             fieldInfo.getRange().startIndex(),
+
                             Utils.getIndexFromLineColumn(
                                     originalText,
                                     Utils.computeTextChangeRange(
@@ -263,8 +264,10 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
                                             originalText.length() - 1
                                     ),
                                     fieldInfo.getRange().startLine(),
-                                    fieldInfo.getRange().startIndex()),
-                            "Non-null field '%s' is not initialized in one or more constructors of class '%s'".formatted(fieldInfo.getSymbol(), typeName)
+                                    fieldInfo.getRange().startIndex()
+                            ),
+
+                            ((fieldInfo.isFinal()) ? "Final" : "Non-null") + " field '%s' is not initialized in one or more constructors of class '%s'".formatted(fieldInfo.getSymbol(), typeName)
                     );
                 }
             }
@@ -1038,6 +1041,17 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
                 //return super.visitAssignment(ctx);
                 return null;
             }
+        }
+
+        if (constructorContextStack.isEmpty() && symbolInfo.isFinal()) {
+
+            reportIssue(
+                    IssueCode.REASSIGN_TO_FINAL,
+                    ctx.getStart(),
+                    "cannot assign a value to final variable %s".formatted(symbolInfo.getSymbol())
+            );
+
+            return null;
         }
 
         TypeInfo typeInfo = symbolInfo.getTypeInfo();
