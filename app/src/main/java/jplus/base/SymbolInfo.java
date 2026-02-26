@@ -32,6 +32,7 @@ import jplus.generator.TextChangeRange;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class SymbolInfo {
     private final String symbol;
@@ -115,15 +116,19 @@ public class SymbolInfo {
     }
 
     public List<Modifier> getModifierList() {
-        return Collections.unmodifiableList(modifierList);
+        return Collections.unmodifiableList(modifierList());
+    }
+
+    private List<Modifier> modifierList() {
+        return (modifierList != null) ? modifierList : List.of();
     }
 
     public boolean isStatic() {
-        return modifierList.contains(Modifier.STATIC);
+        return modifierList().contains(Modifier.STATIC);
     }
 
     public boolean isFinal() {
-        return modifierList.contains(Modifier.FINAL);
+        return modifierList().contains(Modifier.FINAL);
     }
 
     public SymbolTable getSymbolTable() {
