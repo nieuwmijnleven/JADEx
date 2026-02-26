@@ -26,7 +26,11 @@
 
 package jplus.analyzer.nullability.context.adapter;
 
-import jplus.base.JPlus25Parser;
+import jplus.base.JADEx25Parser.ConstructorDeclarationContext;
+import jplus.base.JADEx25Parser.ConstructorModifierContext;
+import jplus.base.JADEx25Parser.FormalParameterListContext;
+import jplus.base.JADEx25Parser.MethodDeclarationContext;
+import jplus.base.JADEx25Parser.MethodModifierContext;
 import jplus.base.Modifier;
 import jplus.util.Utils;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -36,12 +40,12 @@ import java.util.EnumSet;
 public interface InvocationDeclarationContext {
 
     ParserRuleContext originalContext();
-    JPlus25Parser.FormalParameterListContext formalParameterList();
+    FormalParameterListContext formalParameterList();
     ParserRuleContext invocationBody();
     EnumSet<Modifier> modifiers();
     String methodName();
 
-    static InvocationDeclarationContext from(JPlus25Parser.MethodDeclarationContext ctx) {
+    static InvocationDeclarationContext from(MethodDeclarationContext ctx) {
         return new InvocationDeclarationContext() {
             @Override
             public ParserRuleContext originalContext() {
@@ -49,7 +53,7 @@ public interface InvocationDeclarationContext {
             }
 
             @Override
-            public JPlus25Parser.FormalParameterListContext formalParameterList() {
+            public FormalParameterListContext formalParameterList() {
                 return ctx.methodHeader().methodDeclarator().formalParameterList();
             }
 
@@ -61,7 +65,7 @@ public interface InvocationDeclarationContext {
             @Override
             public EnumSet<Modifier> modifiers() {
                 EnumSet<Modifier> modifierEnumSet = EnumSet.noneOf(Modifier.class);
-                for (JPlus25Parser.MethodModifierContext methodModifierContext : ctx.methodModifier()) {
+                for (MethodModifierContext methodModifierContext : ctx.methodModifier()) {
                     modifierEnumSet.add(Modifier.valueOf(methodModifierContext.toString().toUpperCase()));
                 }
                 return modifierEnumSet;
@@ -74,7 +78,7 @@ public interface InvocationDeclarationContext {
         };
     }
 
-    static InvocationDeclarationContext from(JPlus25Parser.ConstructorDeclarationContext ctx) {
+    static InvocationDeclarationContext from(ConstructorDeclarationContext ctx) {
         return new InvocationDeclarationContext() {
             @Override
             public ParserRuleContext originalContext() {
@@ -82,7 +86,7 @@ public interface InvocationDeclarationContext {
             }
 
             @Override
-            public JPlus25Parser.FormalParameterListContext formalParameterList() {
+            public FormalParameterListContext formalParameterList() {
                 return ctx.constructorDeclarator().formalParameterList();
             }
 
@@ -94,7 +98,7 @@ public interface InvocationDeclarationContext {
             @Override
             public EnumSet<Modifier> modifiers() {
                 EnumSet<Modifier> modifierEnumSet = EnumSet.noneOf(Modifier.class);
-                for (JPlus25Parser.ConstructorModifierContext constructorModifierContext: ctx.constructorModifier()) {
+                for (ConstructorModifierContext constructorModifierContext: ctx.constructorModifier()) {
                     modifierEnumSet.add(Modifier.valueOf(constructorModifierContext.toString().toUpperCase()));
                 }
                 return modifierEnumSet;

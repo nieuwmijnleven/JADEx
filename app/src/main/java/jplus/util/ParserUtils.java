@@ -26,7 +26,7 @@
 
 package jplus.util;
 
-import jplus.base.JPlus25Parser;
+import jplus.base.JADEx25Parser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -40,7 +40,7 @@ public class ParserUtils {
             ParseTree child = ctx.getChild(i);
 
             if (child instanceof TerminalNode tn) {
-                if (tn.getSymbol().getType() == JPlus25Parser.NULLSAFE) {
+                if (tn.getSymbol().getType() == JADEx25Parser.NULLSAFE) {
                     return true;
                 }
             } else if (child instanceof ParserRuleContext prc) {

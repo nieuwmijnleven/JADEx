@@ -37,7 +37,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.IFileElementType;
 import com.intellij.psi.tree.TokenSet;
-import jplus.base.JPlus25Parser;
+import jplus.base.JADEx25Parser;
 import jplus.plugin.intellij.adapter.JPlusLexerAdapter;
 import jplus.plugin.intellij.adapter.JPlusParserAdapter;
 import jplus.plugin.intellij.psi.ApplyBlockPsiElement;
@@ -101,13 +101,13 @@ public class JPlusParserDefinition implements ParserDefinition {
 
         RuleIElementType ruleElementType = (RuleIElementType)iElementType;
         switch (ruleElementType.getRuleIndex()) {
-            case JPlus25Parser.RULE_applyBlock:
+            case JADEx25Parser.RULE_applyBlock:
                 return new ApplyBlockPsiElement(node);
-            case JPlus25Parser.RULE_applyStatement:
+            case JADEx25Parser.RULE_applyStatement:
                 return new ApplyStatementPsiElement(node);
-            case JPlus25Parser.RULE_methodDeclaration:
+            case JADEx25Parser.RULE_methodDeclaration:
                 return new MethodPsiElement(node, ruleElementType);
-            case JPlus25Parser.RULE_normalClassDeclaration:
+            case JADEx25Parser.RULE_normalClassDeclaration:
                 return new NormalClassDeclarationPsiElement(node);
         }
 

@@ -28,14 +28,14 @@ package jplus.generator;
 
 import jplus.analyzer.nullability.context.adapter.PNNAContextAdapter;
 import jplus.analyzer.nullability.context.adapter.PrimaryNoNewArrayContextAdapter;
-import jplus.base.JPlus25Parser;
-import jplus.base.JPlus25Parser.ApplyDeclarationContext;
-import jplus.base.JPlus25Parser.ExpressionNameContext;
-import jplus.base.JPlus25Parser.FieldAccessContext;
-import jplus.base.JPlus25Parser.MethodInvocationContext;
-import jplus.base.JPlus25Parser.NullCoalescingExpressionContext;
-import jplus.base.JPlus25Parser.PrimaryNoNewArrayContext;
-import jplus.base.JPlus25Parser.UnannTypeContext;
+import jplus.base.JADEx25Parser;
+import jplus.base.JADEx25Parser.ApplyDeclarationContext;
+import jplus.base.JADEx25Parser.ExpressionNameContext;
+import jplus.base.JADEx25Parser.FieldAccessContext;
+import jplus.base.JADEx25Parser.MethodInvocationContext;
+import jplus.base.JADEx25Parser.NullCoalescingExpressionContext;
+import jplus.base.JADEx25Parser.PrimaryNoNewArrayContext;
+import jplus.base.JADEx25Parser.UnannTypeContext;
 import jplus.editor.FragmentedText;
 import jplus.util.ParserUtils;
 import jplus.util.Utils;
@@ -54,9 +54,9 @@ public class BasicCodeGenDelegate implements CodeGenDelegate {
 
     protected String updatedContextString = "";
 
-    protected final JPlusParserRuleContext ctx;
+    protected final JADExParserRuleContext ctx;
 
-    public BasicCodeGenDelegate(JPlusParserRuleContext ctx) {
+    public BasicCodeGenDelegate(JADExParserRuleContext ctx) {
         this.ctx = ctx;
     }
 
@@ -73,10 +73,10 @@ public class BasicCodeGenDelegate implements CodeGenDelegate {
                 yield replaceApplyStatementWithComment(applyDeclarationCtx);
             }
 
-            case JPlus25Parser.FieldDeclarationContext fieldDeclCtx
+            case JADEx25Parser.FieldDeclarationContext fieldDeclCtx
                     -> processFieldDeclarationContext(fieldDeclCtx);
 
-            case JPlus25Parser.LocalVariableDeclarationContext locDeclCtx
+            case JADEx25Parser.LocalVariableDeclarationContext locDeclCtx
                     -> processLocalVariableDeclarationContext(locDeclCtx);
 
             case UnannTypeContext unannTypeCtx when unannTypeCtx.unannReferenceType() != null
@@ -101,7 +101,7 @@ public class BasicCodeGenDelegate implements CodeGenDelegate {
         };
     }
 
-    /*protected String processOrdinaryCompilationUnit(JPlus25Parser.OrdinaryCompilationUnitContext ordCompUnitCtx) {
+    /*protected String processOrdinaryCompilationUnit(JADEx25Parser.OrdinaryCompilationUnitContext ordCompUnitCtx) {
         String replaced = "";
 
         if (ordCompUnitCtx.packageDeclaration() != null) {
@@ -132,7 +132,7 @@ public class BasicCodeGenDelegate implements CodeGenDelegate {
 
     protected void checkImmutableMode(ApplyDeclarationContext applyDeclarationCtx) {
 
-        if (!(applyDeclarationCtx.applyStatement() instanceof JPlus25Parser.ApplyStatementContext applyStmtCtx)) return;
+        if (!(applyDeclarationCtx.applyStatement() instanceof JADEx25Parser.ApplyStatementContext applyStmtCtx)) return;
 
         for (var applyFeatureContext : applyStmtCtx.applyFeatureList().applyFeature()) {
 
@@ -147,7 +147,7 @@ public class BasicCodeGenDelegate implements CodeGenDelegate {
         }
     }
 
-    protected String processFieldDeclarationContext(JPlus25Parser.FieldDeclarationContext fieldDeclCtx) {
+    protected String processFieldDeclarationContext(JADEx25Parser.FieldDeclarationContext fieldDeclCtx) {
 
         var codeGenCtx = CodeGenContext.current();
         if (!codeGenCtx.isImmutableMode()) {
@@ -218,7 +218,7 @@ public class BasicCodeGenDelegate implements CodeGenDelegate {
         return updateContextString(fieldDeclCtx, replaced);
     }
 
-    protected String processLocalVariableDeclarationContext(JPlus25Parser.LocalVariableDeclarationContext locDeclCtx) {
+    protected String processLocalVariableDeclarationContext(JADEx25Parser.LocalVariableDeclarationContext locDeclCtx) {
 
         var codeGenCtx = CodeGenContext.current();
         if (!codeGenCtx.isImmutableMode()) {
@@ -643,7 +643,7 @@ public class BasicCodeGenDelegate implements CodeGenDelegate {
     protected String processDefaultText() {
         ensureChildTextInitialized();
 
-        if (ctx instanceof JPlus25Parser.Start_Context) {
+        if (ctx instanceof JADEx25Parser.Start_Context) {
 
             FragmentedText fragmentedText = getCurrentFragmentedText();
             //System.err.println("debugString = " + fragmentedText.debugString());

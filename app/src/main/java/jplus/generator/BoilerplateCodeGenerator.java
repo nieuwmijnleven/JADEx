@@ -27,10 +27,10 @@
 package jplus.generator;
 
 import jplus.base.JADEx25ParserBaseVisitor;
-import jplus.base.JPlus25Parser.ApplyBlockContext;
-import jplus.base.JPlus25Parser.ApplyDeclarationContext;
-import jplus.base.JPlus25Parser.ApplyFeatureListContext;
-import jplus.base.JPlus25Parser.ApplyStatementContext;
+import jplus.base.JADEx25Parser.ApplyBlockContext;
+import jplus.base.JADEx25Parser.ApplyDeclarationContext;
+import jplus.base.JADEx25Parser.ApplyFeatureListContext;
+import jplus.base.JADEx25Parser.ApplyStatementContext;
 import jplus.base.SymbolInfo;
 import jplus.base.SymbolTable;
 import jplus.base.TypeInfo;

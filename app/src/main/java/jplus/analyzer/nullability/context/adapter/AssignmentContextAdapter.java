@@ -26,7 +26,7 @@
 
 package jplus.analyzer.nullability.context.adapter;
 
-import jplus.base.JPlus25Parser;
+import jplus.base.JADEx25Parser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -34,17 +34,17 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 public interface AssignmentContextAdapter {
 
     ParserRuleContext originalContext();
-    JPlus25Parser.ExpressionContext expression();
+    JADEx25Parser.ExpressionContext expression();
     Token getStart();
 
-    static AssignmentContextAdapter from(JPlus25Parser.FieldDeclarationContext ctx, JPlus25Parser.ExpressionContext exprCtx) {
+    static AssignmentContextAdapter from(JADEx25Parser.FieldDeclarationContext ctx, JADEx25Parser.ExpressionContext exprCtx) {
         return new AssignmentContextAdapter() {
 
             @Override
             public ParserRuleContext originalContext() { return ctx; }
 
             @Override
-            public JPlus25Parser.ExpressionContext expression() {
+            public JADEx25Parser.ExpressionContext expression() {
                 return exprCtx;
             }
 
@@ -53,14 +53,14 @@ public interface AssignmentContextAdapter {
         };
     }
 
-    static AssignmentContextAdapter from(JPlus25Parser.LocalVariableDeclarationContext ctx, JPlus25Parser.ExpressionContext exprCtx) {
+    static AssignmentContextAdapter from(JADEx25Parser.LocalVariableDeclarationContext ctx, JADEx25Parser.ExpressionContext exprCtx) {
         return new AssignmentContextAdapter() {
 
             @Override
             public ParserRuleContext originalContext() { return ctx; }
 
             @Override
-            public JPlus25Parser.ExpressionContext expression() {
+            public JADEx25Parser.ExpressionContext expression() {
                 return exprCtx;
             }
 
@@ -69,14 +69,14 @@ public interface AssignmentContextAdapter {
         };
     }
 
-    static AssignmentContextAdapter from(JPlus25Parser.AssignmentContext ctx, JPlus25Parser.ExpressionContext exprCtx) {
+    static AssignmentContextAdapter from(JADEx25Parser.AssignmentContext ctx, JADEx25Parser.ExpressionContext exprCtx) {
         return new AssignmentContextAdapter() {
 
             @Override
             public ParserRuleContext originalContext() { return ctx; }
 
             @Override
-            public JPlus25Parser.ExpressionContext expression() {
+            public JADEx25Parser.ExpressionContext expression() {
                 return exprCtx;
             }
 

@@ -24,29 +24,27 @@
  * a commercial license. See the CLA file in the project root for details.
  */
 
-package jplus.analyzer.nullability.context.adapter;
+package jplus.generator;
 
-import jplus.base.JADEx25Parser;
 import org.antlr.v4.runtime.ParserRuleContext;
 
-public interface InvocationContext {
-    ParserRuleContext originalContext();
+public class JADExParserRuleContext extends ParserRuleContext {
+    private final CodeGenDelegate basicDelegate = new BasicCodeGenDelegate(this);
+    private final CodeGenDelegate semanticDelegate = new SemanticCodeGenDelegate(this);
 
-    static InvocationContext from(JADEx25Parser.MethodInvocationContext ctx) {
-        return new InvocationContext() {
-            @Override
-            public ParserRuleContext originalContext() {
-                return ctx;
-            }
-        };
+    public JADExParserRuleContext() {}
+
+    public JADExParserRuleContext(ParserRuleContext parent, int invokingStateNumber) {
+        super(parent, invokingStateNumber);
     }
 
-    static InvocationContext from(JADEx25Parser.UnqualifiedClassInstanceCreationExpressionContext ctx) {
-        return new InvocationContext() {
-            @Override
-            public ParserRuleContext originalContext() {
-                return ctx;
-            }
-        };
+    @Override
+    public String getText() {
+        return isSemanticMode() ? semanticDelegate.getText()
+                                : basicDelegate.getText();
+    }
+
+    private boolean isSemanticMode() {
+        return CodeGenContext.current().isSemanticMode();
     }
 }

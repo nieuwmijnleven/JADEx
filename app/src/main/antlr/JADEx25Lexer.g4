@@ -2,7 +2,7 @@
 // $antlr-format allowShortRulesOnASingleLine true, allowShortBlocksOnASingleLine true, minEmptyLines 0, alignSemicolons ownLine
 // $antlr-format alignColons trailing, singleLineOverrulesHangingColon true, alignLexerCommands true, alignLabels true, alignTrailers true
 
-lexer grammar JPlus25IntellijLexer;
+lexer grammar JADEx25Lexer;
 
 // LEXER
 
@@ -939,8 +939,8 @@ fragment IdentifierPart:
 // Whitespace and comments
 //
 
-WS: [ \t\r\n\u000C]+;
+WS: [ \t\r\n\u000C]+ -> skip;
 
-COMMENT: '/*' .*? '*/';
+COMMENT: '/*' .*? '*/' -> channel(HIDDEN);
 
-LINE_COMMENT: '//' ~[\r\n]*;
+LINE_COMMENT: '//' ~[\r\n]* -> channel(HIDDEN);

@@ -26,7 +26,7 @@
 
 package jplus.analyzer.nullability.context.adapter;
 
-import jplus.base.JPlus25Parser;
+import jplus.base.JADEx25Parser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -35,13 +35,13 @@ public interface IfThenElseContextAdapter {
 
     ParserRuleContext originalContext();
 
-    static IfThenElseContextAdapter from(JPlus25Parser.IfThenElseStatementContext ctx) {
+    static IfThenElseContextAdapter from(JADEx25Parser.IfThenElseStatementContext ctx) {
         return new IfThenElseContextAdapter() {
             public ParserRuleContext originalContext() { return ctx; }
         };
     }
 
-    static IfThenElseContextAdapter from(JPlus25Parser.IfThenElseStatementNoShortIfContext ctx) {
+    static IfThenElseContextAdapter from(JADEx25Parser.IfThenElseStatementNoShortIfContext ctx) {
         return new IfThenElseContextAdapter() {
             public ParserRuleContext originalContext() { return ctx; }
         };

@@ -26,18 +26,18 @@
 
 package jplus.analyzer.nullability.context.adapter;
 
-import jplus.base.JPlus25Parser;
+import jplus.base.JADEx25Parser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 
 public interface SwitchExprStmtContext {
 
     ParserRuleContext originalContext();
-    JPlus25Parser.ExpressionContext expression();
-    JPlus25Parser.SwitchBlockContext switchBlock();
+    JADEx25Parser.ExpressionContext expression();
+    JADEx25Parser.SwitchBlockContext switchBlock();
     Token getStart();
 
-    static SwitchExprStmtContext from(JPlus25Parser.SwitchExpressionContext ctx) {
+    static SwitchExprStmtContext from(JADEx25Parser.SwitchExpressionContext ctx) {
         return new SwitchExprStmtContext() {
             @Override
             public ParserRuleContext originalContext() {
@@ -45,12 +45,12 @@ public interface SwitchExprStmtContext {
             }
 
             @Override
-            public JPlus25Parser.ExpressionContext expression() {
+            public JADEx25Parser.ExpressionContext expression() {
                 return ctx.expression();
             }
 
             @Override
-            public JPlus25Parser.SwitchBlockContext switchBlock() {
+            public JADEx25Parser.SwitchBlockContext switchBlock() {
                 return ctx.switchBlock();
             }
 
@@ -61,7 +61,7 @@ public interface SwitchExprStmtContext {
         };
     }
 
-    static SwitchExprStmtContext from(JPlus25Parser.SwitchStatementContext ctx) {
+    static SwitchExprStmtContext from(JADEx25Parser.SwitchStatementContext ctx) {
         return new SwitchExprStmtContext() {
             @Override
             public ParserRuleContext originalContext() {
@@ -69,12 +69,12 @@ public interface SwitchExprStmtContext {
             }
 
             @Override
-            public JPlus25Parser.ExpressionContext expression() {
+            public JADEx25Parser.ExpressionContext expression() {
                 return ctx.expression();
             }
 
             @Override
-            public JPlus25Parser.SwitchBlockContext switchBlock() {
+            public JADEx25Parser.SwitchBlockContext switchBlock() {
                 return ctx.switchBlock();
             }
 

@@ -26,20 +26,22 @@
 
 package jplus.generator;
 
-import jplus.base.JPlus25Parser;
-import jplus.base.JPlus25Parser.ApplyDeclarationContext;
-import jplus.base.JPlus25Parser.ExpressionNameContext;
-import jplus.base.JPlus25Parser.FieldAccessContext;
-import jplus.base.JPlus25Parser.MethodInvocationContext;
-import jplus.base.JPlus25Parser.NullCoalescingExpressionContext;
-import jplus.base.JPlus25Parser.PrimaryNoNewArrayContext;
-import jplus.base.JPlus25Parser.UnannTypeContext;
+import jplus.base.JADEx25Parser.ApplyDeclarationContext;
+import jplus.base.JADEx25Parser.ExpressionNameContext;
+import jplus.base.JADEx25Parser.FieldAccessContext;
+import jplus.base.JADEx25Parser.FieldDeclarationContext;
+import jplus.base.JADEx25Parser.LocalVariableDeclarationContext;
+import jplus.base.JADEx25Parser.MethodInvocationContext;
+import jplus.base.JADEx25Parser.NullCoalescingExpressionContext;
+import jplus.base.JADEx25Parser.PrimaryNoNewArrayContext;
+import jplus.base.JADEx25Parser.Start_Context;
+import jplus.base.JADEx25Parser.UnannTypeContext;
 import jplus.editor.FragmentedText;
 import jplus.util.Utils;
 
 public class SemanticCodeGenDelegate extends BasicCodeGenDelegate {
 
-    public SemanticCodeGenDelegate(JPlusParserRuleContext ctx) {
+    public SemanticCodeGenDelegate(JADExParserRuleContext ctx) {
         super(ctx);
     }
 
@@ -56,10 +58,10 @@ public class SemanticCodeGenDelegate extends BasicCodeGenDelegate {
                 yield replaceApplyStatementWithComment(applyDeclarationCtx);
             }
 
-            case JPlus25Parser.FieldDeclarationContext fieldDeclCtx
+            case FieldDeclarationContext fieldDeclCtx
                     -> processFieldDeclarationContext(fieldDeclCtx);
 
-            case JPlus25Parser.LocalVariableDeclarationContext locDeclCtx
+            case LocalVariableDeclarationContext locDeclCtx
                     -> processLocalVariableDeclarationContext(locDeclCtx);
 
             case UnannTypeContext unannTypeCtx when unannTypeCtx.unannReferenceType() != null
@@ -138,7 +140,7 @@ public class SemanticCodeGenDelegate extends BasicCodeGenDelegate {
     protected String processDefaultText() {
         ensureChildTextInitialized();
 
-        if (ctx instanceof JPlus25Parser.Start_Context) {
+        if (ctx instanceof Start_Context) {
 
             FragmentedText fragmentedText = getCurrentFragmentedText();
             //System.err.println("debugString = " + fragmentedText.debugString());

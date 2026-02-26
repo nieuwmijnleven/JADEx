@@ -29,21 +29,19 @@ package jplus.processor;
 import jplus.analyzer.UnresolvedReferenceScanner;
 import jplus.analyzer.nullability.NullabilityChecker;
 import jplus.analyzer.nullability.issue.NullabilityIssue;
-import jplus.base.JPlus25Lexer;
-import jplus.base.JPlus25Parser;
+import jplus.base.JADEx25Lexer;
+import jplus.base.JADEx25Parser;
 import jplus.base.Project;
 import jplus.base.SymbolTable;
 import jplus.editor.FragmentedText;
 import jplus.generator.BoilerplateCodeGenerator;
 import jplus.generator.CodeGenContext;
-import jplus.generator.JPlusParserRuleContext;
+import jplus.generator.JADExParserRuleContext;
 import jplus.generator.SourceMappingEntry;
 import jplus.util.Utils;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.DiagnosticErrorListener;
-import org.antlr.v4.runtime.atn.PredictionMode;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -57,8 +55,8 @@ public class JPlusProcessor {
     private final Project project;
     private final String originalText;
 
-    private JPlus25Parser parser;
-    private JPlusParserRuleContext parseTree;
+    private JADEx25Parser parser;
+    private JADExParserRuleContext parseTree;
     private Set<SourceMappingEntry> sourceMappingEntrySet;
 
     private JavaProcessor javaProcessor;
@@ -134,9 +132,9 @@ public class JPlusProcessor {
         CodeGenContext.push();
         try {
             CharStream input = CharStreams.fromString(originalText);
-            JPlus25Lexer lexer = new JPlus25Lexer(input);
+            JADEx25Lexer lexer = new JADEx25Lexer(input);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
-            parser = new JPlus25Parser(tokens);
+            parser = new JADEx25Parser(tokens);
 
             parseTree = parser.start_();
             processed = true;

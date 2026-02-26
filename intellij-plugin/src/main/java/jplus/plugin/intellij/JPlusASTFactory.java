@@ -30,7 +30,7 @@ import com.intellij.core.CoreASTFactory;
 import com.intellij.psi.impl.source.tree.CompositeElement;
 import com.intellij.psi.impl.source.tree.LeafElement;
 import com.intellij.psi.tree.IElementType;
-import jplus.base.JPlus25Lexer;
+import jplus.base.JADEx25Lexer;
 import jplus.plugin.intellij.psi.IdentifierPsiElement;
 import org.antlr.intellij.adaptor.lexer.TokenIElementType;
 import org.jetbrains.annotations.NotNull;
@@ -46,7 +46,7 @@ public class JPlusASTFactory extends CoreASTFactory {
 	@Override
 	public LeafElement createLeaf(@NotNull IElementType type, CharSequence text) {
 		if (type instanceof TokenIElementType tokenIElementType &&
-			 tokenIElementType.getANTLRTokenType() == JPlus25Lexer.Identifier) {
+			 tokenIElementType.getANTLRTokenType() == JADEx25Lexer.Identifier) {
 			return new IdentifierPsiElement(type, text);
 		}
 		LeafElement leaf = super.createLeaf(type, text);

@@ -24,27 +24,23 @@
  * a commercial license. See the CLA file in the project root for details.
  */
 
-package jplus.generator;
+package jplus.base;
 
-import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;
+import org.antlr.v4.runtime.tree.RuleNode;
 
-public class JPlusParserRuleContext extends ParserRuleContext {
-    private final CodeGenDelegate basicDelegate = new BasicCodeGenDelegate(this);
-    private final CodeGenDelegate semanticDelegate = new SemanticCodeGenDelegate(this);
+public abstract class JADEx25AbstractParseTreeVisitor<T> extends AbstractParseTreeVisitor<T> {
 
-    public JPlusParserRuleContext() {}
-
-    public JPlusParserRuleContext(ParserRuleContext parent, int invokingStateNumber) {
-        super(parent, invokingStateNumber);
+    public T executeDefaultProcessing(RuleNode node) {
+        try {
+            applyDefault();
+            return visitChildren(node);
+        } finally {
+            finalizeDefault();
+        }
     }
 
-    @Override
-    public String getText() {
-        return isSemanticMode() ? semanticDelegate.getText()
-                                : basicDelegate.getText();
-    }
+    public void applyDefault() {}
 
-    private boolean isSemanticMode() {
-        return CodeGenContext.current().isSemanticMode();
-    }
+    public void finalizeDefault() {}
 }

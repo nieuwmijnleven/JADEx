@@ -47,8 +47,8 @@ import jplus.analyzer.nullability.dataflow.context.SwitchContext;
 import jplus.analyzer.nullability.issue.IssueCode;
 import jplus.analyzer.nullability.issue.NullabilityIssue;
 import jplus.analyzer.nullability.module.ConditionVisitor;
+import jplus.base.JADEx25Parser.*;
 import jplus.base.JADEx25ParserBaseVisitor;
-import jplus.base.JPlus25Parser;
 import jplus.base.JavaMethodInvocationManager;
 import jplus.base.MethodInvocationInfo;
 import jplus.base.SymbolInfo;
@@ -129,20 +129,20 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitStart_(JPlus25Parser.Start_Context ctx) {
+    public Void visitStart_(Start_Context ctx) {
         this.originalText = ctx.start.getInputStream().toString();
         return super.visitStart_(ctx);
     }
 
     @Override
-    public Void visitPackageDeclaration(JPlus25Parser.PackageDeclarationContext ctx) {
+    public Void visitPackageDeclaration(PackageDeclarationContext ctx) {
         this.packageName = ctx.identifier().stream().map(Utils::getTokenString).collect(Collectors.joining("."));
         //System.err.println("[NullabilityChecker] packageName = " + packageName);
         return super.visitPackageDeclaration(ctx);
     }
 
     @Override
-    public Void visitTopLevelClassOrInterfaceDeclaration(JPlus25Parser.TopLevelClassOrInterfaceDeclarationContext ctx) {
+    public Void visitTopLevelClassOrInterfaceDeclaration(TopLevelClassOrInterfaceDeclarationContext ctx) {
         String className = getClassName(ctx.classDeclaration().normalClassDeclaration());
         //System.err.println("className = " + className);
 
@@ -160,7 +160,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         return classSymbolInfo;
     }
 
-    private String getClassName(JPlus25Parser.NormalClassDeclarationContext ctx) {
+    private String getClassName(NormalClassDeclarationContext ctx) {
         String className = Utils.getTokenString(ctx.typeIdentifier());
         if (this.packageName != null) {
             className = this.packageName + "." + className;
@@ -169,11 +169,11 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitClassDeclaration(JPlus25Parser.ClassDeclarationContext ctx) {
+    public Void visitClassDeclaration(ClassDeclarationContext ctx) {
 
         String typeName = null;
 
-        List<JPlus25Parser.ClassBodyDeclarationContext> classBodyDefCtxList = null;
+        List<ClassBodyDeclarationContext> classBodyDefCtxList = null;
         Map<String, InvocationDeclarationContext> ctorNameToContextMap = null;
 
         if (ctx.normalClassDeclaration() != null) {
@@ -209,7 +209,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
 
             classBodyDefCtxList =
                     recordBodyDeclaration.stream()
-                            .map(JPlus25Parser.RecordBodyDeclarationContext::classBodyDeclaration)
+                            .map(RecordBodyDeclarationContext::classBodyDeclaration)
                             .toList();
 
             var allMethodDefList = new ArrayList<InvocationDeclarationContext>();
@@ -300,7 +300,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         return null;
     }
 
-    private List<InvocationDeclarationContext> getCtorDefListFromEnum(List<JPlus25Parser.ClassBodyDeclarationContext> enumDeclarationContexts) {
+    private List<InvocationDeclarationContext> getCtorDefListFromEnum(List<ClassBodyDeclarationContext> enumDeclarationContexts) {
 
         List<InvocationDeclarationContext> enumDefList = new ArrayList<>();
 
@@ -313,7 +313,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         return enumDefList;
     }
 
-    private List<InvocationDeclarationContext> getCtorDefListFromNormalClass(List<JPlus25Parser.ClassBodyDeclarationContext> classBodyDeclarationContexts) {
+    private List<InvocationDeclarationContext> getCtorDefListFromNormalClass(List<ClassBodyDeclarationContext> classBodyDeclarationContexts) {
 
         List<InvocationDeclarationContext> normalClassCtorDefList = new ArrayList<>();
         for (var normalClassDeclarationContext : classBodyDeclarationContexts) {
@@ -326,7 +326,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         return normalClassCtorDefList;
     }
 
-    private List<InvocationDeclarationContext> getMethodDefListFromNormalClass(List<JPlus25Parser.ClassBodyDeclarationContext> classBodyDeclarationContexts) {
+    private List<InvocationDeclarationContext> getMethodDefListFromNormalClass(List<ClassBodyDeclarationContext> classBodyDeclarationContexts) {
 
         List<InvocationDeclarationContext> normalClassMethodDefList = new ArrayList<>();
         for (var normalClassDeclarationContext : classBodyDeclarationContexts) {
@@ -340,7 +340,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         return normalClassMethodDefList;
     }
 
-    private List<InvocationDeclarationContext> getCtorDefListFromRecord(List<JPlus25Parser.RecordBodyDeclarationContext> recordBodyDeclarationContexts) {
+    private List<InvocationDeclarationContext> getCtorDefListFromRecord(List<RecordBodyDeclarationContext> recordBodyDeclarationContexts) {
 
         List<InvocationDeclarationContext> ctorDefList = new ArrayList<>();
         for (var recordBodyDeclarationContext : recordBodyDeclarationContexts) {
@@ -366,31 +366,31 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitConstructorDeclaration(JPlus25Parser.ConstructorDeclarationContext ctx) {
+    public Void visitConstructorDeclaration(ConstructorDeclarationContext ctx) {
         //currentSymbolTable = currentSymbolTable.copy(true);
         return processInvocationDeclaration(InvocationDeclarationContext.from(ctx));
     }
 
     @Override
-    public Void visitMethodDeclaration(JPlus25Parser.MethodDeclarationContext ctx) {
+    public Void visitMethodDeclaration(MethodDeclarationContext ctx) {
         //currentSymbolTable = currentSymbolTable.copy();
         return processInvocationDeclaration(InvocationDeclarationContext.from(ctx));
     }
 
-    private List<String> extractParameterTypes(List<JPlus25Parser.FormalParameterContext> params) {
+    private List<String> extractParameterTypes(List<FormalParameterContext> params) {
         return params.stream()
                 .map(this::extractParameterType)
                 .toList();
     }
 
-    private String extractParameterType(JPlus25Parser.FormalParameterContext param) {
+    private String extractParameterType(FormalParameterContext param) {
         boolean nullable = isNullable(param);
         String type = Utils.getTokenString(param.unannType());
 
         return nullable ? type + "?" : type;
     }
 
-    private boolean isNullable(JPlus25Parser.FormalParameterContext param) {
+    private boolean isNullable(FormalParameterContext param) {
         if (param.variableModifier() == null) {
             return false;
         }
@@ -402,7 +402,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
 
-    private List<String> getTypeNamesFromParameterList(JPlus25Parser.FormalParameterListContext ctx) {
+    private List<String> getTypeNamesFromParameterList(FormalParameterListContext ctx) {
         if (ctx == null) return List.of();
         return extractParameterTypes(ctx.formalParameter());
     }
@@ -432,7 +432,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitLambdaExpression(JPlus25Parser.LambdaExpressionContext ctx) {
+    public Void visitLambdaExpression(LambdaExpressionContext ctx) {
         log("[LambdaExpression] contextString = " + Utils.getTokenString(ctx));
         log("[LambdaExpression] startOffset = " + ctx.start.getStartIndex());
 
@@ -451,7 +451,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitFieldDeclaration(JPlus25Parser.FieldDeclarationContext ctx) {
+    public Void visitFieldDeclaration(FieldDeclarationContext ctx) {
         for (var decl : ctx.variableDeclaratorList().variableDeclarator()) {
             String symbol = Utils.getTokenString(decl.variableDeclaratorId());
             //System.err.println("[NullabilityChecker][FieldDecl] symbol = " + symbol);
@@ -623,7 +623,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitBlock(JPlus25Parser.BlockContext ctx) {
+    public Void visitBlock(BlockContext ctx) {
         var saved = currentSymbolTable;
         enterSymbolTable("^block$");
         try {
@@ -635,7 +635,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitConstructorBody(JPlus25Parser.ConstructorBodyContext ctx) {
+    public Void visitConstructorBody(ConstructorBodyContext ctx) {
         var saved = currentSymbolTable;
         enterSymbolTable("^block$");
         constructorContextStack.push(new ConstructorContext());
@@ -735,9 +735,9 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         String rawParamTypes = methodSymbolInfo.getSymbol().substring(("^" + methodName + "$~").length());
         String[] paramTypes = rawParamTypes.isEmpty() ? new String[0] : rawParamTypes.split("~");
 
-        List<JPlus25Parser.ExpressionContext> argumentList =
+        List<ExpressionContext> argumentList =
                 Optional.ofNullable(ctx.argumentList())
-                        .map(JPlus25Parser.ArgumentListContext::expression)
+                        .map(ArgumentListContext::expression)
                         .orElseGet(ArrayList::new);
 
         int fixedVariableCnt = paramTypes.length;
@@ -803,7 +803,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitUnqualifiedClassInstanceCreationExpression(JPlus25Parser.UnqualifiedClassInstanceCreationExpressionContext ctx) {
+    public Void visitUnqualifiedClassInstanceCreationExpression(UnqualifiedClassInstanceCreationExpressionContext ctx) {
 
         TextChangeRange codeRange = getCodeRange(ctx);
         if (consumedExpressions.contains(codeRange)) {
@@ -859,7 +859,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitLocalVariableDeclaration(JPlus25Parser.LocalVariableDeclarationContext ctx) {
+    public Void visitLocalVariableDeclaration(LocalVariableDeclarationContext ctx) {
 
         //System.err.println("[LocalVariableDeclaration] line(" + ctx.start.getLine() + ") contextString: " + Utils.getTokenString(ctx));
 
@@ -975,14 +975,14 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         }
     }
 
-    public boolean isTopLevelNullCoalescing(JPlus25Parser.ExpressionContext ctx) {
+    public boolean isTopLevelNullCoalescing(ExpressionContext ctx) {
 
         ParseTree node = ctx;
 
         node = unwrapParentheses(node);
         System.err.println("[isTopLevelNullCoalescing] isTopLevelNullCoalescing = " + node.getClass().getSimpleName());
 
-        if (node instanceof JPlus25Parser.ExpressionContext unwrappedExprCtx) {
+        if (node instanceof ExpressionContext unwrappedExprCtx) {
 
             var assignExprCtx = unwrappedExprCtx.assignmentExpression();
             if (assignExprCtx == null) {
@@ -1007,7 +1007,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
 
     private ParseTree unwrapParentheses(ParseTree node) {
         while (true) {
-            if (node instanceof JPlus25Parser.PrimaryNoNewArrayParenExpressionContext p) {
+            if (node instanceof PrimaryNoNewArrayParenExpressionContext p) {
                 node = p.expression();
                 continue;
             }
@@ -1017,7 +1017,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitAssignment(JPlus25Parser.AssignmentContext ctx) {
+    public Void visitAssignment(AssignmentContext ctx) {
 
 
         //System.err.println("[NullabilityChecker][Assignment] contextString = " + Utils.getTokenString(ctx));
@@ -1153,7 +1153,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitIfThenStatement(JPlus25Parser.IfThenStatementContext ctx) {
+    public Void visitIfThenStatement(IfThenStatementContext ctx) {
 
         SymbolTable entry = currentSymbolTable.copy();
 
@@ -1200,7 +1200,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitIfThenElseStatement(JPlus25Parser.IfThenElseStatementContext ctx) {
+    public Void visitIfThenElseStatement(IfThenElseStatementContext ctx) {
 
         SymbolTable entry = currentSymbolTable.copy();
 
@@ -1271,7 +1271,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitIfThenElseStatementNoShortIf(JPlus25Parser.IfThenElseStatementNoShortIfContext ctx) {
+    public Void visitIfThenElseStatementNoShortIf(IfThenElseStatementNoShortIfContext ctx) {
 
         SymbolTable entry = currentSymbolTable.copy();
 
@@ -1377,10 +1377,10 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         unInitNonNullVariableIssueOpt.ifPresent(issues::remove);
     }
 
-    private JPlus25Parser.LocalVariableDeclarationContext findLocalVariableDeclarationBeforeIf(IfThenElseContextAdapter ctx) {
+    private LocalVariableDeclarationContext findLocalVariableDeclarationBeforeIf(IfThenElseContextAdapter ctx) {
 
         ParserRuleContext current = ctx.originalContext();
-        while (current != null && !(current instanceof JPlus25Parser.StatementContext)) {
+        while (current != null && !(current instanceof StatementContext)) {
             current = current.getParent();
         }
         //System.err.println("[getVarDeclCtxRelatedToIfStmt] current =  " + current.getClass().getSimpleName());
@@ -1388,25 +1388,25 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         if (current == null) return null;
 
         ParserRuleContext blockStmtCtx = current.getParent();
-        if (!(blockStmtCtx instanceof JPlus25Parser.BlockStatementContext)) {
+        if (!(blockStmtCtx instanceof BlockStatementContext)) {
             return null;
         }
         //System.err.println("[getVarDeclCtxRelatedToIfStmt] blockStmtCtx =  " + blockStmtCtx.getClass().getSimpleName());
 
         ParserRuleContext blockStmtsCtx = blockStmtCtx.getParent();
-        if (!(blockStmtsCtx instanceof JPlus25Parser.BlockStatementsContext blockStatements)) {
+        if (!(blockStmtsCtx instanceof BlockStatementsContext blockStatements)) {
             return null;
         }
         //System.err.println("[getVarDeclCtxRelatedToIfStmt] blockStmtsCtx =  " + blockStmtsCtx.getClass().getSimpleName());
 
-        //JPlus25Parser.BlockStatementsContext blockStatements = (JPlus25Parser.BlockStatementsContext) blockStmtsCtx;
+        //BlockStatementsContext blockStatements = (BlockStatementsContext) blockStmtsCtx;
 
-        List<JPlus25Parser.BlockStatementContext> blockStatementList = blockStatements.blockStatement();
+        List<BlockStatementContext> blockStatementList = blockStatements.blockStatement();
 
         int index = blockStatementList.indexOf(blockStmtCtx);
         if (index <= 0) return null;
 
-        JPlus25Parser.BlockStatementContext prevBlockStmt = blockStatementList.get(index - 1);
+        BlockStatementContext prevBlockStmt = blockStatementList.get(index - 1);
         //System.err.println("[getVarDeclCtxRelatedToIfStmt] prevBlockStmt =  " + prevBlockStmt.getClass().getSimpleName());
 
         if (prevBlockStmt.localVariableDeclarationStatement() != null) {
@@ -1454,7 +1454,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitYieldStatement(JPlus25Parser.YieldStatementContext ctx) {
+    public Void visitYieldStatement(YieldStatementContext ctx) {
         if (!switchContextStack.isEmpty()) {
 
             var nullState = evalRHS(ctx.expression(), currentSymbolTable);
@@ -1466,13 +1466,13 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitSwitchExpression(JPlus25Parser.SwitchExpressionContext ctx) {
+    public Void visitSwitchExpression(SwitchExpressionContext ctx) {
 
         return processSwitchBlock(SwitchExprStmtContext.from(ctx));
     }
 
     @Override
-    public Void visitSwitchStatement(JPlus25Parser.SwitchStatementContext ctx) {
+    public Void visitSwitchStatement(SwitchStatementContext ctx) {
 
         return processSwitchBlock(SwitchExprStmtContext.from(ctx));
     }
@@ -1529,23 +1529,23 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
 
         var switchLabelListInSwitchRule =
                 ctx.switchBlock().switchRule().stream()
-                        .map(JPlus25Parser.SwitchRuleContext::switchLabel)
+                        .map(SwitchRuleContext::switchLabel)
                         .toList();
 
         var switchLabelListInswitchBlkStmtGrp =
                 ctx.switchBlock().switchBlockStatementGroup().stream()
-                        .map(JPlus25Parser.SwitchBlockStatementGroupContext::switchLabel)
+                        .map(SwitchBlockStatementGroupContext::switchLabel)
                         .flatMap(Collection::stream)
                         .toList();
 
-        var switchLabelList = new ArrayList<JPlus25Parser.SwitchLabelContext>();
+        var switchLabelList = new ArrayList<SwitchLabelContext>();
         switchLabelList.addAll(switchLabelListInSwitchRule);
         switchLabelList.addAll(switchLabelListInswitchBlkStmtGrp);
 
         return hasNullCase(switchLabelList);
     }
 
-    private void processSwitchBlkStmtGrp(List<JPlus25Parser.SwitchBlockStatementGroupContext> switchBlkStmtGrpList, JPlus25Parser.ExpressionContext selector) {
+    private void processSwitchBlkStmtGrp(List<SwitchBlockStatementGroupContext> switchBlkStmtGrpList, ExpressionContext selector) {
 
         if (switchBlkStmtGrpList.isEmpty()) return;
 
@@ -1586,7 +1586,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         currentSymbolTable = joinedBranchTable.promoteLocalSymbols();
     }
 
-    private boolean isNullLiteral(JPlus25Parser.CaseConstantContext ctx) {
+    private boolean isNullLiteral(CaseConstantContext ctx) {
         var expr = ctx.conditionalExpression();
         if (expr == null) return false;
 
@@ -1594,7 +1594,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         return "null".equals(Utils.getTokenString(expr));
     }
 
-    private boolean hasNullCase(List<JPlus25Parser.SwitchLabelContext> switchLabelCtxList) {
+    private boolean hasNullCase(List<SwitchLabelContext> switchLabelCtxList) {
         for (var switchLabelCtx : switchLabelCtxList) {
             if (switchLabelCtx.NullLiteral() != null) {
                 return true;
@@ -1603,7 +1603,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         return false;
     }
 
-    private NullState processSwitchRule(List<JPlus25Parser.SwitchRuleContext> switchRuleList, JPlus25Parser.ExpressionContext selector) {
+    private NullState processSwitchRule(List<SwitchRuleContext> switchRuleList, ExpressionContext selector) {
 
         var switchContext = new SwitchContext();
         switchContextStack.push(switchContext);
@@ -1699,7 +1699,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitConditionalExpression(JPlus25Parser.ConditionalExpressionContext ctx) {
+    public Void visitConditionalExpression(ConditionalExpressionContext ctx) {
 
         if (ctx.expression() == null) {
             return super.visitNullCoalescingExpression(ctx.nullCoalescingExpression());
@@ -1861,7 +1861,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitReturnStatement(JPlus25Parser.ReturnStatementContext ctx) {
+    public Void visitReturnStatement(ReturnStatementContext ctx) {
         //System.err.println("[ReturnStatement] contextString: " + Utils.getTokenString(ctx));
 
         currentSymbolTable.setDeadContext(true);
@@ -1900,7 +1900,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         return super.visitReturnStatement(ctx);
     }
 
-    private void handleMethodReturn(JPlus25Parser.ReturnStatementContext ctx, MethodContext methodContext, ResolvedChain chain, NullState nullState) {
+    private void handleMethodReturn(ReturnStatementContext ctx, MethodContext methodContext, ResolvedChain chain, NullState nullState) {
 
         var methodSymbolInfo = methodContext.getMethodSymbolInfo();
         var step = chain.last();
@@ -1916,13 +1916,13 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitThrowStatement(JPlus25Parser.ThrowStatementContext ctx) {
+    public Void visitThrowStatement(ThrowStatementContext ctx) {
         currentSymbolTable.setDeadContext(true);
         return super.visitThrowStatement(ctx);
     }
 
     @Override
-    public Void visitEnhancedForStatement(JPlus25Parser.EnhancedForStatementContext ctx) {
+    public Void visitEnhancedForStatement(EnhancedForStatementContext ctx) {
 
         //visit(ctx.enhancedForDeclaration().localVariableDeclaration());
 
@@ -1948,7 +1948,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitEqualityExpression(JPlus25Parser.EqualityExpressionContext ctx) {
+    public Void visitEqualityExpression(EqualityExpressionContext ctx) {
 
         if (ctx.NOTEQUAL() != null) {
             String variableName = Utils.getTokenString(ctx.equalityExpression());
@@ -1976,7 +1976,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitAdditiveExpression(JPlus25Parser.AdditiveExpressionContext ctx) {
+    public Void visitAdditiveExpression(AdditiveExpressionContext ctx) {
         ////System.err.println("[AdditiveExpression] line(" + ctx.start.getLine() + ") contextString: " + Utils.getTokenString(ctx));
         ////System.err.println("[AdditiveExpression] resolvedChains: " + currentSymbolTable.getResolvedChains());
 
@@ -1991,7 +1991,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitExplicitConstructorInvocation(JPlus25Parser.ExplicitConstructorInvocationContext ctx) {
+    public Void visitExplicitConstructorInvocation(ExplicitConstructorInvocationContext ctx) {
 
         findTransformedRange(Utils.getTextChangeRange(originalText, ctx))
                 .flatMap(range ->
@@ -2039,7 +2039,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
                     //System.err.println("[handleExplicitConstructorInvocation] currentSymbolTable = " + currentSymbolTable);
 
                     try {
-                        var constructorBody = (JPlus25Parser.ConstructorBodyContext) invocationDefCtx.invocationBody();
+                        var constructorBody = (ConstructorBodyContext) invocationDefCtx.invocationBody();
 
                         if (constructorBody.blockStatements(0) != null) visit(constructorBody.blockStatements(0));
                         if (constructorBody.explicitConstructorInvocation() != null) visit(constructorBody.explicitConstructorInvocation());
@@ -2051,14 +2051,14 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitMethodInvocation(JPlus25Parser.MethodInvocationContext ctx) {
+    public Void visitMethodInvocation(MethodInvocationContext ctx) {
         //TextChangeRange invocationCodeRange = getCodeRange(ctx);
         //System.err.println("[MethodInvocation] invocationCodeRange: " + invocationCodeRange);
 
         return processMethodInvocation(ctx);
     }
 
-    private Void processMethodInvocation(JPlus25Parser.MethodInvocationContext ctx) {
+    private Void processMethodInvocation(MethodInvocationContext ctx) {
         //System.err.println("[MethodInvocation] resolvedChains: " + currentSymbolTable.getResolvedChains());
         //System.err.println("[MethodInvocation] original range = " + Utils.getTextChangeRange(originalText, ctx));
 
@@ -2077,7 +2077,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         return null;
     }
 
-    private void handleMethodInvocation(JPlus25Parser.MethodInvocationContext ctx, ResolvedChain chain) {
+    private void handleMethodInvocation(MethodInvocationContext ctx, ResolvedChain chain) {
         StepCursor cursor = chain.stepCursor();
 
         //methodName '(' argumentList? ')'
@@ -2131,7 +2131,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitPostfixExpression(JPlus25Parser.PostfixExpressionContext ctx) {
+    public Void visitPostfixExpression(PostfixExpressionContext ctx) {
         if (ctx.expressionName() != null) {
             //System.err.println("[PostfixExpression] chaining = " + currentSymbolTable.getResolvedChains());
             //System.err.println("[PostfixExpression] findResolvedChain = " + currentSymbolTable.findResolvedChain(Utils.getTextChangeRange(originalText, ctx)));
@@ -2143,7 +2143,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         return super.visitPostfixExpression(ctx);
     }
 
-    private Optional<ResolvedChain> findPrimaryNoNewArrayChain(JPlus25Parser.PrimaryNoNewArrayContext ctx) {
+    private Optional<ResolvedChain> findPrimaryNoNewArrayChain(PrimaryNoNewArrayContext ctx) {
         //System.err.println("[PrimaryNoNewArray] line(" + ctx.start.getLine() + ") contextString = " + Utils.getTokenString(ctx));
         //System.err.println("[PrimaryNoNewArray] line(" + ctx.start.getLine() + ") chaining = " + currentSymbolTable.getResolvedChains());
 
@@ -2159,51 +2159,51 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
                 });
     }
 
-    private void withPrimaryNoNewArrayChain(JPlus25Parser.PrimaryNoNewArrayContext ctx, Consumer<ResolvedChain> chainConsumer) {
+    private void withPrimaryNoNewArrayChain(PrimaryNoNewArrayContext ctx, Consumer<ResolvedChain> chainConsumer) {
         findPrimaryNoNewArrayChain(ctx).ifPresent(chainConsumer);
     }
 
     @Override
-    public Void visitPrimaryNoNewArrayThis(JPlus25Parser.PrimaryNoNewArrayThisContext ctx) {
+    public Void visitPrimaryNoNewArrayThis(PrimaryNoNewArrayThisContext ctx) {
         //'this' pNNA? #primaryNoNewArrayThis
         withPrimaryNoNewArrayChain(ctx, resolvedChain -> PrimaryNoNewArrayThis(PrimaryNoNewArrayContextAdapter.from(ctx), resolvedChain.stepCursor()));
         return null;
     }
 
     @Override
-    public Void visitPrimaryNoNewArrayQualifiedThis(JPlus25Parser.PrimaryNoNewArrayQualifiedThisContext ctx) {
+    public Void visitPrimaryNoNewArrayQualifiedThis(PrimaryNoNewArrayQualifiedThisContext ctx) {
         //typeName '.' 'this' pNNA?
         withPrimaryNoNewArrayChain(ctx, resolvedChain -> handlePrimaryNoNewArrayQualifiedThis(ctx, resolvedChain.stepCursor()));
         return null;
     }
 
-    private void handlePrimaryNoNewArrayQualifiedThis(JPlus25Parser.PrimaryNoNewArrayQualifiedThisContext ctx, StepCursor cursor) {
+    private void handlePrimaryNoNewArrayQualifiedThis(PrimaryNoNewArrayQualifiedThisContext ctx, StepCursor cursor) {
         processTypeName(ctx.typeName(), cursor);
         PrimaryNoNewArrayThis(PrimaryNoNewArrayContextAdapter.from(ctx), cursor);
     }
 
     @Override
-    public Void visitPrimaryNoNewArrayClassInstanceCreation(JPlus25Parser.PrimaryNoNewArrayClassInstanceCreationContext ctx) {
+    public Void visitPrimaryNoNewArrayClassInstanceCreation(PrimaryNoNewArrayClassInstanceCreationContext ctx) {
         withPrimaryNoNewArrayChain(ctx, resolvedChain -> handleUnqualifiedClassInstanceCreationExpression(PrimaryNoNewArrayUnqualifiedClassInstanceCreationContextAdapter.from(ctx), resolvedChain.stepCursor()));
         //return super.visitPrimaryNoNewArrayClassInstanceCreation(ctx);
         return null;
     }
 
     @Override
-    public Void visitPrimaryNoNewArrayExprQualifiedClassInstanceCreation(JPlus25Parser.PrimaryNoNewArrayExprQualifiedClassInstanceCreationContext ctx) {
+    public Void visitPrimaryNoNewArrayExprQualifiedClassInstanceCreation(PrimaryNoNewArrayExprQualifiedClassInstanceCreationContext ctx) {
         withPrimaryNoNewArrayChain(ctx, resolvedChain -> handleExprQualifiedClassInstanceCreation(ctx, resolvedChain.stepCursor()));
         //return super.visitPrimaryNoNewArrayClassInstanceCreation(ctx);
         return null;
     }
 
     /*@Override
-    public Void visitPrimaryNoNewArrayArrayQualifiedClassInstanceCreation(JPlus25Parser.PrimaryNoNewArrayArrayQualifiedClassInstanceCreationContext ctx) {
+    public Void visitPrimaryNoNewArrayArrayQualifiedClassInstanceCreation(PrimaryNoNewArrayArrayQualifiedClassInstanceCreationContext ctx) {
         withPrimaryNoNewArrayChain(ctx, resolvedChain -> handlePrimaryNoNewArrayArrayQualifiedClassInstanceCreation(ctx, resolvedChain.stepCursor()));
         //return super.visitPrimaryNoNewArrayArrayQualifiedClassInstanceCreation(ctx);
         return null;
     }
 
-    private void handlePrimaryNoNewArrayArrayQualifiedClassInstanceCreation(JPlus25Parser.PrimaryNoNewArrayArrayQualifiedClassInstanceCreationContext ctx, StepCursor cursor) {
+    private void handlePrimaryNoNewArrayArrayQualifiedClassInstanceCreation(PrimaryNoNewArrayArrayQualifiedClassInstanceCreationContext ctx, StepCursor cursor) {
         //ResolvedChain.Step step = cursor.consume();
         //if (!step.symbol.equals(Utils.getTokenString(ctx.arrayCreationExpression()))) throw new IllegalStateException();
 
@@ -2214,13 +2214,13 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }*/
 
     /*@Override
-    public Void visitPrimaryNoNewArrayArrayFieldAccess(JPlus25Parser.PrimaryNoNewArrayArrayFieldAccessContext ctx) {
+    public Void visitPrimaryNoNewArrayArrayFieldAccess(PrimaryNoNewArrayArrayFieldAccessContext ctx) {
         withPrimaryNoNewArrayChain(ctx, resolvedChain -> handlePrimaryNoNewArrayArrayFieldAccess(ctx, resolvedChain.stepCursor()));
         //return super.visitPrimaryNoNewArrayArrayFieldAccess(ctx);
         return null;
     }
 
-    private void handlePrimaryNoNewArrayArrayFieldAccess(JPlus25Parser.PrimaryNoNewArrayArrayFieldAccessContext ctx, StepCursor cursor) {
+    private void handlePrimaryNoNewArrayArrayFieldAccess(PrimaryNoNewArrayArrayFieldAccessContext ctx, StepCursor cursor) {
         cursor.consume(); //skip: arrayCreationExpression
 
         ResolvedChain.Step step = cursor.consume();
@@ -2230,26 +2230,26 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }*/
 
     @Override
-    public Void visitPrimaryNoNewArrayExprMethodInvocation(JPlus25Parser.PrimaryNoNewArrayExprMethodInvocationContext ctx) {
+    public Void visitPrimaryNoNewArrayExprMethodInvocation(PrimaryNoNewArrayExprMethodInvocationContext ctx) {
         withPrimaryNoNewArrayChain(ctx, resolvedChain -> handlePrimaryNoNewArrayExprMethodInvocation(ctx, resolvedChain.stepCursor()));
         //return super.visitPrimaryNoNewArrayExprMethodInvocation(ctx);
         return null;
 
     }
 
-    private void handlePrimaryNoNewArrayExprMethodInvocation(JPlus25Parser.PrimaryNoNewArrayExprMethodInvocationContext ctx, StepCursor cursor) {
+    private void handlePrimaryNoNewArrayExprMethodInvocation(PrimaryNoNewArrayExprMethodInvocationContext ctx, StepCursor cursor) {
         handleExpressionName(ctx.expressionName(), cursor);
         handlePrimaryNoNewArrayMethodInvocation(ctx, cursor);
     }
 
     @Override
-    public Void visitPrimaryNoNewArraySuperFieldAccess(JPlus25Parser.PrimaryNoNewArraySuperFieldAccessContext ctx) {
+    public Void visitPrimaryNoNewArraySuperFieldAccess(PrimaryNoNewArraySuperFieldAccessContext ctx) {
         withPrimaryNoNewArrayChain(ctx, resolvedChain -> handlePrimaryNoNewArraySuperFieldAccess(ctx, resolvedChain.stepCursor()));
         //return super.visitPrimaryNoNewArrayExprMethodInvocation(ctx);
         return null;
     }
 
-    private void handlePrimaryNoNewArraySuperFieldAccess(JPlus25Parser.PrimaryNoNewArraySuperFieldAccessContext ctx, StepCursor cursor) {
+    private void handlePrimaryNoNewArraySuperFieldAccess(PrimaryNoNewArraySuperFieldAccessContext ctx, StepCursor cursor) {
         ResolvedChain.Step step = cursor.consume();
         if (!step.symbol.equals(ctx.SUPER().toString())) throw new IllegalStateException();
 
@@ -2260,12 +2260,12 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitPrimaryNoNewArrayQualifiedSuperFieldAccess(JPlus25Parser.PrimaryNoNewArrayQualifiedSuperFieldAccessContext ctx) {
+    public Void visitPrimaryNoNewArrayQualifiedSuperFieldAccess(PrimaryNoNewArrayQualifiedSuperFieldAccessContext ctx) {
         withPrimaryNoNewArrayChain(ctx, resolvedChain -> handlePrimaryNoNewArrayQualifiedSuperFieldAccess(ctx, resolvedChain.stepCursor()));
         return null;
     }
 
-    private void handlePrimaryNoNewArrayQualifiedSuperFieldAccess(JPlus25Parser.PrimaryNoNewArrayQualifiedSuperFieldAccessContext ctx, StepCursor cursor) {
+    private void handlePrimaryNoNewArrayQualifiedSuperFieldAccess(PrimaryNoNewArrayQualifiedSuperFieldAccessContext ctx, StepCursor cursor) {
         processTypeName(ctx.typeName(), cursor);
 
         ResolvedChain.Step step = cursor.consume();
@@ -2278,12 +2278,12 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitPrimaryNoNewArrayArrayAccess(JPlus25Parser.PrimaryNoNewArrayArrayAccessContext ctx) {
+    public Void visitPrimaryNoNewArrayArrayAccess(PrimaryNoNewArrayArrayAccessContext ctx) {
         withPrimaryNoNewArrayChain(ctx, resolvedChain -> handlePrimaryNoNewArrayArrayAccess(ctx, resolvedChain.stepCursor()));
         return null;
     }
 
-    private void handlePrimaryNoNewArrayArrayAccess(JPlus25Parser.PrimaryNoNewArrayArrayAccessContext ctx, StepCursor cursor) {
+    private void handlePrimaryNoNewArrayArrayAccess(PrimaryNoNewArrayArrayAccessContext ctx, StepCursor cursor) {
         //need dataflow
         //expressionName '[' expression ']' pNNA?
         //must handle the front part of `expressionName '[' expression ']'`
@@ -2294,12 +2294,12 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitPrimaryNoNewArrayArrayCreationWithInitAccess(JPlus25Parser.PrimaryNoNewArrayArrayCreationWithInitAccessContext ctx) {
+    public Void visitPrimaryNoNewArrayArrayCreationWithInitAccess(PrimaryNoNewArrayArrayCreationWithInitAccessContext ctx) {
         withPrimaryNoNewArrayChain(ctx, resolvedChain -> handlePrimaryNoNewArrayArrayCreationWithInitAccess(ctx, resolvedChain.stepCursor()));
         return null;
     }
 
-    private void handlePrimaryNoNewArrayArrayCreationWithInitAccess(JPlus25Parser.PrimaryNoNewArrayArrayCreationWithInitAccessContext ctx, StepCursor cursor) {
+    private void handlePrimaryNoNewArrayArrayCreationWithInitAccess(PrimaryNoNewArrayArrayCreationWithInitAccessContext ctx, StepCursor cursor) {
         //arrayCreationExpressionWithInitializer '[' expression ']' pNNA?
         //must handle `arrayCreationExpressionWithInitializer '[' expression ']'`
         //so must add the support for `arrayCreationExpressionWithInitializer '[' expression ']'`in symbol analyzer.
@@ -2311,7 +2311,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitPrimaryNoNewArrayMethodInvocation(JPlus25Parser.PrimaryNoNewArrayMethodInvocationContext ctx) {
+    public Void visitPrimaryNoNewArrayMethodInvocation(PrimaryNoNewArrayMethodInvocationContext ctx) {
         withPrimaryNoNewArrayChain(ctx, resolvedChain -> processImplicitReceiverMethodInvocationSignature(MethodInvocationSignatureContextAdapter.from(ctx), resolvedChain.stepCursor()));
         return null;
     }
@@ -2369,7 +2369,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
                                     .copy();
 
                     try {
-                        var methodBody = (JPlus25Parser.BlockContext) invocationDefCtx.invocationBody();
+                        var methodBody = (BlockContext) invocationDefCtx.invocationBody();
 
                         if (methodBody.blockStatements() != null) visit(methodBody.blockStatements());
 
@@ -2379,7 +2379,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
                 });
     }
 
-    private void handlePrimaryNoNewArrayMethodInvocation(JPlus25Parser.PrimaryNoNewArrayExprMethodInvocationContext ctx, StepCursor cursor) {
+    private void handlePrimaryNoNewArrayMethodInvocation(PrimaryNoNewArrayExprMethodInvocationContext ctx, StepCursor cursor) {
         var prevStep = cursor.peekPrev().orElseThrow(() -> new IllegalStateException("A ExpressionName rule needed."));
         var currentStep = cursor.consume();
 
@@ -2429,12 +2429,12 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitPrimaryNoNewArrayTypeMethodInvocation(JPlus25Parser.PrimaryNoNewArrayTypeMethodInvocationContext ctx) {
+    public Void visitPrimaryNoNewArrayTypeMethodInvocation(PrimaryNoNewArrayTypeMethodInvocationContext ctx) {
         withPrimaryNoNewArrayChain(ctx, resolvedChain -> handlePrimaryNoNewArrayTypeMethodInvocation(ctx, resolvedChain.stepCursor()));
         return null;
     }
 
-    private void handlePrimaryNoNewArrayTypeMethodInvocation(JPlus25Parser.PrimaryNoNewArrayTypeMethodInvocationContext ctx, StepCursor cursor) {
+    private void handlePrimaryNoNewArrayTypeMethodInvocation(PrimaryNoNewArrayTypeMethodInvocationContext ctx, StepCursor cursor) {
         processTypeName(ctx.typeName(), cursor);
         processExplicitReceiverMethodInvocationSignature(MethodInvocationSignatureContextAdapter.from(ctx), cursor);
     }
@@ -2489,18 +2489,18 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         //handlePNNA(PNNAContextAdapter.from(ctx.pNNA()), cursor);
     }
 
-    private void handleExprQualifiedClassInstanceCreation(JPlus25Parser.PrimaryNoNewArrayExprQualifiedClassInstanceCreationContext ctx, StepCursor cursor) {
+    private void handleExprQualifiedClassInstanceCreation(PrimaryNoNewArrayExprQualifiedClassInstanceCreationContext ctx, StepCursor cursor) {
         handleExpressionName(ctx.expressionName(), cursor);
         handleUnqualifiedClassInstanceCreationExpression(PrimaryNoNewArrayUnqualifiedClassInstanceCreationContextAdapter.from(ctx), cursor);
     }
 
     @Override
-    public Void visitPrimaryNoNewArraySuperMethodInvocation(JPlus25Parser.PrimaryNoNewArraySuperMethodInvocationContext ctx) {
+    public Void visitPrimaryNoNewArraySuperMethodInvocation(PrimaryNoNewArraySuperMethodInvocationContext ctx) {
         withPrimaryNoNewArrayChain(ctx, resolvedChain -> handlePrimaryNoNewArraySuperMethodInvocation(ctx, resolvedChain.stepCursor()));
         return null;
     }
 
-    private void handlePrimaryNoNewArraySuperMethodInvocation(JPlus25Parser.PrimaryNoNewArraySuperMethodInvocationContext ctx, StepCursor cursor) {
+    private void handlePrimaryNoNewArraySuperMethodInvocation(PrimaryNoNewArraySuperMethodInvocationContext ctx, StepCursor cursor) {
         //'super' '.' typeArguments? identifier '(' argumentList? ')' pNNA?
         //skip: super
         cursor.consume();
@@ -2509,12 +2509,12 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
 
 
     @Override
-    public Void visitPrimaryNoNewArrayQualifiedSuperMethodInvocation(JPlus25Parser.PrimaryNoNewArrayQualifiedSuperMethodInvocationContext ctx) {
+    public Void visitPrimaryNoNewArrayQualifiedSuperMethodInvocation(PrimaryNoNewArrayQualifiedSuperMethodInvocationContext ctx) {
         withPrimaryNoNewArrayChain(ctx, resolvedChain -> handlePrimaryNoNewArrayQualifiedSuperMethodInvocation(ctx, resolvedChain.stepCursor()));
         return null;
     }
 
-    private void handlePrimaryNoNewArrayQualifiedSuperMethodInvocation(JPlus25Parser.PrimaryNoNewArrayQualifiedSuperMethodInvocationContext ctx, StepCursor cursor) {
+    private void handlePrimaryNoNewArrayQualifiedSuperMethodInvocation(PrimaryNoNewArrayQualifiedSuperMethodInvocationContext ctx, StepCursor cursor) {
         processTypeName(ctx.typeName(), cursor);
         //skip: super
         cursor.consume();
@@ -2522,29 +2522,29 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitPrimaryNoNewArrayExprMethodReference(JPlus25Parser.PrimaryNoNewArrayExprMethodReferenceContext ctx) {
+    public Void visitPrimaryNoNewArrayExprMethodReference(PrimaryNoNewArrayExprMethodReferenceContext ctx) {
         withPrimaryNoNewArrayChain(ctx, resolvedChain -> handlePrimaryNoNewArrayprimaryNoNewArrayExprMethodReference(ctx, resolvedChain.stepCursor()));
         return null;
     }
 
-    private void handlePrimaryNoNewArrayprimaryNoNewArrayExprMethodReference(JPlus25Parser.PrimaryNoNewArrayExprMethodReferenceContext ctx, StepCursor cursor) {
+    private void handlePrimaryNoNewArrayprimaryNoNewArrayExprMethodReference(PrimaryNoNewArrayExprMethodReferenceContext ctx, StepCursor cursor) {
         //expressionName '::' typeArguments? identifier pNNA?
         handleExpressionName(ctx.expressionName(), cursor);
     }
 
 
     @Override
-    public Void visitPrimaryNoNewArrayParenExpression(JPlus25Parser.PrimaryNoNewArrayParenExpressionContext ctx) {
+    public Void visitPrimaryNoNewArrayParenExpression(PrimaryNoNewArrayParenExpressionContext ctx) {
         //'(' expression ')' pNNA?
         withPrimaryNoNewArrayChain(ctx, resolvedChain -> handlePrimaryNoNewArrayParenExpression(ctx, resolvedChain.stepCursor()));
         return null;
     }
 
-    private void handlePrimaryNoNewArrayParenExpression(JPlus25Parser.PrimaryNoNewArrayParenExpressionContext ctx, StepCursor cursor) {
+    private void handlePrimaryNoNewArrayParenExpression(PrimaryNoNewArrayParenExpressionContext ctx, StepCursor cursor) {
         handleExpressionWithParenthesis(ctx, cursor);
     }
 
-    private void handleExpressionWithParenthesis(JPlus25Parser.PrimaryNoNewArrayParenExpressionContext ctx, StepCursor cursor) {
+    private void handleExpressionWithParenthesis(PrimaryNoNewArrayParenExpressionContext ctx, StepCursor cursor) {
         log("[handleExpressionWithParenthesis] expression = " + Utils.getTokenString(ctx.expression()));
         log("[handleExpressionWithParenthesis] step = " + cursor.peek());
 
@@ -2575,19 +2575,19 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         }
     }
 
-    private void processTypeName(JPlus25Parser.TypeNameContext ctx, StepCursor cursor) {
+    private void processTypeName(TypeNameContext ctx, StepCursor cursor) {
         processPackageName(ctx.packageName(), cursor);
         processTypeIdentifier(ctx.typeIdentifier(), cursor);
     }
 
-    private void processTypeIdentifier(JPlus25Parser.TypeIdentifierContext ctx, StepCursor cursor) {
+    private void processTypeIdentifier(TypeIdentifierContext ctx, StepCursor cursor) {
         if (ctx == null) return;
 
         var step = cursor.consume();
         if (!Objects.equals(step.symbol, Utils.getTokenString(ctx))) throw new IllegalStateException();
     }
 
-    private void processPackageName(JPlus25Parser.PackageNameContext ctx, StepCursor cursor) {
+    private void processPackageName(PackageNameContext ctx, StepCursor cursor) {
         if (ctx == null) return;
 
         var step = cursor.consume();
@@ -2650,15 +2650,15 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         log("[handlePNNA] context string = " + Utils.getTokenString(ctx.originalContext()));
 
         switch(ctx.originalContext()) {
-            case JPlus25Parser.PNNAClassInstanceCreationContext instanceCreationContext
+            case PNNAClassInstanceCreationContext instanceCreationContext
                     -> processPNNAClassInstanceCreation(instanceCreationContext, cursor);
-            case JPlus25Parser.PNNAFieldAccessContext fieldAccessContext
+            case PNNAFieldAccessContext fieldAccessContext
                     -> processPNNAFieldAccessContext(fieldAccessContext, cursor);
-            case JPlus25Parser.PNNAMethodInvocationContext methodInvocationContext
+            case PNNAMethodInvocationContext methodInvocationContext
                     -> processPNNAMethodInvocationContext(methodInvocationContext, cursor);
-            //case JPlus25Parser.PNNAArrayAccessContext arrayAccessContext
+            //case PNNAArrayAccessContext arrayAccessContext
             //      -> processPNNAArrayAccessContext(arrayAccessContext);
-            //case JPlus25Parser.PNNAMethodReferenceContext methodReferenceContext
+            //case PNNAMethodReferenceContext methodReferenceContext
             //      -> processPNNAMethodReferenceContext(methodReferenceContext);
             default -> throw new IllegalStateException();
         }
@@ -2666,18 +2666,18 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         handlePNNA(PNNAContextAdapter.from(ctx.pNNA()), cursor);
     }
 
-    /*private void processPNNAMethodReferenceContext(JPlus25Parser.PNNAMethodReferenceContext methodReferenceContext) {
+    /*private void processPNNAMethodReferenceContext(PNNAMethodReferenceContext methodReferenceContext) {
     }*/
 
-    private void processPNNAMethodInvocationContext(JPlus25Parser.PNNAMethodInvocationContext ctx, StepCursor cursor) {
+    private void processPNNAMethodInvocationContext(PNNAMethodInvocationContext ctx, StepCursor cursor) {
         processExplicitReceiverMethodInvocationSignature(MethodInvocationSignatureContextAdapter.from(ctx), cursor);
         if (ctx.argumentList() != null) super.visitChildren(ctx.argumentList());
     }
 
-    /*private void processPNNAArrayAccessContext(JPlus25Parser.PNNAArrayAccessContext arrayAccessContext) {
+    /*private void processPNNAArrayAccessContext(PNNAArrayAccessContext arrayAccessContext) {
     }*/
 
-    private void processPNNAFieldAccessContext(JPlus25Parser.PNNAFieldAccessContext ctx, StepCursor cursor) {
+    private void processPNNAFieldAccessContext(PNNAFieldAccessContext ctx, StepCursor cursor) {
         ResolvedChain.Step prevStep = cursor.peekPrev().orElse(null);
         //System.err.println("[processPNNAFieldAccessContext] prevStep = " + prevStep);
 
@@ -2692,7 +2692,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         cursor.consume();
     }
 
-    private void processPNNAClassInstanceCreation(JPlus25Parser.PNNAClassInstanceCreationContext instanceCreationContext, StepCursor cursor) {
+    private void processPNNAClassInstanceCreation(PNNAClassInstanceCreationContext instanceCreationContext, StepCursor cursor) {
         handleUnqualifiedClassInstanceCreationExpression(PrimaryNoNewArrayUnqualifiedClassInstanceCreationContextAdapter.from(instanceCreationContext), cursor);
     }
 
@@ -2702,7 +2702,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
                 && ctx.NULLSAFE() == null;
     }
 
-    private void handleExpressionName(JPlus25Parser.ExpressionNameContext ctx, StepCursor cursor) {
+    private void handleExpressionName(ExpressionNameContext ctx, StepCursor cursor) {
         var expressionNameList = getExpressionNameList(ctx);
         processExpressionNameContext(expressionNameList, cursor);
     }
@@ -2728,14 +2728,14 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         return symbolTable.getEnclosingSymbolTable(receiverClassSymbolInfo.getSymbol());
     }
 
-    private void processExpressionNameContext(List<JPlus25Parser.ExpressionNameContext> expressionNameList, StepCursor cursor) {
+    private void processExpressionNameContext(List<ExpressionNameContext> expressionNameList, StepCursor cursor) {
 
         ResolvedChain.Step prevStep = null;
 
         SymbolTable symbolTable = currentSymbolTable;
         SymbolInfo symbolInfo = null;
 
-        for (JPlus25Parser.ExpressionNameContext ctx : expressionNameList) {
+        for (ExpressionNameContext ctx : expressionNameList) {
 
             var step = cursor.consume();
             var rangeOpt = findTransformedRange(Utils.getTextChangeRange(originalText, ctx));
@@ -2779,9 +2779,9 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         }
     }
 
-    private List<JPlus25Parser.ExpressionNameContext> getExpressionNameList(JPlus25Parser.ExpressionNameContext ctx) {
-        Deque<JPlus25Parser.ExpressionNameContext> expressionNameContextDeque = new ArrayDeque<>();
-        JPlus25Parser.ExpressionNameContext current = ctx;
+    private List<ExpressionNameContext> getExpressionNameList(ExpressionNameContext ctx) {
+        Deque<ExpressionNameContext> expressionNameContextDeque = new ArrayDeque<>();
+        ExpressionNameContext current = ctx;
         expressionNameContextDeque.addFirst(current);
         while (current.expressionName() != null) {
             current = current.expressionName();

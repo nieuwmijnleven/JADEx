@@ -26,12 +26,14 @@
 
 package jplus.plugin.intellij;
 
+import com.intellij.codeInsight.daemon.impl.DaemonCodeAnalyzerEx;
 import com.intellij.codeInsight.daemon.impl.DaemonCodeAnalyzerImpl;
 import com.intellij.codeInsight.daemon.impl.HighlightInfo;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.command.WriteCommandAction;
+import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
@@ -61,9 +63,6 @@ public class JPlusFileService {
     public void compileAndWriteToJava(PsiFile file, VirtualFile jplusFile, String jplusCode, ProgressIndicator indicator) {
 
         try {
-
-            boolean hasError = ReadAction.compute(() -> hasErrorInProblems(file));
-            if (hasError) return;
 
             Project ideaProject = file.getProject();
 
@@ -131,17 +130,5 @@ public class JPlusFileService {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    private boolean hasErrorInProblems(PsiFile file) {
-
-        List<HighlightInfo> infos = DaemonCodeAnalyzerImpl.getHighlights(
-                file.getViewProvider().getDocument(),
-                HighlightSeverity.ERROR,
-                project
-        );
-
-        return infos.stream()
-                .anyMatch(info -> info.getSeverity() == HighlightSeverity.ERROR);
     }
 }

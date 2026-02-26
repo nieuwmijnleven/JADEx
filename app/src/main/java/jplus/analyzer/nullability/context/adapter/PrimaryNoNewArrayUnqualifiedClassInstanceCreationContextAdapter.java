@@ -26,7 +26,7 @@
 
 package jplus.analyzer.nullability.context.adapter;
 
-import jplus.base.JPlus25Parser;
+import jplus.base.JADEx25Parser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -34,13 +34,13 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 public interface PrimaryNoNewArrayUnqualifiedClassInstanceCreationContextAdapter {
 
     ParserRuleContext originalContext();
-    JPlus25Parser.UnqualifiedClassInstanceCreationExpressionContext unqualifiedClassInstanceCreationExpression();
-    JPlus25Parser.ArgumentListContext argumentList();
+    JADEx25Parser.UnqualifiedClassInstanceCreationExpressionContext unqualifiedClassInstanceCreationExpression();
+    JADEx25Parser.ArgumentListContext argumentList();
     TerminalNode NULLSAFE();
-    JPlus25Parser.PNNAContext pNNA();
+    JADEx25Parser.PNNAContext pNNA();
     Token getStart();
 
-    static PrimaryNoNewArrayUnqualifiedClassInstanceCreationContextAdapter from(JPlus25Parser.PrimaryNoNewArrayClassInstanceCreationContext ctx) {
+    static PrimaryNoNewArrayUnqualifiedClassInstanceCreationContextAdapter from(JADEx25Parser.PrimaryNoNewArrayClassInstanceCreationContext ctx) {
         return new PrimaryNoNewArrayUnqualifiedClassInstanceCreationContextAdapter() {
             @Override
             public ParserRuleContext originalContext() {
@@ -48,17 +48,17 @@ public interface PrimaryNoNewArrayUnqualifiedClassInstanceCreationContextAdapter
             }
 
             @Override
-            public JPlus25Parser.UnqualifiedClassInstanceCreationExpressionContext unqualifiedClassInstanceCreationExpression() {
+            public JADEx25Parser.UnqualifiedClassInstanceCreationExpressionContext unqualifiedClassInstanceCreationExpression() {
                 return ctx.unqualifiedClassInstanceCreationExpression();
             }
 
             @Override
-            public JPlus25Parser.ArgumentListContext argumentList() {
+            public JADEx25Parser.ArgumentListContext argumentList() {
                 return ctx.unqualifiedClassInstanceCreationExpression().argumentList();
             }
 
             @Override
-            public JPlus25Parser.PNNAContext pNNA() {
+            public JADEx25Parser.PNNAContext pNNA() {
                 return ctx.pNNA();
             }
 
@@ -74,7 +74,7 @@ public interface PrimaryNoNewArrayUnqualifiedClassInstanceCreationContextAdapter
         };
     }
 
-    static PrimaryNoNewArrayUnqualifiedClassInstanceCreationContextAdapter from(JPlus25Parser.PrimaryNoNewArrayExprQualifiedClassInstanceCreationContext ctx) {
+    static PrimaryNoNewArrayUnqualifiedClassInstanceCreationContextAdapter from(JADEx25Parser.PrimaryNoNewArrayExprQualifiedClassInstanceCreationContext ctx) {
         return new PrimaryNoNewArrayUnqualifiedClassInstanceCreationContextAdapter() {
             @Override
             public ParserRuleContext originalContext() {
@@ -82,17 +82,17 @@ public interface PrimaryNoNewArrayUnqualifiedClassInstanceCreationContextAdapter
             }
 
             @Override
-            public JPlus25Parser.UnqualifiedClassInstanceCreationExpressionContext unqualifiedClassInstanceCreationExpression() {
+            public JADEx25Parser.UnqualifiedClassInstanceCreationExpressionContext unqualifiedClassInstanceCreationExpression() {
                 return ctx.unqualifiedClassInstanceCreationExpression();
             }
 
             @Override
-            public JPlus25Parser.ArgumentListContext argumentList() {
+            public JADEx25Parser.ArgumentListContext argumentList() {
                 return ctx.unqualifiedClassInstanceCreationExpression().argumentList();
             }
 
             @Override
-            public JPlus25Parser.PNNAContext pNNA() {
+            public JADEx25Parser.PNNAContext pNNA() {
                 return ctx.pNNA();
             }
 
@@ -108,7 +108,7 @@ public interface PrimaryNoNewArrayUnqualifiedClassInstanceCreationContextAdapter
         };
     }
 
-    static PrimaryNoNewArrayUnqualifiedClassInstanceCreationContextAdapter from(JPlus25Parser.PrimaryNoNewArrayArrayQualifiedClassInstanceCreationContext ctx) {
+    static PrimaryNoNewArrayUnqualifiedClassInstanceCreationContextAdapter from(JADEx25Parser.PrimaryNoNewArrayArrayQualifiedClassInstanceCreationContext ctx) {
         return new PrimaryNoNewArrayUnqualifiedClassInstanceCreationContextAdapter() {
             @Override
             public ParserRuleContext originalContext() {
@@ -116,17 +116,17 @@ public interface PrimaryNoNewArrayUnqualifiedClassInstanceCreationContextAdapter
             }
 
             @Override
-            public JPlus25Parser.UnqualifiedClassInstanceCreationExpressionContext unqualifiedClassInstanceCreationExpression() {
+            public JADEx25Parser.UnqualifiedClassInstanceCreationExpressionContext unqualifiedClassInstanceCreationExpression() {
                 return ctx.unqualifiedClassInstanceCreationExpression();
             }
 
             @Override
-            public JPlus25Parser.ArgumentListContext argumentList() {
+            public JADEx25Parser.ArgumentListContext argumentList() {
                 return ctx.unqualifiedClassInstanceCreationExpression().argumentList();
             }
 
             @Override
-            public JPlus25Parser.PNNAContext pNNA() {
+            public JADEx25Parser.PNNAContext pNNA() {
                 return ctx.pNNA();
             }
 
@@ -142,7 +142,7 @@ public interface PrimaryNoNewArrayUnqualifiedClassInstanceCreationContextAdapter
         };
     }
 
-    static PrimaryNoNewArrayUnqualifiedClassInstanceCreationContextAdapter from(JPlus25Parser.PNNAClassInstanceCreationContext ctx) {
+    static PrimaryNoNewArrayUnqualifiedClassInstanceCreationContextAdapter from(JADEx25Parser.PNNAClassInstanceCreationContext ctx) {
         return new PrimaryNoNewArrayUnqualifiedClassInstanceCreationContextAdapter() {
             @Override
             public ParserRuleContext originalContext() {
@@ -150,17 +150,17 @@ public interface PrimaryNoNewArrayUnqualifiedClassInstanceCreationContextAdapter
             }
 
             @Override
-            public JPlus25Parser.UnqualifiedClassInstanceCreationExpressionContext unqualifiedClassInstanceCreationExpression() {
+            public JADEx25Parser.UnqualifiedClassInstanceCreationExpressionContext unqualifiedClassInstanceCreationExpression() {
                 return ctx.unqualifiedClassInstanceCreationExpression();
             }
 
             @Override
-            public JPlus25Parser.ArgumentListContext argumentList() {
+            public JADEx25Parser.ArgumentListContext argumentList() {
                 return ctx.unqualifiedClassInstanceCreationExpression().argumentList();
             }
 
             @Override
-            public JPlus25Parser.PNNAContext pNNA() {
+            public JADEx25Parser.PNNAContext pNNA() {
                 return ctx.pNNA();
             }
 
@@ -184,17 +184,17 @@ public interface PrimaryNoNewArrayUnqualifiedClassInstanceCreationContextAdapter
             }
 
             @Override
-            public JPlus25Parser.UnqualifiedClassInstanceCreationExpressionContext unqualifiedClassInstanceCreationExpression() {
+            public JADEx25Parser.UnqualifiedClassInstanceCreationExpressionContext unqualifiedClassInstanceCreationExpression() {
                 return ctx.unqualifiedClassInstanceCreationExpression();
             }
 
             @Override
-            public JPlus25Parser.ArgumentListContext argumentList() {
+            public JADEx25Parser.ArgumentListContext argumentList() {
                 return ctx.unqualifiedClassInstanceCreationExpression().argumentList();
             }
 
             @Override
-            public JPlus25Parser.PNNAContext pNNA() {
+            public JADEx25Parser.PNNAContext pNNA() {
                 return ctx.pNNA();
             }
 

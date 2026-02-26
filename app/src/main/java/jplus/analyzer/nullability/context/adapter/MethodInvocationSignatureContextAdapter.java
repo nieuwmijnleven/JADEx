@@ -26,7 +26,7 @@
 
 package jplus.analyzer.nullability.context.adapter;
 
-import jplus.base.JPlus25Parser;
+import jplus.base.JADEx25Parser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -34,14 +34,14 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 public interface MethodInvocationSignatureContextAdapter {
 
     ParserRuleContext originalContext();
-    JPlus25Parser.IdentifierContext identifier();
-    JPlus25Parser.MethodNameContext methodName();
-    JPlus25Parser.ArgumentListContext argumentList();
-    JPlus25Parser.PNNAContext pNNA();
+    JADEx25Parser.IdentifierContext identifier();
+    JADEx25Parser.MethodNameContext methodName();
+    JADEx25Parser.ArgumentListContext argumentList();
+    JADEx25Parser.PNNAContext pNNA();
     TerminalNode NULLSAFE();
     Token getStart();
 
-    static MethodInvocationSignatureContextAdapter from(JPlus25Parser.PrimaryNoNewArrayTypeMethodInvocationContext ctx) {
+    static MethodInvocationSignatureContextAdapter from(JADEx25Parser.PrimaryNoNewArrayTypeMethodInvocationContext ctx) {
         return new MethodInvocationSignatureContextAdapter() {
             @Override
             public ParserRuleContext originalContext() {
@@ -49,22 +49,22 @@ public interface MethodInvocationSignatureContextAdapter {
             }
 
             @Override
-            public JPlus25Parser.IdentifierContext identifier() {
+            public JADEx25Parser.IdentifierContext identifier() {
                 return ctx.identifier();
             }
 
             @Override
-            public JPlus25Parser.MethodNameContext methodName() {
+            public JADEx25Parser.MethodNameContext methodName() {
                 return null;
             }
 
             @Override
-            public JPlus25Parser.ArgumentListContext argumentList() {
+            public JADEx25Parser.ArgumentListContext argumentList() {
                 return ctx.argumentList();
             }
 
             @Override
-            public JPlus25Parser.PNNAContext pNNA() {
+            public JADEx25Parser.PNNAContext pNNA() {
                 return ctx.pNNA();
             }
 
@@ -80,7 +80,7 @@ public interface MethodInvocationSignatureContextAdapter {
         };
     }
 
-    static MethodInvocationSignatureContextAdapter from(JPlus25Parser.PrimaryNoNewArrayArrayMethodInvocationContext ctx) {
+    static MethodInvocationSignatureContextAdapter from(JADEx25Parser.PrimaryNoNewArrayArrayMethodInvocationContext ctx) {
         return new MethodInvocationSignatureContextAdapter() {
             @Override
             public ParserRuleContext originalContext() {
@@ -88,17 +88,17 @@ public interface MethodInvocationSignatureContextAdapter {
             }
 
             @Override
-            public JPlus25Parser.IdentifierContext identifier() {
+            public JADEx25Parser.IdentifierContext identifier() {
                 return ctx.identifier();
             }
 
             @Override
-            public JPlus25Parser.MethodNameContext methodName() {
+            public JADEx25Parser.MethodNameContext methodName() {
                 return null;
             }
 
             @Override
-            public JPlus25Parser.ArgumentListContext argumentList() {
+            public JADEx25Parser.ArgumentListContext argumentList() {
                 return ctx.argumentList();
             }
 
@@ -108,7 +108,7 @@ public interface MethodInvocationSignatureContextAdapter {
             }
 
             @Override
-            public JPlus25Parser.PNNAContext pNNA() {
+            public JADEx25Parser.PNNAContext pNNA() {
                 return ctx.pNNA();
             }
 
@@ -119,7 +119,7 @@ public interface MethodInvocationSignatureContextAdapter {
         };
     }
 
-    static MethodInvocationSignatureContextAdapter from(JPlus25Parser.PrimaryNoNewArrayQualifiedSuperMethodInvocationContext ctx) {
+    static MethodInvocationSignatureContextAdapter from(JADEx25Parser.PrimaryNoNewArrayQualifiedSuperMethodInvocationContext ctx) {
         return new MethodInvocationSignatureContextAdapter() {
             @Override
             public ParserRuleContext originalContext() {
@@ -127,17 +127,17 @@ public interface MethodInvocationSignatureContextAdapter {
             }
 
             @Override
-            public JPlus25Parser.IdentifierContext identifier() {
+            public JADEx25Parser.IdentifierContext identifier() {
                 return ctx.identifier();
             }
 
             @Override
-            public JPlus25Parser.MethodNameContext methodName() {
+            public JADEx25Parser.MethodNameContext methodName() {
                 return null;
             }
 
             @Override
-            public JPlus25Parser.ArgumentListContext argumentList() {
+            public JADEx25Parser.ArgumentListContext argumentList() {
                 return ctx.argumentList();
             }
 
@@ -147,7 +147,7 @@ public interface MethodInvocationSignatureContextAdapter {
             }
 
             @Override
-            public JPlus25Parser.PNNAContext pNNA() {
+            public JADEx25Parser.PNNAContext pNNA() {
                 return ctx.pNNA();
             }
 
@@ -158,7 +158,7 @@ public interface MethodInvocationSignatureContextAdapter {
         };
     }
 
-    static MethodInvocationSignatureContextAdapter from(JPlus25Parser.MethodInvocationContext ctx) {
+    static MethodInvocationSignatureContextAdapter from(JADEx25Parser.MethodInvocationContext ctx) {
         return new MethodInvocationSignatureContextAdapter() {
             @Override
             public ParserRuleContext originalContext() {
@@ -166,22 +166,22 @@ public interface MethodInvocationSignatureContextAdapter {
             }
 
             @Override
-            public JPlus25Parser.IdentifierContext identifier() {
+            public JADEx25Parser.IdentifierContext identifier() {
                 return ctx.identifier();
             }
 
             @Override
-            public JPlus25Parser.MethodNameContext methodName() {
+            public JADEx25Parser.MethodNameContext methodName() {
                 return ctx.methodName();
             }
 
             @Override
-            public JPlus25Parser.ArgumentListContext argumentList() {
+            public JADEx25Parser.ArgumentListContext argumentList() {
                 return ctx.argumentList();
             }
 
             @Override
-            public JPlus25Parser.PNNAContext pNNA() {
+            public JADEx25Parser.PNNAContext pNNA() {
                 return null;
             }
 
@@ -197,7 +197,7 @@ public interface MethodInvocationSignatureContextAdapter {
         };
     }
 
-    static MethodInvocationSignatureContextAdapter from(JPlus25Parser.PrimaryNoNewArrayMethodInvocationContext ctx) {
+    static MethodInvocationSignatureContextAdapter from(JADEx25Parser.PrimaryNoNewArrayMethodInvocationContext ctx) {
         return new MethodInvocationSignatureContextAdapter() {
             @Override
             public ParserRuleContext originalContext() {
@@ -205,22 +205,22 @@ public interface MethodInvocationSignatureContextAdapter {
             }
 
             @Override
-            public JPlus25Parser.IdentifierContext identifier() {
+            public JADEx25Parser.IdentifierContext identifier() {
                 return null;
             }
 
             @Override
-            public JPlus25Parser.MethodNameContext methodName() {
+            public JADEx25Parser.MethodNameContext methodName() {
                 return ctx.methodName();
             }
 
             @Override
-            public JPlus25Parser.ArgumentListContext argumentList() {
+            public JADEx25Parser.ArgumentListContext argumentList() {
                 return ctx.argumentList();
             }
 
             @Override
-            public JPlus25Parser.PNNAContext pNNA() {
+            public JADEx25Parser.PNNAContext pNNA() {
                 return null;
             }
 
@@ -236,7 +236,7 @@ public interface MethodInvocationSignatureContextAdapter {
         };
     }
 
-    static MethodInvocationSignatureContextAdapter from(JPlus25Parser.PrimaryNoNewArraySuperMethodInvocationContext ctx) {
+    static MethodInvocationSignatureContextAdapter from(JADEx25Parser.PrimaryNoNewArraySuperMethodInvocationContext ctx) {
         return new MethodInvocationSignatureContextAdapter() {
             @Override
             public ParserRuleContext originalContext() {
@@ -244,22 +244,22 @@ public interface MethodInvocationSignatureContextAdapter {
             }
 
             @Override
-            public JPlus25Parser.IdentifierContext identifier() {
+            public JADEx25Parser.IdentifierContext identifier() {
                 return ctx.identifier();
             }
 
             @Override
-            public JPlus25Parser.MethodNameContext methodName() {
+            public JADEx25Parser.MethodNameContext methodName() {
                 return null;
             }
 
             @Override
-            public JPlus25Parser.ArgumentListContext argumentList() {
+            public JADEx25Parser.ArgumentListContext argumentList() {
                 return ctx.argumentList();
             }
 
             @Override
-            public JPlus25Parser.PNNAContext pNNA() {
+            public JADEx25Parser.PNNAContext pNNA() {
                 return ctx.pNNA();
             }
 
@@ -275,7 +275,7 @@ public interface MethodInvocationSignatureContextAdapter {
         };
     }
 
-    static MethodInvocationSignatureContextAdapter from(JPlus25Parser.PNNAMethodInvocationContext ctx) {
+    static MethodInvocationSignatureContextAdapter from(JADEx25Parser.PNNAMethodInvocationContext ctx) {
         return new MethodInvocationSignatureContextAdapter() {
             @Override
             public ParserRuleContext originalContext() {
@@ -283,22 +283,22 @@ public interface MethodInvocationSignatureContextAdapter {
             }
 
             @Override
-            public JPlus25Parser.IdentifierContext identifier() {
+            public JADEx25Parser.IdentifierContext identifier() {
                 return ctx.identifier();
             }
 
             @Override
-            public JPlus25Parser.MethodNameContext methodName() {
+            public JADEx25Parser.MethodNameContext methodName() {
                 return null;
             }
 
             @Override
-            public JPlus25Parser.ArgumentListContext argumentList() {
+            public JADEx25Parser.ArgumentListContext argumentList() {
                 return ctx.argumentList();
             }
 
             @Override
-            public JPlus25Parser.PNNAContext pNNA() {
+            public JADEx25Parser.PNNAContext pNNA() {
                 return ctx.pNNA();
             }
 
@@ -314,8 +314,8 @@ public interface MethodInvocationSignatureContextAdapter {
         };
     }
 
-    //JPlus25Parser.PrimaryNoNewArrayExprMethodInvocationContext
-    static MethodInvocationSignatureContextAdapter from(JPlus25Parser.PrimaryNoNewArrayExprMethodInvocationContext ctx) {
+    //JADEx25Parser.PrimaryNoNewArrayExprMethodInvocationContext
+    static MethodInvocationSignatureContextAdapter from(JADEx25Parser.PrimaryNoNewArrayExprMethodInvocationContext ctx) {
         return new MethodInvocationSignatureContextAdapter() {
             @Override
             public ParserRuleContext originalContext() {
@@ -323,22 +323,22 @@ public interface MethodInvocationSignatureContextAdapter {
             }
 
             @Override
-            public JPlus25Parser.IdentifierContext identifier() {
+            public JADEx25Parser.IdentifierContext identifier() {
                 return ctx.identifier();
             }
 
             @Override
-            public JPlus25Parser.MethodNameContext methodName() {
+            public JADEx25Parser.MethodNameContext methodName() {
                 return null;
             }
 
             @Override
-            public JPlus25Parser.ArgumentListContext argumentList() {
+            public JADEx25Parser.ArgumentListContext argumentList() {
                 return ctx.argumentList();
             }
 
             @Override
-            public JPlus25Parser.PNNAContext pNNA() {
+            public JADEx25Parser.PNNAContext pNNA() {
                 return ctx.pNNA();
             }
 
@@ -355,7 +355,7 @@ public interface MethodInvocationSignatureContextAdapter {
     }
 
     //UnqualifiedClassInstanceCreationExpressionContext
-    static MethodInvocationSignatureContextAdapter from(JPlus25Parser.UnqualifiedClassInstanceCreationExpressionContext ctx) {
+    static MethodInvocationSignatureContextAdapter from(JADEx25Parser.UnqualifiedClassInstanceCreationExpressionContext ctx) {
         return new MethodInvocationSignatureContextAdapter() {
             @Override
             public ParserRuleContext originalContext() {
@@ -363,22 +363,22 @@ public interface MethodInvocationSignatureContextAdapter {
             }
 
             @Override
-            public JPlus25Parser.IdentifierContext identifier() {
+            public JADEx25Parser.IdentifierContext identifier() {
                 return null;
             }
 
             @Override
-            public JPlus25Parser.MethodNameContext methodName() {
+            public JADEx25Parser.MethodNameContext methodName() {
                 return null;
             }
 
             @Override
-            public JPlus25Parser.ArgumentListContext argumentList() {
+            public JADEx25Parser.ArgumentListContext argumentList() {
                 return ctx.argumentList();
             }
 
             @Override
-            public JPlus25Parser.PNNAContext pNNA() {
+            public JADEx25Parser.PNNAContext pNNA() {
                 return null;
             }
 
@@ -403,22 +403,22 @@ public interface MethodInvocationSignatureContextAdapter {
             }
 
             @Override
-            public JPlus25Parser.IdentifierContext identifier() {
+            public JADEx25Parser.IdentifierContext identifier() {
                 return null;
             }
 
             @Override
-            public JPlus25Parser.MethodNameContext methodName() {
+            public JADEx25Parser.MethodNameContext methodName() {
                 return null;
             }
 
             @Override
-            public JPlus25Parser.ArgumentListContext argumentList() {
+            public JADEx25Parser.ArgumentListContext argumentList() {
                 return ctx.argumentList();
             }
 
             @Override
-            public JPlus25Parser.PNNAContext pNNA() {
+            public JADEx25Parser.PNNAContext pNNA() {
                 return ctx.pNNA();
             }
 
