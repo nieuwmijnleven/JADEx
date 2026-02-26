@@ -1192,7 +1192,8 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         } else if (conditionResult.whenFalse().isDeadContext()) {
             currentSymbolTable = whenTrue;
         } else {
-            currentSymbolTable = join(whenTrue, conditionResult.whenFalse());
+            //currentSymbolTable = join(whenTrue, conditionResult.whenFalse());
+            currentSymbolTable = join(entry, whenTrue);
         }
 
         return null;
