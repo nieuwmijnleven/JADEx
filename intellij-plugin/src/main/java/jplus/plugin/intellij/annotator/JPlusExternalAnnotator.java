@@ -36,7 +36,6 @@ import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiFile;
-import jplus.analyzer.nullability.NullabilityChecker;
 import jplus.analyzer.nullability.issue.NullabilityIssue;
 import jplus.analyzer.nullability.issue.Severity;
 import jplus.plugin.intellij.JPlusFile;
@@ -93,7 +92,11 @@ public class JPlusExternalAnnotator
                 indicator.setFraction(0.1);
             }
 
-            processor.process();
+            var diagnostics = processor.process();
+//            if (!diagnostics.isEmpty()) {
+//                if (indicator != null) indicator.cancel();
+//                return new JPlusAnnotationResult(diagnostics, null);
+//            }
 
             if (indicator != null) {
                 indicator.checkCanceled();
@@ -115,7 +118,8 @@ public class JPlusExternalAnnotator
                 indicator.setFraction(1.0);
             }
 
-            return new JPlusAnnotationResult(issues);
+            return new JPlusAnnotationResult(diagnostics, issues);
+
         } catch (ProcessCanceledException pce) {
             throw pce;
         } catch (Exception e) {
@@ -130,6 +134,15 @@ public class JPlusExternalAnnotator
             @NotNull com.intellij.lang.annotation.AnnotationHolder holder
     ) {
         if (result == null) return;
+
+        for (var diagnostic : result.diagnostics()) {
+            holder.newAnnotation(
+                            HighlightSeverity.ERROR,
+                            diagnostic.message()
+                    )
+                    .range(TextRange.create((int)diagnostic.start(), (int)diagnostic.end()))
+                    .create();
+        }
 
         for (NullabilityIssue issue : result.issues()) {
             holder.newAnnotation(

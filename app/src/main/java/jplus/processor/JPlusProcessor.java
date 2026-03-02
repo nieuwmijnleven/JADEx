@@ -38,16 +38,21 @@ import jplus.generator.BoilerplateCodeGenerator;
 import jplus.generator.CodeGenContext;
 import jplus.generator.JADExParserRuleContext;
 import jplus.generator.SourceMappingEntry;
+import jplus.processor.issue.Issue;
+import jplus.processor.issue.Severity;
+import jplus.util.CodeGenUtils;
 import jplus.util.Utils;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 public class JPlusProcessor {
@@ -70,8 +75,10 @@ public class JPlusProcessor {
     private boolean nullabilityChecked = false;
     private boolean symbolsAnalyzed = false;
 
-    public JPlusProcessor(Project project, String originalText, SymbolTable globalSymbolTable) {
+    public JPlusProcessor(Project project, String packageName, String className, String originalText, SymbolTable globalSymbolTable) {
         this.project = project;
+        this.packageName = packageName;
+        this.className = className;
         this.originalText = originalText;
         this.globalSymbolTable = globalSymbolTable;
     }
@@ -79,24 +86,19 @@ public class JPlusProcessor {
     public JPlusProcessor(Project project, String packageName, String className) throws Exception {
         this(
                 project,
+                packageName,
+                className,
                 Files.readString(
                         resolveSourceFile(project, packageName, className),
                         StandardCharsets.UTF_8
                 ),
                 new SymbolTable(null)
         );
+
     }
 
     public JPlusProcessor(Project project, String originalText) {
-        this(project, originalText, new SymbolTable(null));
-    }
-
-    public JPlusProcessor(Project project, Path filePath) throws Exception {
-        this(project, Files.readString(filePath, StandardCharsets.UTF_8), new SymbolTable(null));
-    }
-
-    public JPlusProcessor(Project project, Path filePath, SymbolTable globalSymbolTable) throws Exception {
-        this(project, Files.readString(filePath, StandardCharsets.UTF_8), globalSymbolTable);
+        this(project, null, null, originalText, new SymbolTable(null));
     }
 
     private static Path resolveSourceFile(Project project, String packageName, String className) {
@@ -126,11 +128,12 @@ public class JPlusProcessor {
     // Main processing pipeline
     // --------------------------------------------------------------
 
-    public void process() throws Exception {
-        if (processed) return;
+    public List<Issue> process() throws Exception {
+        if (processed) return null;
 
         CodeGenContext.push();
         try {
+
             CharStream input = CharStreams.fromString(originalText);
             JADEx25Lexer lexer = new JADEx25Lexer(input);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -140,7 +143,8 @@ public class JPlusProcessor {
             processed = true;
 
             generateRuntime();
-            runInitialJavaProcessing();
+            return runInitialJavaProcessing();
+
         } finally {
             CodeGenContext.pop();
         }
@@ -280,7 +284,7 @@ public class JPlusProcessor {
         }
     }
 
-    private void runInitialJavaProcessing() throws Exception {
+    private List<Issue> runInitialJavaProcessing() throws Exception {
 
         String javaCode = generateJavaCodeForSemanticMode();
         System.err.println("[JPlusProcessor][runInitialJavaProcessing] javaCode = " + javaCode);
@@ -298,13 +302,44 @@ public class JPlusProcessor {
                 "}";
 
         List<InMemoryJavaFile> inMemoryJavaFiles = new ArrayList<>();
-        inMemoryJavaFiles.add(new InMemoryJavaFile("source", javaCode));
+
+        if (className != null) {
+            inMemoryJavaFiles.add(new InMemoryJavaFile(className, javaCode));
+        } else {
+            inMemoryJavaFiles.add(new InMemoryJavaFile("source", javaCode));
+        }
+
         inMemoryJavaFiles.add(new InMemoryJavaFile("JextUtils", jextUtilsClass));
 
-        //javaProcessor = new JavaProcessor(javaCode, globalSymbolTable);
         javaProcessor = new JavaProcessor(project, inMemoryJavaFiles, globalSymbolTable);
-        //System.err.println("[JPlusProcessor][runInitialJavaProcessing] javaProcessor.process()");
-        javaProcessor.process();
+        var diagnositics = javaProcessor.process();
+
+        var issueList = new ArrayList<Issue>();
+        for (var diagnositic : diagnositics) {
+
+            var issue =
+                    new Issue(
+                            Severity.ERROR,
+                            CodeGenUtils.mapOffsetFromTransformedToOriginal(
+                                    originalText,
+                                    javaCode,
+                                    (int) diagnositic.getStartPosition()),
+                            CodeGenUtils.mapOffsetFromTransformedToOriginal(
+                                    originalText,
+                                    javaCode,
+                                    (int)diagnositic.getEndPosition()),
+                            diagnositic.getMessage(Locale.getDefault())
+                    );
+
+            issueList.add(issue);
+        }
+
+        return issueList;
+    }
+
+    private int mapOffsetBtoA(String aText, String bText, int offsetInB) {
+        DiffMatchPatch dmp = new DiffMatchPatch();
+        return dmp.diffXIndex(dmp.diffMain(bText, aText), offsetInB);
     }
 
     public String getProcessedJavaCode() {
@@ -379,7 +414,7 @@ public class JPlusProcessor {
     public List<NullabilityIssue> checkNullability() {
         assertAnalyzed();
 
-        NullabilityChecker nullabilityChecker = new NullabilityChecker(globalSymbolTable, sourceMappingEntrySet, javaProcessor.getMethodInvocationManager().get(0));
+        NullabilityChecker nullabilityChecker = new NullabilityChecker(globalSymbolTable, sourceMappingEntrySet, javaProcessor.getSource(), javaProcessor.getMethodInvocationManager().getFirst());
         nullabilityChecker.visit(parseTree);
         nullabilityChecked = true;
         return nullabilityChecker.getIssues().stream().sorted().toList();

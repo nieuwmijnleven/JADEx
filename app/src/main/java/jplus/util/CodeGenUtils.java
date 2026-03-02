@@ -29,11 +29,12 @@ package jplus.util;
 import jplus.base.Modifier;
 import jplus.base.SymbolInfo;
 import jplus.base.TypeInfo;
+import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch;
 
 import java.util.EnumSet;
 import java.util.stream.Collectors;
 
-public class CodeGenUtils {
+public final class CodeGenUtils {
 
     private CodeGenUtils() {}
 
@@ -62,6 +63,15 @@ public class CodeGenUtils {
             return base;
         }
         return base + "<?>";
+    }
+
+    public static int mapOffsetFromTransformedToOriginal(
+            String originalText,
+            String transformedText,
+            int offsetInTransformed) {
+
+        DiffMatchPatch dmp = new DiffMatchPatch();
+        return dmp.diffXIndex(dmp.diffMain(transformedText, originalText), offsetInTransformed);
     }
 
     public static boolean hasAnyModifiers(SymbolInfo symbolInfo, EnumSet<Modifier> modifiers) {

@@ -209,7 +209,8 @@ public class BasicCodeGenDelegate implements CodeGenDelegate {
 //        } else {
 //            replaced += Utils.getTokenString(fieldDeclCtx.unannType());
 //        }
-        replaced += Utils.getTokenString(fieldDeclCtx.unannType());
+
+        replaced += replaceNullType(fieldDeclCtx.unannType());
         replaced += " ";
 
         replaced += fieldDeclCtx.variableDeclaratorList().getText();
@@ -222,6 +223,10 @@ public class BasicCodeGenDelegate implements CodeGenDelegate {
 
         var codeGenCtx = CodeGenContext.current();
         if (!codeGenCtx.isImmutableMode()) {
+            return processDefaultText();
+        }
+
+        if (locDeclCtx.getParent() instanceof JADEx25Parser.ForInitContext) {
             return processDefaultText();
         }
 
@@ -272,11 +277,14 @@ public class BasicCodeGenDelegate implements CodeGenDelegate {
                         .collect(Collectors.joining(" "));
         replaced += " ";
 
-        replaced += Utils.getTokenString(locDeclCtx.localVariableType());
+        if (locDeclCtx.localVariableType().unannType() instanceof UnannTypeContext unannTypeCtx) {
+            replaced += replaceNullType(unannTypeCtx);
+        } else {
+            replaced += Utils.getTokenString(locDeclCtx.localVariableType());
+        }
         replaced += " ";
 
         replaced += locDeclCtx.variableDeclaratorList().getText();
-
         return updateContextString(locDeclCtx, replaced);
     }
 

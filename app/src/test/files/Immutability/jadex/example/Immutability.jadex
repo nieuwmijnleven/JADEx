@@ -5,20 +5,21 @@ apply immutability;
 public class Immutability {
 
     private int capacity = 2; // immutable
-    private String msg = "immutable"; // immutable
+    private String? msg = "immutable"; // immutable
 
     private int uninitializedCapacity; // uninitilaized immutable
     private String uninitializedMsg; // uninitilaized immutable
 
-    private mutable String mutableMsg = "mutable";  // mutable
+    private mutable String? mutableMsg = "mutable";  // mutable
 
     public static void main(String[] args) {
         var immutable = new Immutability();
+        String? mutableMsg = "changed mutable";
 
-         immutable.capacity = 10; //error
-         immutable.msg = "new immutable"; //error
+        immutable.capacity = 10; //error
+        immutable.msg = "new immutable"; //error
 
-         immutable.mutableMsg = "changed mutable";
+        immutable.mutableMsg = mutableMsg;
 
         System.out.println("mutableMsg: " + immutable.mutableMsg);
         System.out.println("capacity: " + immutable.capacity);

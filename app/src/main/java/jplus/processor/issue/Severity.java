@@ -24,17 +24,10 @@
  * a commercial license. See the CLA file in the project root for details.
  */
 
-package jplus.plugin.intellij.annotator;
+package jplus.processor.issue;
 
-import jplus.analyzer.nullability.NullabilityChecker;
-import jplus.analyzer.nullability.issue.NullabilityIssue;
-import jplus.processor.issue.Issue;
-
-import javax.tools.Diagnostic;
-import javax.tools.JavaFileObject;
-import java.util.List;
-
-public record JPlusAnnotationResult(
-        List<Issue> diagnostics,
-        List<NullabilityIssue> issues
-) {}
+public enum Severity {
+    INFO,
+    WARNING,
+    ERROR
+}

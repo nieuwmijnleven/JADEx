@@ -103,7 +103,7 @@ public class JPlusTest9 {
                 "./src/test/files/Immutability",
                 "jadex.example",
                 "Immutability",
-                "f/aRHgiR9KpGPA5WL1+HE5Jix4g="
+                "R7qUiR7AY1ihEE0SB242caOV0nI="
         );
     }
 
@@ -114,8 +114,8 @@ public class JPlusTest9 {
                 "jadex.example",
                 "Immutability",
                 "Error: (line:11, column:4) Final field 'uninitializedMsg' is not initialized in one or more constructors of class 'Immutability'\n" +
-                        "Error: (line:18, column:9) cannot assign a value to final variable capacity\n" +
-                        "Error: (line:19, column:9) cannot assign a value to final variable msg\n"
+                        "Error: (line:19, column:8) cannot assign a value to final variable capacity\n" +
+                        "Error: (line:20, column:8) cannot assign a value to final variable msg\n"
         );
     }
 

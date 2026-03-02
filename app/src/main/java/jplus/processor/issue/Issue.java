@@ -24,17 +24,29 @@
  * a commercial license. See the CLA file in the project root for details.
  */
 
-package jplus.plugin.intellij.annotator;
+package jplus.processor.issue;
 
-import jplus.analyzer.nullability.NullabilityChecker;
-import jplus.analyzer.nullability.issue.NullabilityIssue;
-import jplus.processor.issue.Issue;
+import org.jspecify.annotations.NonNull;
 
-import javax.tools.Diagnostic;
-import javax.tools.JavaFileObject;
-import java.util.List;
+public record Issue(Severity severity, int start, int end, String message) implements Comparable<Issue> {
 
-public record JPlusAnnotationResult(
-        List<Issue> diagnostics,
-        List<NullabilityIssue> issues
-) {}
+    public Issue {
+        if (start < 0) {
+            throw new IllegalArgumentException("start offset must be >= 0");
+        }
+
+        if (end < 0) {
+            throw new IllegalArgumentException("end offset must be >= 0");
+        }
+    }
+
+    @Override
+    public int compareTo(Issue other) {
+        return Integer.compare(this.start, other.start);
+    }
+
+    @Override
+    public @NonNull String toString() {
+        return String.format("%s: (start:%d, end:%d) %s", severity, start, end, message);
+    }
+}

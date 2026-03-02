@@ -37,7 +37,10 @@ import jplus.base.SymbolTable;
 
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import javax.tools.Diagnostic;
+import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
@@ -49,6 +52,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -88,7 +92,7 @@ public class JavaProcessor {
 
     public JavaProcessor(Project project, List<InMemoryJavaFile> javaFiles, SymbolTable globalSymbolTable) {
         this.project = project;
-        this.source = javaFiles.get(0).getContent();
+        this.source = javaFiles.getFirst().getContent();
         this.javaFiles = javaFiles;
         this.globalSymbolTable = globalSymbolTable;
         this.symbolAnalyzerList = new ArrayList<>();
@@ -111,7 +115,7 @@ public class JavaProcessor {
         return compiler;
     }
 
-    public void process() throws Exception {
+    public List<Diagnostic<? extends JavaFileObject>> process() throws Exception {
 
         JavaCompiler compiler = getCachedJavaCompiler();
         if (compiler == null && project.getJdkHome() != null) {
@@ -122,8 +126,9 @@ public class JavaProcessor {
             }
         }
 
+        DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
 
-        StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+        StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnostics, null, null);
 
         List<String> options = new ArrayList<>();
         options.add("-XDcompilePolicy=simple");
@@ -159,7 +164,7 @@ public class JavaProcessor {
         task = (JavacTask) compiler.getTask(
                 null,
                 fileManager,
-                null,
+                diagnostics,
                 options,
                 null,
                 javaFiles
@@ -181,6 +186,8 @@ public class JavaProcessor {
         
         //System.err.println("task.getTypes()");
         types = task.getTypes();
+
+        return diagnostics.getDiagnostics();
     }
 
     private synchronized JavaCompiler loadJavaCompiler() {

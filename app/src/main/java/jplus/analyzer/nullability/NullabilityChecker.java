@@ -56,12 +56,14 @@ import jplus.base.SymbolTable;
 import jplus.base.TypeInfo;
 import jplus.generator.SourceMappingEntry;
 import jplus.generator.TextChangeRange;
+import jplus.util.CodeGenUtils;
 import jplus.util.CodeUtils;
 import jplus.util.MethodUtils;
 import jplus.util.Utils;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch;
 import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayDeque;
@@ -84,6 +86,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
 
     private final SymbolTable globalSymbolTable;
     private final Set<SourceMappingEntry> sourceMappingEntrySet;
+    private final String javaCode;
     private final JavaMethodInvocationManager methodInvocationManager;
     private SymbolTable currentSymbolTable;
     private final Set<TextChangeRange> consumedExpressions = new HashSet<>();
@@ -99,9 +102,10 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     private String originalText;
     private String packageName;
 
-    public NullabilityChecker(SymbolTable globalSymbolTable, Set<SourceMappingEntry> sourceMappingEntrySet, JavaMethodInvocationManager methodInvocationManager) {
+    public NullabilityChecker(SymbolTable globalSymbolTable, Set<SourceMappingEntry> sourceMappingEntrySet, String javaCode, JavaMethodInvocationManager methodInvocationManager) {
         this.globalSymbolTable = globalSymbolTable;
         this.sourceMappingEntrySet = sourceMappingEntrySet;
+        this.javaCode = javaCode;
         this.methodInvocationManager = methodInvocationManager;
         this.currentSymbolTable = globalSymbolTable;
     }
@@ -436,7 +440,11 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         log("[LambdaExpression] contextString = " + Utils.getTokenString(ctx));
         log("[LambdaExpression] startOffset = " + ctx.start.getStartIndex());
 
-        String lambdaSymbol = "^lambda$" + ctx.start.getStartIndex();
+        int javaCodeOffset = getMapOffset(ctx.start.getStartIndex());
+
+        String lambdaSymbol = "^lambda$" + javaCodeOffset;
+        System.err.println("lambdaSymbol = " + lambdaSymbol);
+
         enterSymbolTable(lambdaSymbol);
         try {
             log("[LambdaExpression] lambdaSymboTable = " + currentSymbolTable);
@@ -2777,6 +2785,10 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
 
             prevStep = step;
         }
+    }
+
+    private int getMapOffset(int offset) {
+        return CodeGenUtils.mapOffsetFromTransformedToOriginal(javaCode, originalText, offset);
     }
 
     private List<ExpressionNameContext> getExpressionNameList(ExpressionNameContext ctx) {
