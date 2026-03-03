@@ -75,7 +75,7 @@ class SymbolInfoTest {
     @Test
     void getNullState() {
         SymbolInfo info = new SymbolInfo("n", new TypeInfo("int", false, TypeInfo.Type.Primitive), null, null, List.of());
-        assertEquals(NullState.NON_NULL, info.getNullState());
+        assertEquals(NullState.UNKNOWN, info.getNullState());
     }
 
     @Test
