@@ -178,10 +178,7 @@ public class BasicCodeGenDelegate implements CodeGenDelegate {
         replaced += " ";
 
         replaced += ctx.variableDeclaratorList().getText();
-
-        if (ctx.originalContext() instanceof JADEx25Parser.FieldDeclarationContext) {
-            replaced += ";";
-        }
+        replaced += ctx.semicolon();
 
         return updateContextString(ctx.originalContext(), replaced);
     }

@@ -39,6 +39,7 @@ public interface VariableDeclarationContextAdapter {
     ParserRuleContext variableType();
     JADEx25Parser.UnannTypeContext unannType();
     JADEx25Parser.VariableDeclaratorListContext variableDeclaratorList();
+    String semicolon();
 
     Token getStart();
 
@@ -71,6 +72,11 @@ public interface VariableDeclarationContextAdapter {
             @Override
             public JADEx25Parser.VariableDeclaratorListContext variableDeclaratorList() {
                 return ctx.variableDeclaratorList();
+            }
+
+            @Override
+            public String semicolon() {
+                return ";";
             }
 
             @Override
@@ -109,6 +115,11 @@ public interface VariableDeclarationContextAdapter {
             @Override
             public JADEx25Parser.VariableDeclaratorListContext variableDeclaratorList() {
                 return ctx.variableDeclaratorList();
+            }
+
+            @Override
+            public String semicolon() {
+                return "";
             }
 
             @Override
