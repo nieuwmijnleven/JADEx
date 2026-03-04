@@ -214,7 +214,7 @@ public class BoilerplateCodeGenerator extends JADEx25ParserBaseVisitor<Void> {
                 ApplyFeatureProcessor processor = strategyMap.get(action.toLowerCase());
                 if (processor == null) {
 
-                    if (Objects.equals("immutability", action.toLowerCase())) continue;
+                    if (Objects.equals("readonly", action.toLowerCase())) continue;
 
                     throw new IllegalArgumentException("Unsupported action: " + action + " in feature " + feature + " at class " + qualifiedName);
                 }

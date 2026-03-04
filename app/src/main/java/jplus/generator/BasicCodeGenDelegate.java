@@ -81,6 +81,9 @@ public class BasicCodeGenDelegate implements CodeGenDelegate {
             case JADEx25Parser.LocalVariableDeclarationContext locDeclCtx
                     -> processLocalVariableDeclarationContext(locDeclCtx);
 
+            case JADEx25Parser.FormalParameterContext formalParamCtx
+                    -> processFormalParameterContext(formalParamCtx);
+
             case UnannTypeContext unannTypeCtx when unannTypeCtx.unannReferenceType() != null
                     -> replaceNullType(unannTypeCtx);
 
@@ -103,18 +106,22 @@ public class BasicCodeGenDelegate implements CodeGenDelegate {
         };
     }
 
+    private String processFormalParameterContext(JADEx25Parser.FormalParameterContext ctx) {
+        return processVariableDeclarationContext(VariableDeclarationContextAdapter.from(ctx));
+    }
+
     protected void checkImmutableMode(ApplyDeclarationContext applyDeclarationCtx) {
 
         if (!(applyDeclarationCtx.applyStatement() instanceof JADEx25Parser.ApplyStatementContext applyStmtCtx)) return;
 
         for (var applyFeatureContext : applyStmtCtx.applyFeatureList().applyFeature()) {
 
-            if ( "immutability".equalsIgnoreCase(Utils.getTokenString(applyFeatureContext.identifier())) ) {
+            if ( "readonly".equalsIgnoreCase(Utils.getTokenString(applyFeatureContext.identifier())) ) {
 
                 var codeGenCtx = CodeGenContext.current();
                 codeGenCtx.setImmutableMode(true);
 
-                System.err.println("immutability feature detected. Setting mutable mode.");
+                System.err.println("readonly feature detected.");
                 break;
             }
         }

@@ -38,7 +38,7 @@ public interface VariableDeclarationContextAdapter {
     List<ModifierContextAdapter> modifiers();
     ParserRuleContext variableType();
     JADEx25Parser.UnannTypeContext unannType();
-    JADEx25Parser.VariableDeclaratorListContext variableDeclaratorList();
+    ParserRuleContext variableDeclaratorList();
     String semicolon();
 
     Token getStart();
@@ -70,7 +70,7 @@ public interface VariableDeclarationContextAdapter {
             }
 
             @Override
-            public JADEx25Parser.VariableDeclaratorListContext variableDeclaratorList() {
+            public ParserRuleContext variableDeclaratorList() {
                 return ctx.variableDeclaratorList();
             }
 
@@ -113,8 +113,51 @@ public interface VariableDeclarationContextAdapter {
             }
 
             @Override
-            public JADEx25Parser.VariableDeclaratorListContext variableDeclaratorList() {
+            public ParserRuleContext variableDeclaratorList() {
                 return ctx.variableDeclaratorList();
+            }
+
+            @Override
+            public String semicolon() {
+                return "";
+            }
+
+            @Override
+            public Token getStart() {
+                return ctx.start;
+            }
+        };
+    }
+
+    static VariableDeclarationContextAdapter from(JADEx25Parser.FormalParameterContext ctx) {
+        return new VariableDeclarationContextAdapter() {
+
+            @Override
+            public ParserRuleContext originalContext() {
+                return ctx;
+            }
+
+            @Override
+            public List<ModifierContextAdapter> modifiers() {
+                return ctx.variableModifier()
+                        .stream()
+                        .map(ModifierContextAdapter::from)
+                        .toList();
+            }
+
+            @Override
+            public ParserRuleContext variableType() {
+                return ctx.unannType();
+            }
+
+            @Override
+            public JADEx25Parser.UnannTypeContext unannType() {
+                return ctx.unannType();
+            }
+
+            @Override
+            public ParserRuleContext variableDeclaratorList() {
+                return ctx.variableDeclaratorId();
             }
 
             @Override

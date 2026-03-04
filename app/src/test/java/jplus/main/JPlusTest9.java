@@ -98,24 +98,24 @@ public class JPlusTest9 {
     }
 
     @Test
-    void testCodeGenImmutability() throws Exception {
+    void testCodeGenReadonly() throws Exception {
         checkGeneratedCode(
-                "./src/test/files/Immutability",
+                "./src/test/files/Readonly",
                 "jadex.example",
-                "Immutability",
-                "nkJVEYZTNktHDF9/Xp3FYyLeXYw="
+                "Readonly",
+                "uvCHs+9lRDaosug4DweoRLxIhXc="
         );
     }
 
     @Test
-    void testValidImmutability() throws Exception {
+    void testValidReadonly() throws Exception {
         checkNullability(
-                "./src/test/files/Immutability",
+                "./src/test/files/Readonly",
                 "jadex.example",
-                "Immutability",
-                "Error: (line:11, column:4) Final field 'uninitializedMsg' is not initialized in one or more constructors of class 'Immutability'\n" +
-                        "Error: (line:19, column:8) cannot assign a value to final variable capacity\n" +
-                        "Error: (line:20, column:8) cannot assign a value to final variable msg\n"
+                "Readonly",
+                "Error: (line:11, column:4) Final field 'uninitializedMsg' is not initialized in one or more constructors of class 'Readonly'\n" +
+                        "Error: (line:28, column:8) cannot assign a value to final variable capacity\n" +
+                        "Error: (line:29, column:8) cannot assign a value to final variable msg\n"
         );
     }
 
