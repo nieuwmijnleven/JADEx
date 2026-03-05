@@ -6,7 +6,7 @@
 
 # <img src="https://raw.githubusercontent.com/nieuwmijnleven/JPlus/refs/heads/master/intellij-plugin/src/main/resources/META-INF/pluginIcon.svg" alt="Logo" width="25" style="vertical-align: middle;"> JADEx - Same Java, Just safer
 
-JADEx (Java Advanced Development Extension) is **a practical solution for Java null-safety**. It lets you enhance your code’s safety and **without rewriting it**, while **fully leveraging existing Java libraries and tools**.
+JADEx (Java Advanced Development Extension) is a practical **Java safety layer** that enhances the safety of your code by providing **null-safety** and **readonly(final-by-default)** enforcement. It strengthens Java’s type system without requiring a full rewrite, while fully leveraging existing Java libraries and tools.
 
 ---
 
@@ -14,30 +14,28 @@ JADEx (Java Advanced Development Extension) is **a practical solution for Java n
 
 ### Key Idea
 
-* JADEx **strengthens Java’s null-related type system in a way similar to how TypeScript enhances JavaScript’s type system**. It brings compile-time null-safety to your existing Java code without requiring a complete rewrite.
+* JADEx is a **Java safety layer** that strengthens the language’s type system by enforcing **null-safety** and **readonly (final-by-default)** semantics. It brings compile-time guarantees to your existing Java code without requiring a full rewrite, while fully leveraging existing Java libraries and tools.
 
-          +---------------------------+
-          |       Existing Java       |
-          | (potentially null-prone)  |
-          +------------+--------------+
-                       |
-                       v
-       +-----------------------------------+
-       |           JADEx Tools             |
-       | (strengthens type system          |
-       |  & applies null-safety operators) |
-       +----------------+------------------+
-                        |
-                        v
-          +---------------------------+
-          |   Null-Safe Java Code     |
-          | (enhanced compile-time    |
-          |  null-safety guarantees)  |
-          +---------------------------+
+				+---------------------------+
+				|       Existing Java       |
+				| (potentially unsafe)      |
+				+------------+--------------+
+						 	 |
+						 	 v
+		+----------------------------------------+
+		|       JADEx (Java Safety Layer)        |
+		| (strengthens type system, applies      |
+		|  null-safety & readonly operators)     |
+		+------------------+---------------------+
+							 |
+							 v
+			    +---------------------------+
+			    |   Safe & Robust Java Code |
+			    | (compile-time enforcement |
+			    | of null-safety & readonly)|
+			    +---------------------------+
 
-> Analogy: Java + JADEx  ≅  JavaScript + TypeScript
-
-> **JADEx is not designed to replace Java. It is designed to strengthen Java's null-related type system without leaving it**
+> **JADEx is not designed to replace Java. It acts as a practical Java safety layer, strengthening Java’s null-related type system and providing optional readonly semantics, all without leaving the existing Java ecosystem**.
 
 ### Key Benefits
 
@@ -250,9 +248,14 @@ public class Main {
 ```java
 package jadex.example;
 
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+import jadex.runtime.SafeAccess;
+
+@NullMarked
 public class Main {
     public static void main(String[] args) {
-        @org.jspecify.annotations.Nullable String s1 = null;
+        @Nullable String s1 = null;
         String s2 = "JADEx";
         System.out.printf("the length of s1 : %d\n", jadex.runtime.SafeAccess.ofNullable(s1).map(t0 -> t0.length()).orElse(null));
         System.out.printf("the length of s2 : %d\n", s2.length());
@@ -294,10 +297,15 @@ public class Main {
 ```java
 package jadex.example;
 
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+import jadex.runtime.SafeAccess;
+
+@NullMarked
 public class Main {
     public static void main(String[] args) {
-        @org.jspecify.annotations.Nullable String s1 = null;
-        String s2 = jadex.runtime.SafeAccess.ofNullable(s1).orElseGet(() -> "JADEx");
+        @Nullable String s1 = null;
+        String s2 = SafeAccess.ofNullable(s1).orElseGet(() -> "JADEx");
         System.out.printf("the length of s1 : %d\n", jadex.runtime.SafeAccess.ofNullable(s1).map(t0 -> t0.length()).orElseGet(() -> 0));
         System.out.printf("the length of s2 : %d\n", s2.length());
     }
@@ -326,509 +334,163 @@ JADEx allows even complex null-handling logic to be expressed **safely and conci
 - Hands-on examples that demonstrate the core JADEx null-safety features in everyday Java code.  
   These examples focus on common patterns such as nullable fields, safe access (`?.`), and evis operator (`?:`) to help you quickly understand how to write null-safe code with JADEx.
 
-**Open the example project in IntelliJ**
-- Go to `File > New > Project from Version Control`
-- Enter `https://github.com/nieuwmijnleven/JADExExample`
-- Click the `Clone` button
-
-![image](https://github.com/user-attachments/assets/3235169a-dc70-472a-ba52-8e99d412690b)
-
----
-
-**Create a JADEx file for User.java in the Project View**
-- Right-click User.java in the Project View
-- Select Convert Java File to JADEx File from the menu
-
-![image](https://github.com/user-attachments/assets/b0d50215-0746-41d2-b2e6-e60528d9da95)
-
----
-
-User.jadex
-```java
-package JADEx.example;
-
-class User {
-    // Name is required
-    String name;        
-    // Address can be null
-    Address address;   
-
-    User(String name, Address address) {
-        this.name = name;
-        this.address = address;
-    }
-    
-    //remain codes
-}
-```
-
-Opening the generated `User.jadex` file, you can see warning messages in the Problems tab.
-
-![image](https://github.com/user-attachments/assets/944c5eb5-81dc-4389-97c7-8280b35d2548)
-
-By default, **JADEx assumes all reference types are non-nullable**, which causes these warnings. The problematic parts are where the constructors of the User and Address classes are called.
-
-```java
-User(String name, Address address) {
-    this.name = name;
-    this.address = address;
-}
-
-Address(String city) {
-    this.city = city;
-}
-
-User user1 = new User("Jeroen", new Address("New Amsterdam"));
-User user2 = new User("Jane Smith", null);
-User user3 = new User(null, new Address(null));
-```
-- The constructor parameters for User and Address are all non-nullable. Passing null violates the null-safety rules.
-- Therefore, warnings occur for user2 and user3.
-
----
-
-**Making Java code null-safe with JADEx**
-
-(1) Assume the address field is nullable
-- Add ? to the Address type
-- Also mark the constructor parameter as nullable
-
-```java
-package JADEx.example;
-
-class User {
-    // Name is required
-    final String name;
-    // Address can be null
-    Address? address;
-
-    User(String name, Address? address) {
-        this.name = name;
-        this.address = address;
-    }
-```
-
-The Problems tab shows:
-- The method(getCity) is declared to return a non-null value, but this return statement may return null.
-- address is a nullable variable. But it directly accesses city. Consider using null-safe operator(?.)
-
-![image](https://github.com/user-attachments/assets/f7b3ab34-26b5-4858-bac9-70617278cb6e)
-
-
-- Use the null-safe operator ?.:
-- Add ? to the return type (String) of method getCity.
-```java
-    // Safely get the city name of the address
-    String? getCity() {
-        return address?.city;
-    }
-
-```
-
-Then only the constructor-related warning for name remains.
-
-![image](https://github.com/user-attachments/assets/4b3c5a81-9667-4829-83d1-5b6c64485b00)
-
-Replace null with "No Name" because name field is required.
-
-```java
-User user3 = new User("No Name", new Address(null));
-```
-
-Now only one warning remains:
-- The 1st argument of the Address constructor is a non-nullable variable, but a null value is assigned to it.
-
-![image](https://github.com/user-attachments/assets/148921bc-b542-4979-bf33-681799db5317)
-
----
-
-(2) Assume city in Address is nullable
-- Add ? to String type and constructor parameter
-
-```java
-static class Address {
-    // City can be null
-    String? city;
-
-    Address(String? city) {
-        this.city = city;
-    }
-}
-```
-
-All nullability warnings disappear. Save the file `ctrl + s` to generate new User.java.
-
-User.java made null-safe by JADEx
-
-```java
-package jadex.example;
-
-class User {
-    // Name is required
-    String name;
-    // Address can be null
-    @org.jspecify.annotations.Nullable Address address;
-
-    User(String name, @org.jspecify.annotations.Nullable Address address) {
-        this.name = name;
-        this.address = address;
-    }
-
-    // Safely get the city name of the address
-    @org.jspecify.annotations.Nullable String getCity() {
-        return jadex.runtime.SafeAccess.ofNullable(address).map(t0 -> t0.city).orElse(null);
-    }
-
-    // Get the display name of the user
-    String getDisplayName() {
-        return name;
-    }
-
-    // Address class
-    static class Address {
-        @org.jspecify.annotations.Nullable String city; // City can be null
-
-        Address(@org.jspecify.annotations.Nullable String city) {
-            this.city = city;
-        }
-    }
-
-    public static void main(String[] args) {
-        // Null-safe object creation
-        User user1 = new User("Jeroen", new Address("New Amsterdam"));
-        User user2 = new User("Jane Smith", null);
-        User user3 = new User("No Name", new Address(null));
-
-        // Null-safe access
-        System.out.println(user1.getDisplayName() + "'s city: " + user1.getCity()); // Jeroen's city: New Amsterdam
-        System.out.println(user2.getDisplayName() + "'s city: " + user2.getCity()); // Jane Smith's city: No Address
-        System.out.println(user3.getDisplayName() + "'s city: " + user3.getCity()); // No Name's city: No Address
-    }
-
-}
-
-```
-
-Run the program:
-- Go to User.java
-- Select Run > 'Run User.java'
-
-![image](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/hhkyo3en31720gszchje.png)
-
-
-No NullPointerException occurs, but some outputs are null. Use the Elvis operator ?: to provide default values.
-
-Edit getCity() in User.jadex:
-
-```java
-class User {
-    //...
-    // Safely get the city name of the address
-    String? getCity() {
-        return address?.city ?: "No City";
-    }
-   //...
-}
-```
-
-Also, be sure to press `ctrl + s` to save. This ensures that the new Java code is saved in User.java.
-
-User.java made null-safe by JADEx
-
-```java
-package jadex.example;
-
-class User {
-    // Name is required
-    String name;
-    // Address can be null
-    @org.jspecify.annotations.Nullable Address address;
-
-    User(String name, @org.jspecify.annotations.Nullable Address address) {
-        this.name = name;
-        this.address = address;
-    }
-
-    // Safely get the city name of the address
-    @org.jspecify.annotations.Nullable String getCity() {
-        return jadex.runtime.SafeAccess.ofNullable(address).map(t0 -> t0.city).orElseGet(() -> "No City");
-    }
-
-    // Get the display name of the user
-    String getDisplayName() {
-        return name;
-    }
-
-    // Address class
-    static class Address {
-        @org.jspecify.annotations.Nullable String city; // City can be null
-
-        Address(@org.jspecify.annotations.Nullable String city) {
-            this.city = city;
-        }
-    }
-
-    public static void main(String[] args) {
-        // Null-safe object creation
-        User user1 = new User("Jeroen", new Address("New Amsterdam"));
-        User user2 = new User("Jane Smith", null);
-        User user3 = new User("No Name", new Address(null));
-
-        // Null-safe access
-        System.out.println(user1.getDisplayName() + "'s city: " + user1.getCity()); // Jeroen's city: New Amsterdam
-        System.out.println(user2.getDisplayName() + "'s city: " + user2.getCity()); // Jane Smith's city: No Address
-        System.out.println(user3.getDisplayName() + "'s city: " + user3.getCity()); // No Name's city: No Address
-    }
-
-}
-
-```
-
-Run the program:
-- Go to User.java
-- Select Run > 'Run User.java'
-
-![image](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/rw7gytaxueue939mgd9n.png)
-
-
-All null values are replaced with "No City"
-
----
-
-## Summary
-
-With JADEx, you can easily enforce null-safety in Java code. JADEx fully supports Java syntax, making it accessible for Java developers. The final code is converted to Java, allowing developers to review it. JADEx is still in its early stages and needs support from the Java community. Even small, regular contributions will help complete this project. Your support can make a real impact.
+	[Making Your Java Code Null-Safe without Rewriting it](https://github.com/nieuwmijnleven/JADEx/blob/master/BasicExample.md)
 
 ---
 
 ### 📚 Real-World Examples
 
-This section demonstrates how to apply **JADEx** to a larger, real-world Java codebase and resolve null-safety issues reported by the tool.
+- This section demonstrates how to apply **JADEx** to a larger, real-world Java codebase and resolve null-safety issues reported by the tool.
 
-**Open the OntheGoDataBase Project in IntelliJ**
+	[Applying JADEx to a Real Java Project: Making OntheGoDataBase Null-Safe](https://github.com/nieuwmijnleven/JADEx/blob/master/RealworldExample.md)
 
-![image](https://github.com/user-attachments/assets/2c124eaa-5c8d-4e1b-8461-bff8ec4f21e3)
+---
 
-**Analyzing `SQLParser.java`**
+## 💡 How to make your Java code readonly
 
-- Creating a JADEx File
- 	- In the **Project View**, create a JADEx file for `SQLParser.java`.
-	- SQLParser class is located in onthego.database.core.sqlprocessor package.
+JADEx allows you to optionally make fields, local variables, and method parameters **readonly (final-by-default)**. This helps prevent accidental reassignment and enforces immutability where you choose to apply it. 
 
-![image](https://github.com/user-attachments/assets/2f985f04-8bc3-42bf-b3f5-d348b49307c6)
+The process is straightforward:
 
-After opening the generated `SQLParser.jadex` file, several warning messages appear in the **Problems** tab.
+1. Mark your code with `apply readonly`.
+2. JADEx analyzes your code and applies `final` modifiers where appropriate.
+3. Generates standard Java code with readonly enforcement, fully compatible with existing Java libraries and tooling.
 
-![image](https://github.com/user-attachments/assets/4fee3366-76c3-4cea-b422-9a17303c8674)
+> **This approach provides a flexible safety layer, allowing you to adopt readonly semantics incrementally without rewriting your existing Java code.**
 
-**Reported Issues**
-- `op`, `value`, and `tableName` are declared as **non-nullable**, but `null` values are assigned to them.
+---
 
-**Fix**
-- To resolve these issues, mark the variables as **nullable** by adding `?` to their types.
+### 📚 Essential Examples
+- Simple, focused examples showing how to use JADEx readonly feature
 
-**line 66**
-```java   
-//RelationalOperator op = null;
-RelationalOperator? op = null;
-```
+#### ✅ Example ① - Basic Field Readonly
 
-**line 135**
-```java   
-//Value value = null;
-Value? value = null;
-```
-
-**line 150**
 ```java
-//String tableName = null;
-String? tableName = null;
+package jadex.example;
+
+apply readonly;
+
+public class Example1 {
+    private int count = 0;        // readonly
+    private String? name = "JADEx"; // readonly
+
+    public static void main(String[] args) {
+        var example = new Example1();
+        example.count = 10; // error: readonly
+        example.name = "New"; // error: readonly
+    }
+}
 ```
 
-After applying these fixes, a new warning appears, indicating issues in another class.
+#### ✅ Output (Java code generated by JADEx)
 
-![image](https://github.com/user-attachments/assets/be29fa10-aeea-4cf6-9852-b8e76f8bde4a)
-
-**Analyzing `IdValue.java`**
-
-- Creating a JADEx File
- 	- In the **Project View**, create a JADEx file for `IdValue.java`.
-	- IdValue class is located in onthego.database.core.sqlprocessor.value package.
-
-**Constructor Issue**
-- The 1st argument of the onthego.database.core.sqlprocessor.value.IdValue constructor is a non-nullable variable, but a null value is assigned to it.
-
-**Fix**
-- Mark the parameter as nullable.
-
-**line 15**
 ```java
-//public IdValue(String? tableName, String columnName) {
-public IdValue(String? tableName, String columnName) {
-```
+package jadex.example;
 
-After this change, additional warnings appear in the **Problems** tab.
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+import jadex.runtime.SafeAccess;
 
-![image](https://github.com/user-attachments/assets/f044b1bb-83d7-4157-ad72-1badeb53a29f)
+//apply readonly;
 
-**Field Initialization Issues**
-- `this.tableName`, `selectCursor`, `columnValue`, and `columnType` are non-nullable but assigned `null`.
+@NullMarked
+public class Example1 {
+    private final int count = 0;        // readonly
+    private final @Nullable String name = "JADEx"; // readonly
 
-**Fix**
-- Update their types to nullable
-
-**line 11**
-```java
-//private final String tableName;
-private final String? tableName;
-```
-
-**line 22 ~ 24**
-```java
-//Cursor selectCursor = null;
-Cursor? selectCursor = null;
-
-//String columnValue = null;
-String? columnValue = null;
-
-//ColumnMeta columnType = null;
-ColumnMeta? columnType = null;
-```
-
-![image](https://github.com/user-attachments/assets/d760c154-2abd-4937-8597-b6d34931a3a3)
-
-**Null-Safe Access Warnings**
-- `selectCursor` is nullable, but `getColumn()` and `getColumnType()` are accessed directly.
-- JADEx recommends using the **null-safe access operator (`?.`)**.
-
-**Fix**
-- Replace direct access (`.`) with null-safe access (`?.`).
-
-**line 37 ~ 38**
-```java
-columnValue = selectCursor?.getColumn(columnName);
-columnType = selectCursor?.getColumnType(columnName);
-```
-
-![image](https://github.com/user-attachments/assets/66fdefcf-046a-4d4a-9f25-ce9b5775697d)
-
-
-**Analyzing `Cursor.java`**
-
-- Creating a JADEx File
-	- This class is located in onthego.database.core.table package
-
-**Method Parameter Issues**
-- The first parameter of `getColumn()` and `getColumnType()` is non-nullable, but `null` is passed.
-
-### Fix
-- Allow nullable parameters.
-
-
-**line 17, 19**
-```java
-String getColumn(String? columnName);
-ColumnMeta getColumnType(String? columnName);
-```
-
-![image](https://github.com/user-attachments/assets/5c199b7e-ba0e-48ee-8700-7f73a8caa735)
-
-
-**Nullable Dereference Warning**
-
-- `selector` is non-nullable but assigned a nullable value.
-- `columnType` is nullable, but `getType()` is accessed directly.
-
-### Fix
-- Use a nullable type and null-safe access.
-
-**line 40**
-```java
-TypeConstants? selector = columnType?.getType().getTypeConstant();
-```
-![image](https://github.com/user-attachments/assets/84b2e427-73c1-46cf-b8b1-6df747b8b382)
-
-
-**Analyzing `BooleanValue.java`**
-- Creating a JADEx File
-	- This class is located in onthego.database.core.sqlprocessor.value package
-
-**Constructor Issue**
-- The constructor parameter is non-nullable, but `null` is assigned.
-
-### Fix
-- Mark the parameter as nullable.
-
-**line 12**
-```java
-public BooleanValue(String? value) {
+    public static void main(final String[] args) {
+        final var example = new Example1();
+        example.count = 10; // error: readonly
+        example.name = "New"; // error: readonly
+    }
+}
 ```
 ---
 
-**Final Java Code Generated by JADEx**
-
-Below is the final version of `IdValue.java` generated by the **JADEx Tool**, reflecting all applied null-safety fixes:
+#### ✅ Example ② - Mutable Fields
 
 ```java
-package onthego.database.core.sqlprocessor.value;
+apply readonly;
 
-import java.text.ParseException;
+public class Example2 {
+    private mutable int temp = 5; // mutable
+    private mutable String? note = "mutable"; // mutable
 
-import onthego.database.core.table.Cursor;
-import onthego.database.core.table.meta.ColumnMeta;
-import onthego.database.core.table.meta.TypeConstants;
-
-public final class IdValue extends Value {
-	
-	private final @org.jspecify.annotations.Nullable String tableName;
-	
-	private final String columnName;
-	
-	public IdValue(@org.jspecify.annotations.Nullable String tableName, String columnName) {
-		super(Value.Type.ID);
-		this.tableName = tableName;
-		this.columnName = columnName;
-	}
-	
-	public Value getValue(Cursor[] tables) throws ParseException {
-		@org.jspecify.annotations.Nullable Cursor selectCursor = null;
-		@org.jspecify.annotations.Nullable String columnValue = null;
-		@org.jspecify.annotations.Nullable ColumnMeta columnType = null;
-		
-		if (tableName == null) {
-			selectCursor = tables[0];
-		} else {
-			for (Cursor cursor : tables) {
-				if (tableName.equalsIgnoreCase(cursor.getTableName())) {
-					selectCursor = cursor;
-					break;
-				}
-			}
-		}
-		
-		columnValue = jadex.runtime.SafeAccess.ofNullable(selectCursor).map(t0 -> t0.getColumn(columnName)).orElse(null);
-		columnType = jadex.runtime.SafeAccess.ofNullable(selectCursor).map(t0 -> t0.getColumnType(columnName)).orElse(null);
-
-        @org.jspecify.annotations.Nullable TypeConstants selector = jadex.runtime.SafeAccess.ofNullable(columnType).map(t0 -> t0.getType().getTypeConstant()).orElse(null);
-		switch (selector) {
-		case CHAR:
-		case VARCHAR:
-			return new StringValue(columnValue);
-		case INTEGER:
-		case NUMERIC:
-			return new NumberValue(columnValue);
-		case BOOL:
-			return new BooleanValue(columnValue);
-		}
-		
-		return new NullValue();
-	}
-	
-	public String toString(Cursor[] cursor) throws ParseException {
-		return getValue(cursor).toString();
-	}
+    public static void main(String[] args) {
+        var example = new Example2();
+        example.temp = 10;       // allowed
+        example.note = "updated"; // allowed
+    }
 }
+```
 
+#### ✅ Output (Java code generated by JADEx)
+
+```java
+package jadex.example;
+
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+import jadex.runtime.SafeAccess;
+
+//apply readonly;
+
+@NullMarked
+public class Example2 {
+    private int temp = 5; // mutable
+    private @Nullable String note = "mutable"; // mutable
+
+    public static void main(final String[] args) {
+        final var example = new Example2();
+        example.temp = 10;       // allowed
+        example.note = "updated"; // allowed
+    }
+}
+```
+
+---
+
+#### ✅ Example ③ - Readonly Method Parameters
+
+```java
+apply readonly;
+
+public class Example3 {
+
+    public static void process(String? readonlyParam, mutable String? mutableParam) {
+        readonlyParam = "change"; // error: readonly
+        mutableParam = "change";  // allowed
+    }
+
+    public static void main(String[] args) {
+        String? msg = "hello";
+        process(msg, msg);
+    }
+}
+```
+
+#### ✅ Output (Java code generated by JADEx)
+
+```java
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+import jadex.runtime.SafeAccess;
+
+//apply readonly;
+
+@NullMarked
+public class Example3 {
+
+    public static void process(final @Nullable String readonlyParam, @Nullable String mutableParam) {
+        readonlyParam = "change"; // error: readonly
+        mutableParam = "change";  // allowed
+    }
+
+    public static void main(final String[] args) {
+        final @Nullable String msg = "hello";
+        process(msg, msg);
+    }
+}
 ```
 ---
 

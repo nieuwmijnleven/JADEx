@@ -168,11 +168,16 @@ User.java made null-safe by JADEx
 ```java
 package jadex.example;
 
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+import jadex.runtime.SafeAccess;
+
+@NullMarked
 class User {
     // Name is required
     String name;
     // Address can be null
-    @org.jspecify.annotations.Nullable Address address;
+    @Nullable Address address;
 
     User(String name, @org.jspecify.annotations.Nullable Address address) {
         this.name = name;
@@ -180,8 +185,8 @@ class User {
     }
 
     // Safely get the city name of the address
-    @org.jspecify.annotations.Nullable String getCity() {
-        return jadex.runtime.SafeAccess.ofNullable(address).map(t0 -> t0.city).orElse(null);
+    @Nullable String getCity() {
+        return SafeAccess.ofNullable(address).map(t0 -> t0.city).orElse(null);
     }
 
     // Get the display name of the user
@@ -191,9 +196,9 @@ class User {
 
     // Address class
     static class Address {
-        @org.jspecify.annotations.Nullable String city; // City can be null
+        @Nullable String city; // City can be null
 
-        Address(@org.jspecify.annotations.Nullable String city) {
+        Address(@Nullable String city) {
             this.city = city;
         }
     }
@@ -243,20 +248,25 @@ User.java made null-safe by JADEx
 ```java
 package jadex.example;
 
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+import jadex.runtime.SafeAccess;
+
+@NullMarked
 class User {
     // Name is required
     String name;
     // Address can be null
-    @org.jspecify.annotations.Nullable Address address;
+    @Nullable Address address;
 
-    User(String name, @org.jspecify.annotations.Nullable Address address) {
+    User(String name, @Nullable Address address) {
         this.name = name;
         this.address = address;
     }
 
     // Safely get the city name of the address
-    @org.jspecify.annotations.Nullable String getCity() {
-        return jadex.runtime.SafeAccess.ofNullable(address).map(t0 -> t0.city).orElseGet(() -> "No City");
+    @Nullable String getCity() {
+        return SafeAccess.ofNullable(address).map(t0 -> t0.city).orElseGet(() -> "No City");
     }
 
     // Get the display name of the user
@@ -266,9 +276,9 @@ class User {
 
     // Address class
     static class Address {
-        @org.jspecify.annotations.Nullable String city; // City can be null
+        @Nullable String city; // City can be null
 
-        Address(@org.jspecify.annotations.Nullable String city) {
+        Address(@Nullable String city) {
             this.city = city;
         }
     }
