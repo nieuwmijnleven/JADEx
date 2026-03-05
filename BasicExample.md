@@ -161,7 +161,7 @@ static class Address {
 }
 ```
   
-All nullability warnings disappear. Save the file `(Ctrl + S)` to generate new User.java.
+All nullability warnings disappear. Save the file `ctrl + s` to generate new User.java.
 
 User.java made null-safe by JADEx
 
@@ -229,14 +229,14 @@ Edit getCity() in User.jadex:
 class User {
     //...
     // Safely get the city name of the address
-    String getCity() {
+    String? getCity() {
         return address?.city ?: "No City";
     }
    //...
 }
 ```
 
-Also, be sure to press Ctrl + S to save. This ensures that the new Java code is saved in User.java.
+Also, be sure to press `ctrl + s` to save. This ensures that the new Java code is saved in User.java.
 
 User.java made null-safe by JADEx
 
