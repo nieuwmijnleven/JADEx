@@ -27,8 +27,10 @@
 package jplus.plugin.intellij.util;
 
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
+import jplus.plugin.intellij.JPlusTokenTypes;
 import jplus.plugin.intellij.psi.NormalClassDeclarationPsiElement;
 
 import java.util.ArrayList;
@@ -42,6 +44,10 @@ public class PsiUtils {
         List<String> classNameList = new ArrayList<>();
         getClassList(element, "", classNameList);
         return classNameList;
+    }
+
+    public static IElementType getIElementType(int ruleNo) {
+        return JPlusTokenTypes.getRuleElementType(ruleNo);
     }
 
     private static void getClassList(PsiElement element, String currentClassName, List<String> result) {

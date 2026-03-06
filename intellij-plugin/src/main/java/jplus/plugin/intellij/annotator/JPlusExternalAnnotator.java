@@ -36,6 +36,8 @@ import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiFile;
+import com.intellij.util.ui.update.MergingUpdateQueue;
+import com.intellij.util.ui.update.Update;
 import jplus.analyzer.nullability.issue.NullabilityIssue;
 import jplus.analyzer.nullability.issue.Severity;
 import jplus.plugin.intellij.JPlusFile;
@@ -64,17 +66,19 @@ public class JPlusExternalAnnotator
         String packageName = JPlusIntelliJProjectUtil.resolvePackageName(ideaProject, file);
 
         return new JPlusAnnotationInput(
-                file.getText(),
+                file,
                 packageName,
                 className,
                 jplusProject
         );
+
     }
 
     @Override
     public @Nullable JPlusAnnotationResult doAnnotate(
             JPlusAnnotationInput input
     ) {
+
         ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
 
         try {
@@ -86,7 +90,10 @@ public class JPlusExternalAnnotator
                             input.className()
                     );
 
+            if (!processor.canParse()) return null;
+
             if (indicator != null) {
+                indicator.checkCanceled();
                 indicator.setText("Jadex: Processing");
                 indicator.setIndeterminate(false);
                 indicator.setFraction(0.1);

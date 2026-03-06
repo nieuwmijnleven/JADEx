@@ -88,7 +88,9 @@
         <lang.ast.factory language="Jadex" implementationClass="jplus.plugin.intellij.JPlusASTFactory"/>
         <lang.parserDefinition language="Jadex" implementationClass="jplus.plugin.intellij.JPlusParserDefinition"/>
         <lang.commenter language="Jadex" implementationClass="jplus.plugin.intellij.JPlusLanguageCommenter"/>
-        <renamePsiElementProcessor order="first" implementation="jplus.plugin.intellij.JPlusRenameProcessor"/>
+        <!--renamePsiElementProcessor order="first" implementation="jplus.plugin.intellij.JPlusRenameProcessor"/-->
+        <lang.elementManipulator
+                implementationClass="jplus.plugin.intellij.psi.IdentifierManipulator" forClass="jplus.plugin.intellij.psi.IdentifierPsiElement"/>
         <externalAnnotator
                 language="Jadex"
                 implementationClass="jplus.plugin.intellij.annotator.JPlusExternalAnnotator"/>

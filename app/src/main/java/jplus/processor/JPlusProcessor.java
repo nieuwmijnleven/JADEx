@@ -42,9 +42,12 @@ import jplus.processor.issue.Issue;
 import jplus.processor.issue.Severity;
 import jplus.util.CodeGenUtils;
 import jplus.util.Utils;
+import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch;
 
 import java.nio.charset.StandardCharsets;
@@ -128,18 +131,46 @@ public class JPlusProcessor {
     // Main processing pipeline
     // --------------------------------------------------------------
 
+    public boolean canParse() {
+        CharStream input = CharStreams.fromString(originalText);
+        JADEx25Lexer lexer = new JADEx25Lexer(input);
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+
+        parser = new JADEx25Parser(tokens);
+        parser.setBuildParseTree(false);
+
+        parser.removeErrorListeners();
+        parser.setErrorHandler(new BailErrorStrategy());
+
+        try {
+            parser.start_();
+        } catch (Exception e) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private void buildParseTree() {
+        CharStream input = CharStreams.fromString(originalText);
+        JADEx25Lexer lexer = new JADEx25Lexer(input);
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+
+        parser = new JADEx25Parser(tokens);
+
+        parser.setBuildParseTree(true);
+        parser.removeErrorListeners();
+
+        parseTree = parser.start_();
+    }
+
     public List<Issue> process() throws Exception {
         if (processed) return null;
 
         CodeGenContext.push();
         try {
 
-            CharStream input = CharStreams.fromString(originalText);
-            JADEx25Lexer lexer = new JADEx25Lexer(input);
-            CommonTokenStream tokens = new CommonTokenStream(lexer);
-            parser = new JADEx25Parser(tokens);
-
-            parseTree = parser.start_();
+            buildParseTree();
             processed = true;
 
             generateRuntime();
@@ -320,11 +351,11 @@ public class JPlusProcessor {
             var issue =
                     new Issue(
                             Severity.ERROR,
-                            CodeGenUtils.mapOffsetFromTransformedToOriginal(
+                            CodeGenUtils.getMapOffset(
                                     originalText,
                                     javaCode,
                                     (int) diagnositic.getStartPosition()),
-                            CodeGenUtils.mapOffsetFromTransformedToOriginal(
+                            CodeGenUtils.getMapOffset(
                                     originalText,
                                     javaCode,
                                     (int)diagnositic.getEndPosition()),
@@ -420,6 +451,22 @@ public class JPlusProcessor {
         return nullabilityChecker.getIssues().stream().sorted().toList();
     }
 
+    public String transformJADExToJava() {
+
+        if (parseTree == null) buildParseTree();
+
+        CodeGenContext.push();
+        try {
+
+            CodeGenContext.current().setSemanticMode(false);
+            CodeGenContext.current().setFragmentedText(new FragmentedText(originalText));
+
+            return parseTree.getText();
+        } finally {
+            CodeGenContext.pop();
+        }
+    }
+
     public String generateJavaCode() {
         //if (!symbolsAnalyzed || !nullabilityChecked) {
         if (!symbolsAnalyzed) {
@@ -427,17 +474,7 @@ public class JPlusProcessor {
             throw new IllegalStateException("Must perform symbol analysis first.");
         }
 
-        CodeGenContext.push();
-        String generated = null;
-        try {
-            CodeGenContext.current().setSemanticMode(false);
-            CodeGenContext.current().setFragmentedText(new FragmentedText(originalText));
-
-            generated = parseTree.getText();
-        } finally {
-            CodeGenContext.pop();
-        }
-
+        String generated = transformJADExToJava();
         //System.err.println("[generateJavaCode] javaCode = " + generated);
 
         int startIndex = parseTree.start.getStartIndex();

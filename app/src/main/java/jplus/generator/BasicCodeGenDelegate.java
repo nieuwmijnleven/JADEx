@@ -371,12 +371,16 @@ public class BasicCodeGenDelegate implements CodeGenDelegate {
 
     protected String forceUpdateContextString(ParserRuleContext ctx) {
         //System.err.println("[forceUpdateContextString] ParserRuleContext = " + ctx.getClass().getSimpleName());
-        TextChangeRange range = Utils.getTextChangeRange(getOriginalText(), ctx);
-        String contextString = Utils.getTokenString(ctx);
-        String replaced = projectUpdatesOn(range, contextString);
-        //System.err.println("[forceUpdateContextString] contextString = " + contextString);
-        //System.err.println("[forceUpdateContextString] replaced = " + replaced);
-        return updateContextString(ctx, replaced);
+        try {
+            TextChangeRange range = Utils.getTextChangeRange(getOriginalText(), ctx);
+            String contextString = Utils.getTokenString(ctx);
+            String replaced = projectUpdatesOn(range, contextString);
+            //System.err.println("[forceUpdateContextString] contextString = " + contextString);
+            //System.err.println("[forceUpdateContextString] replaced = " + replaced);
+            return updateContextString(ctx, replaced);
+        } catch(Exception e) {
+            return null;
+        }
     }
 
     protected String replaceApplyStatementWithComment(ApplyDeclarationContext ApplyDeclarationCtx) {

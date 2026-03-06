@@ -103,7 +103,7 @@ public class JPlusTest9 {
                 "./src/test/files/Readonly",
                 "jadex.example",
                 "Readonly",
-                "uvCHs+9lRDaosug4DweoRLxIhXc="
+                "R90FySSD4he/7+ZR+sy685kXzlQ="
         );
     }
 

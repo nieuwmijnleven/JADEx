@@ -34,7 +34,39 @@ import com.intellij.psi.PsiReference;
 import com.jetbrains.cef.remote.thrift.annotation.Nullable;
 
 public class JPlusGotoDefinitionHandler implements GotoDeclarationHandler {
+
     @Override
+    public @Nullable PsiElement[] getGotoDeclarationTargets(
+            @Nullable PsiElement sourceElement, int offset, Editor editor) {
+
+        if (sourceElement == null) {
+            System.err.println("[JPlusGotoDefinitionHandler]getGotoDeclarationTargets called with null sourceElement at offset " + offset);
+            return PsiElement.EMPTY_ARRAY;
+        }
+
+        System.err.println("[JPlusGotoDefinitionHandler]GotoDeclaration triggered for element: " + sourceElement.getText()
+                + " at offset " + offset + " in file " + sourceElement.getContainingFile().getName());
+
+        PsiReference ref = sourceElement.getReference();
+        if (ref != null) {
+
+            System.err.println("[JPlusGotoDefinitionHandler]Found reference for element: " + sourceElement.getText() + "(" + sourceElement.getClass().getSimpleName() + "), resolving...");
+            PsiElement resolved = ref.resolve();
+            if (resolved != null) {
+                System.err.println("[JPlusGotoDefinitionHandler]Reference resolved to: " + resolved.getText()
+                        + " in file " + resolved.getContainingFile().getName());
+                return new PsiElement[]{resolved};
+            } else {
+                System.err.println("[JPlusGotoDefinitionHandler]Reference could not be resolved for element: " + sourceElement.getText());
+            }
+        } else {
+            System.err.println("[JPlusGotoDefinitionHandler]No reference found for element: " + sourceElement.getText());
+        }
+
+        return PsiElement.EMPTY_ARRAY;
+    }
+    
+    /*@Override
     public  @Nullable PsiElement[] getGotoDeclarationTargets(
             @Nullable PsiElement sourceElement, int offset, Editor editor) {
 
@@ -49,11 +81,7 @@ public class JPlusGotoDefinitionHandler implements GotoDeclarationHandler {
         }
 
         return PsiElement.EMPTY_ARRAY;
-    }
-
-    private @Nullable PsiElement findCorrespondingJavaElement(PsiJavaFile javaPsiFile, int offset) {
-        return javaPsiFile.findElementAt(offset);
-    }
+    }*/
 
     @Override
     public @Nullable String getActionText(@Nullable com.intellij.openapi.actionSystem.DataContext context) {

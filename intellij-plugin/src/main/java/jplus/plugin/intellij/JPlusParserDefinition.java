@@ -42,8 +42,9 @@ import jplus.plugin.intellij.adapter.JPlusLexerAdapter;
 import jplus.plugin.intellij.adapter.JPlusParserAdapter;
 import jplus.plugin.intellij.psi.ApplyBlockPsiElement;
 import jplus.plugin.intellij.psi.ApplyStatementPsiElement;
-import jplus.plugin.intellij.psi.MethodPsiElement;
+import jplus.plugin.intellij.psi.MethodDeclarationPsiElement;
 import jplus.plugin.intellij.psi.NormalClassDeclarationPsiElement;
+import jplus.plugin.intellij.psi.VariableDeclaratorPsiElement;
 import org.antlr.intellij.adaptor.lexer.RuleIElementType;
 import org.antlr.intellij.adaptor.lexer.TokenIElementType;
 import org.antlr.intellij.adaptor.psi.ANTLRPsiNode;
@@ -90,28 +91,25 @@ public class JPlusParserDefinition implements ParserDefinition {
 
     @Override
     public @NotNull PsiElement createElement(ASTNode node) {
+
         IElementType iElementType = node.getElementType();
-        if (iElementType instanceof TokenIElementType) {
+
+        if (iElementType instanceof TokenIElementType tokenElement) {
             return new ANTLRPsiNode(node);
         }
 
-        if (!(iElementType instanceof RuleIElementType)) {
+        if (!(iElementType instanceof RuleIElementType ruleElementType)) {
             return new ANTLRPsiNode(node);
         }
 
-        RuleIElementType ruleElementType = (RuleIElementType)iElementType;
-        switch (ruleElementType.getRuleIndex()) {
-            case JADEx25Parser.RULE_applyBlock:
-                return new ApplyBlockPsiElement(node);
-            case JADEx25Parser.RULE_applyStatement:
-                return new ApplyStatementPsiElement(node);
-            case JADEx25Parser.RULE_methodDeclaration:
-                return new MethodPsiElement(node, ruleElementType);
-            case JADEx25Parser.RULE_normalClassDeclaration:
-                return new NormalClassDeclarationPsiElement(node);
-        }
-
-        return new ANTLRPsiNode(node);
+        return switch (ruleElementType.getRuleIndex()) {
+            case JADEx25Parser.RULE_applyBlock -> new ApplyBlockPsiElement(node);
+            case JADEx25Parser.RULE_applyStatement -> new ApplyStatementPsiElement(node);
+            case JADEx25Parser.RULE_methodDeclaration -> new MethodDeclarationPsiElement(node);
+            case JADEx25Parser.RULE_normalClassDeclaration -> new NormalClassDeclarationPsiElement(node);
+            case JADEx25Parser.RULE_variableDeclarator -> new VariableDeclaratorPsiElement(node);
+            default -> new ANTLRPsiNode(node);
+        };
     }
 
     @Override

@@ -26,6 +26,7 @@
 
 package jplus.plugin.intellij.psi;
 
+import com.intellij.lang.ASTNode;
 import com.intellij.openapi.util.NlsSafe;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
@@ -43,12 +44,35 @@ public class IdentifierPsiElement extends ANTLRPsiLeafNode implements PsiNamedEl
     }
 
     @Override
-    public PsiElement setName(@NlsSafe @NotNull String s) throws IncorrectOperationException {
-        return null;
+    public String getName() {
+        return getText();
     }
 
     @Override
+    public PsiElement setName(@NlsSafe @NotNull String newName) throws IncorrectOperationException {
+        if (newName.isEmpty()) {
+            throw new IncorrectOperationException("Identifier name cannot be empty");
+        }
+
+        replaceWithText(newName);
+        return this;
+
+        /*IdentifierPsiElement newIdentifier = new IdentifierPsiElement(getNode().getElementType(), newName);
+        return this.replace(newIdentifier);*/
+    }
+
+//    @Override
+//    public PsiElement setName(@NotNull String newName) throws IncorrectOperationException {
+//        if (newName.isEmpty()) {
+//            throw new IncorrectOperationException("Identifier name cannot be empty");
+//        }
+//
+//        ANTLRPsiLeafNode
+//        return replace(this, newName);
+//    }
+
+    @Override
     public PsiReference getReference() {
-        return new JPlusPsiReference(this, new TextRange(0, getTextLength()));
+        return new JADExPsiReference(this);
     }
 }

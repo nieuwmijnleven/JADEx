@@ -35,7 +35,7 @@ import com.intellij.psi.tree.IElementType;
 import jplus.base.JADEx25Lexer;
 import jplus.base.JADEx25Parser;
 import jplus.plugin.intellij.adapter.JPlusLexerAdapter;
-import jplus.plugin.intellij.psi.MethodPsiElement;
+import jplus.plugin.intellij.psi.MethodDeclarationPsiElement;
 import org.antlr.intellij.adaptor.lexer.RuleIElementType;
 import org.jetbrains.annotations.NotNull;
 

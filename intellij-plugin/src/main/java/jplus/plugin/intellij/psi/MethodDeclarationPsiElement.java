@@ -38,32 +38,35 @@ import jplus.base.JADEx25Parser;
 import jplus.plugin.intellij.JPlusLanguage;
 import jplus.plugin.intellij.JPlusTokenTypes;
 import jplus.plugin.intellij.util.PsiUtils;
-import org.antlr.intellij.adaptor.lexer.RuleIElementType;
+import org.antlr.intellij.adaptor.SymtabUtils;
 import org.antlr.intellij.adaptor.psi.ANTLRPsiNode;
+import org.antlr.intellij.adaptor.psi.IdentifierDefSubtree;
 import org.antlr.intellij.adaptor.psi.ScopeNode;
-import org.antlr.intellij.adaptor.psi.Trees;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.Objects;
 
-public class NormalClassDeclarationPsiElement extends ANTLRPsiNode implements PsiNameIdentifierOwner, ScopeNode {
+public class MethodDeclarationPsiElement extends ANTLRPsiNode implements PsiNameIdentifierOwner, ScopeNode {
 
-    public NormalClassDeclarationPsiElement(@NotNull ASTNode node) {
+    public MethodDeclarationPsiElement(@NotNull ASTNode node) {
         super(node);
     }
 
     @Override
     public @Nullable PsiElement getNameIdentifier() {
 
-        PsiElement typeIdentifierNode = findChildByType(PsiUtils.getIElementType(JADEx25Parser.RULE_typeIdentifier));
-        if (typeIdentifierNode == null) return null;
+        PsiElement methodHeaderNode = findChildByType(PsiUtils.getIElementType(JADEx25Parser.RULE_methodHeader));
+        if (methodHeaderNode == null) return null;
 
-        return PsiTreeUtil.findChildOfType(
-                typeIdentifierNode,
-                IdentifierPsiElement.class
-        );
+        ASTNode methodDeclaratorNode = methodHeaderNode.getNode().findChildByType(PsiUtils.getIElementType(JADEx25Parser.RULE_methodDeclarator));
+        if (methodDeclaratorNode == null) return null;
+
+        ASTNode identifierNode = methodDeclaratorNode.findChildByType(PsiUtils.getIElementType(JADEx25Parser.RULE_identifier));
+        if (identifierNode == null) return null;
+
+        return identifierNode.getPsi();
     }
 
     @Override
@@ -83,11 +86,16 @@ public class NormalClassDeclarationPsiElement extends ANTLRPsiNode implements Ps
         return this;
     }
 
+
     @Override
     public @Nullable PsiElement resolve(PsiNamedElement element) {
 
+        System.err.println("[MethodDeclarationPsiElement] element = " + element);
         String name = element.getName();
         if (name == null) return null;
+
+        System.err.println("[MethodDeclarationPsiElement] element = " + element.getClass().getSimpleName());
+        System.err.println("[MethodDeclarationPsiElement] name = " + name);
 
         Collection<PsiNameIdentifierOwner> ids =
                 PsiTreeUtil.findChildrenOfType(this, PsiNameIdentifierOwner.class);
@@ -103,5 +111,6 @@ public class NormalClassDeclarationPsiElement extends ANTLRPsiNode implements Ps
         }
 
         return null;
+
     }
 }

@@ -27,13 +27,18 @@
 package jplus.plugin.intellij.adapter;
 
 import com.intellij.lang.Language;
+import com.intellij.psi.tree.IElementType;
+import com.jetbrains.cef.remote.thrift.annotation.Nullable;
 import jplus.base.JADEx25Lexer;
 import jplus.base.JADEx25Parser;
 import jplus.plugin.intellij.JADEx25IntellijLexer;
 import jplus.plugin.intellij.JPlusLanguage;
+import jplus.plugin.intellij.JPlusTokenTypes;
 import org.antlr.intellij.adaptor.lexer.ANTLRLexerAdaptor;
 import org.antlr.intellij.adaptor.lexer.PSIElementTypeFactory;
+import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Lexer;
+import org.antlr.v4.runtime.Token;
 
 public class JPlusLexerAdapter extends ANTLRLexerAdaptor {
 
@@ -44,7 +49,8 @@ public class JPlusLexerAdapter extends ANTLRLexerAdaptor {
     public static void initializeElementTypeFactory() {
         PSIElementTypeFactory.defineLanguageIElementTypes(
                 JPlusLanguage.INSTANCE,
-                JADEx25Lexer.tokenNames,
+                //JADEx25Lexer.tokenNames,
+                JADEx25IntellijLexer.tokenNames,
                 JADEx25Parser.ruleNames
         );
     }
@@ -58,16 +64,16 @@ public class JPlusLexerAdapter extends ANTLRLexerAdaptor {
      * @param lexer    The underlying ANTLR lexer.
      */
     public JPlusLexerAdapter() {
-        super(JPlusLanguage.INSTANCE, new JADEx25IntellijLexer(null));
+        super(JPlusLanguage.INSTANCE, new JADEx25IntellijLexer(CharStreams.fromString("")));
     }
 
-//    @Override
-//    public @Nullable IElementType getTokenType(int antlrTokenType) {
-//        if (antlrTokenType == Token.EOF) {
-//            return JPlusTokenTypes.BAD_TOKEN_TYPE;
-//        }
-//
-//        IElementType tokenType = super.getTokenType(antlrTokenType);
-//        return (tokenType != null) ? tokenType : JPlusTokenTypes.BAD_TOKEN_TYPE;
-//    }
+    @Override
+    public @Nullable IElementType getTokenType(int antlrTokenType) {
+        if (antlrTokenType == Token.EOF) {
+            return null;
+        }
+
+        IElementType tokenType = super.getTokenType(antlrTokenType);
+        return (tokenType != null) ? tokenType : JPlusTokenTypes.BAD_TOKEN_TYPE;
+    }
 }

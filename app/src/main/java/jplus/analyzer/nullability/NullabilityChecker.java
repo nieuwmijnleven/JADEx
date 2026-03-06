@@ -2787,7 +2787,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     private int getMapOffset(int offset) {
-        return CodeGenUtils.mapOffsetFromTransformedToOriginal(javaCode, originalText, offset);
+        return CodeGenUtils.getMapOffset(javaCode, originalText, offset);
     }
 
     private List<ExpressionNameContext> getExpressionNameList(ExpressionNameContext ctx) {

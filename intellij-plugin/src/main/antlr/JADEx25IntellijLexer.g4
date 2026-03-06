@@ -944,3 +944,5 @@ WS: [ \t\r\n\u000C]+;
 COMMENT: '/*' .*? '*/';
 
 LINE_COMMENT: '//' ~[\r\n]*;
+
+ERROR_CHAR : . -> channel(HIDDEN);

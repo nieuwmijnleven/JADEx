@@ -36,20 +36,21 @@ import org.antlr.intellij.adaptor.lexer.TokenIElementType;
 import org.jetbrains.annotations.NotNull;
 
 public class JPlusASTFactory extends CoreASTFactory {
-	@NotNull
-    @Override
-    public CompositeElement createComposite(IElementType type) {
-        return super.createComposite(type);
-    }
+//	@NotNull
+//    @Override
+//    public CompositeElement createComposite(IElementType type) {
+//        return super.createComposite(type);
+//    }
 
 	@NotNull
 	@Override
 	public LeafElement createLeaf(@NotNull IElementType type, CharSequence text) {
-		if (type instanceof TokenIElementType tokenIElementType &&
+
+        if (type instanceof TokenIElementType tokenIElementType &&
 			 tokenIElementType.getANTLRTokenType() == JADEx25Lexer.Identifier) {
 			return new IdentifierPsiElement(type, text);
 		}
-		LeafElement leaf = super.createLeaf(type, text);
-		return leaf;
+
+		return super.createLeaf(type, text);
     }
 }

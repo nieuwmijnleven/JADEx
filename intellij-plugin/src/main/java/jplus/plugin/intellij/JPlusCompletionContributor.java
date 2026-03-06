@@ -31,10 +31,14 @@ import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.completion.CompletionProvider;
 import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.completion.CompletionType;
+import com.intellij.codeInsight.completion.CompletionUtilCore;
 import com.intellij.codeInsight.completion.JavaCompletionContributor;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.ide.highlighter.JavaFileType;
+import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.NlsSafe;
+import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
@@ -45,6 +49,7 @@ import jplus.plugin.intellij.psi.ApplyBlockPsiElement;
 import jplus.plugin.intellij.psi.ApplyStatementPsiElement;
 import jplus.plugin.intellij.util.JPlusUtil;
 import jplus.plugin.intellij.util.PsiUtils;
+import jplus.util.CodeGenUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -53,7 +58,7 @@ import java.util.List;
 public class JPlusCompletionContributor extends CompletionContributor {
 
     private static final List<String> APPLY_KEYWORDS = Arrays.asList(
-            "getter", "setter", "data", "equality", "constructor", "builder", "tostring", "equals", "hashcode"
+            "readonly", "getter", "setter", "data", "equality", "constructor", "builder", "tostring", "equals", "hashcode"
     );
 
     public JPlusCompletionContributor() {
@@ -64,15 +69,14 @@ public class JPlusCompletionContributor extends CompletionContributor {
                                           @NotNull CompletionResultSet result) {
                 Project project = parameters.getPosition().getProject();
                 PsiElement psiElement = parameters.getPosition();
-                PsiFile jplusFile = psiElement.getContainingFile();
+                PsiFile jadexPsiFile = psiElement.getContainingFile();
 
                 collectApplyCandidates(psiElement, result);
 
-                PsiJavaFile javaPsiFile = (PsiJavaFile) PsiFileFactory.getInstance(project)
-                        .createFileFromText("Temp.java", JavaFileType.INSTANCE, jplusFile.getText());
-                if (javaPsiFile != null) {
-                    invokeJavaCompletion(javaPsiFile, parameters, result);
-                }
+                PsiJavaFile javaPsiFile = JPlusUtil.createJavaPsiFromJADExForCodeCompletion(project, jadexPsiFile, parameters.getOffset(), false);
+                if (javaPsiFile == null) return;
+
+                invokeJavaCompletion(jadexPsiFile, javaPsiFile, parameters, result);
             }
         });
     }
@@ -98,13 +102,21 @@ public class JPlusCompletionContributor extends CompletionContributor {
         }
     }
 
-    private void invokeJavaCompletion(PsiFile javaPsiFile,
+    private void invokeJavaCompletion(PsiFile jplusFile,
+                                      PsiFile javaPsiFile,
                                       CompletionParameters originalParameters,
                                       CompletionResultSet result) {
-        PsiElement javaElementAtCursor = javaPsiFile.findElementAt(originalParameters.getOffset());
-        CompletionParameters javaParams = originalParameters.withPosition(javaElementAtCursor, originalParameters.getOffset());
+
+        int mapOffset = CodeGenUtils.getMapOffset(javaPsiFile.getText(), jplusFile.getText(), originalParameters.getOffset());
+
+        PsiElement javaElementAtCursor = javaPsiFile.findElementAt(mapOffset);
+
+        CompletionParameters javaParams =
+                originalParameters.withPosition(javaElementAtCursor, mapOffset);
 
         JavaCompletionContributor javaContributor = new JavaCompletionContributor();
         javaContributor.fillCompletionVariants(javaParams, result);
     }
+
+
 }

@@ -65,7 +65,7 @@ public final class CodeGenUtils {
         return base + "<?>";
     }
 
-    public static int mapOffsetFromTransformedToOriginal(
+    public static int getMapOffset(
             String originalText,
             String transformedText,
             int offsetInTransformed) {

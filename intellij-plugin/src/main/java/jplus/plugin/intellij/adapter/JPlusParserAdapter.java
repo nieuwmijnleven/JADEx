@@ -42,8 +42,8 @@ public class JPlusParserAdapter extends ANTLRParserAdaptor {
 
     @Override
     protected ParseTree parse(Parser parser, IElementType root) {
+
         if (root instanceof IFileElementType) {
-            //parser.setBuildParseTree(false);
             return ((JADEx25Parser) parser).start_();
         }
 

@@ -29,36 +29,47 @@ package jplus.plugin.intellij.psi;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.util.NlsSafe;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiNameIdentifierOwner;
 import com.intellij.psi.PsiNamedElement;
 import com.intellij.util.IncorrectOperationException;
+import jplus.base.JADEx25Parser;
+import jplus.plugin.intellij.util.PsiUtils;
 import org.antlr.intellij.adaptor.psi.ANTLRPsiNode;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class TypeIdentifierPsiElement extends ANTLRPsiNode implements PsiNamedElement {
-    public TypeIdentifierPsiElement(@NotNull ASTNode node) {
+public class VariableDeclaratorPsiElement extends ANTLRPsiNode implements PsiNameIdentifierOwner {
+
+    public VariableDeclaratorPsiElement(@NotNull ASTNode node) {
         super(node);
     }
 
     @Override
-    public PsiElement setName(@NlsSafe @NotNull String s) throws IncorrectOperationException {
-        return null;
+    public @Nullable PsiElement getNameIdentifier() {
+
+        PsiElement variableDeclaratorIdNode = findChildByType(PsiUtils.getIElementType(JADEx25Parser.RULE_variableDeclaratorId));
+        if (variableDeclaratorIdNode == null) return null;
+
+        ASTNode identifierNode = variableDeclaratorIdNode.getNode().findChildByType(PsiUtils.getIElementType(JADEx25Parser.RULE_identifier));
+        if (identifierNode == null) return null;
+
+        return identifierNode.getPsi();
     }
 
-//    @Override
-//    public PsiReference getReference() {
-//        PsiElement parent = getParent();
-//        IElementType iElementType = parent.getNode().getElementType();
-//        // do not return a reference for the ID nodes in a definition
-//        if ( iElementType instanceof RuleIElementType ruleIElementType) {
-//            switch ( ruleIElementType.getRuleIndex() ) {
-//                case RULE_normalClassDeclaration:
-////                case RULE_expr :
-////                case RULE_primary :
-////                    return new NormalClassDeclarationPsiReference(this);
-////                case RULE_call_expr :
-////                    return new FunctionRef(this);
-//            }
-//        }
-//        return null;
-//    }
+    @Override
+    public String getName() {
+
+        PsiElement id = getNameIdentifier();
+        return id != null ? id.getText() : super.getName();
+    }
+
+    @Override
+    public PsiElement setName(@NlsSafe @NotNull String newName) throws IncorrectOperationException {
+
+        if ( getNameIdentifier() instanceof PsiNamedElement psiNamedElem ) {
+            return psiNamedElem.setName(newName);
+        }
+
+        return this;
+    }
 }

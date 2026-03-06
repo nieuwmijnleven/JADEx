@@ -26,8 +26,10 @@
 
 package jplus.plugin.intellij.annotator;
 
+import com.intellij.psi.PsiFile;
+
 public record JPlusAnnotationInput(
-        String fileText,
+        PsiFile file,
         String packageName,
         String className,
         jplus.base.Project project

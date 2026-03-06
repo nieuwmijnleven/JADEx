@@ -66,10 +66,18 @@ public class JPlusFileService {
 
             Project ideaProject = file.getProject();
 
-            Module module = ModuleUtilCore.findModuleForFile(file.getVirtualFile(), ideaProject);
-            jplus.base.Project jplusProject = JPlusIntelliJProjectUtil.buildJPlusProject(ideaProject, module);
+            Module module = ModuleUtilCore.findModuleForFile(file.getVirtualFile(), file.getProject());
+
+            jplus.base.Project jplusProject = ReadAction.compute(() -> JPlusIntelliJProjectUtil.buildJPlusProject(file.getProject(), module));
 
             JPlusProcessor processor = new JPlusProcessor(jplusProject, jplusCode);
+
+            /*Module module = ModuleUtilCore.findModuleForFile(file.getVirtualFile(), ideaProject);
+            jplus.base.Project jplusProject = JPlusIntelliJProjectUtil.buildJPlusProject(ideaProject, module);
+
+            JPlusProcessor processor = new JPlusProcessor(jplusProject, jplusCode);*/
+
+            if (!processor.canParse()) return;
 
             indicator.setText("Parsing");
             processor.process();

@@ -31,12 +31,10 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiJavaFile;
+import com.intellij.psi.PsiReference;
 import com.intellij.refactoring.rename.RenameDialog;
 import com.intellij.refactoring.rename.RenameHandler;
 import com.intellij.refactoring.rename.RenameProcessor;
-import jplus.plugin.intellij.psi.PsiElementWrapper;
-import jplus.plugin.intellij.util.JPlusUtil;
 import org.jetbrains.annotations.NotNull;
 
 public class JPlusRenameHandler implements RenameHandler {
@@ -59,18 +57,21 @@ public class JPlusRenameHandler implements RenameHandler {
 
     @Override
     public void invoke(@NotNull Project project, Editor editor, PsiFile file, DataContext dataContext) {
-        PsiJavaFile psiJavaFile = JPlusUtil.createJavaPsiFromJPlus(project, file);
-        PsiElement element = psiJavaFile.findElementAt(editor.getCaretModel().getOffset());
-        if (element == null) return;
+        //PsiJavaFile psiJavaFile = JPlusUtil.createJavaPsiFromJPlus(project, file);
+        int offset = editor.getCaretModel().getOffset();
+        PsiReference reference = file.findReferenceAt(offset);
 
-        RenameDialog dialog = new RenameDialog(project, element, element.getContext(), editor);
+        if (reference == null) return;
+
+        PsiElement target = reference.resolve();
+        if (target == null) return;
+
+        RenameDialog dialog = new RenameDialog(project, target, null, editor);
         dialog.show();
 
         if (dialog.isOK()) {
-            String newName = dialog.getNewName();
 
-            PsiElement target = new PsiElementWrapper(element, file);
-            RenameProcessor processor = new RenameProcessor(project, target, newName, true, true);
+            RenameProcessor processor = new RenameProcessor(project, target, dialog.getNewName(), true, true);
             processor.run();
         }
 

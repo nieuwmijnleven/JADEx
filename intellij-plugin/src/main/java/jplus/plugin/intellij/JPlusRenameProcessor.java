@@ -35,6 +35,7 @@ import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiJavaFile;
+import com.intellij.psi.PsiNameIdentifierOwner;
 import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.searches.ReferencesSearch;
@@ -54,12 +55,14 @@ public class JPlusRenameProcessor extends RenamePsiElementProcessor {
     @Override
     public boolean canProcessElement(@NotNull PsiElement element) {
         System.err.println("canProcessElement = " + element.getClass().getSimpleName());
-        return element.getLanguage().isKindOf(JavaLanguage.INSTANCE) || !element.isPhysical();
+        return element.isPhysical() &&
+                element.getLanguage().isKindOf(JPlusLanguage.INSTANCE) &&
+                element instanceof PsiNamedElement;
     }
 
     @Override
     public @NotNull PsiElement substituteElementToRename(@NotNull PsiElement element, @Nullable Editor editor) {
-        System.out.println("substituteElementToRename = " + element.getClass().getSimpleName());
+        /*System.out.println("substituteElementToRename = " + element.getClass().getSimpleName());
         if (editor != null) {
             Project project = element.getProject();
             Document doc = editor.getDocument();
@@ -71,7 +74,7 @@ public class JPlusRenameProcessor extends RenamePsiElementProcessor {
             if (element instanceof PsiElementWrapper javaElement) {
                 return javaElement.getSourceElement();
             }
-        }
+        }*/
         return element;
     }
 
@@ -82,76 +85,29 @@ public class JPlusRenameProcessor extends RenamePsiElementProcessor {
             @NotNull UsageInfo[] usages,
             @Nullable RefactoringElementListener listener
     ) {
+
         System.err.println("renameElement = " + element.getClass().getSimpleName());
-        if (!(element instanceof PsiNamedElement)) {
+        if (!(element instanceof PsiNamedElement namedElement)) {
             System.err.println("Not a PsiNamedElement: " + element);
             return;
         }
 
-        Project project = JPlusContext.getInstance().getProject();
-        System.err.println("project = " + project);
+        namedElement.setName(newName);
 
-        PsiJavaFile javaPsiFile = (PsiJavaFile) element.getContainingFile();
-        performInMemoryRename(project, javaPsiFile, (PsiNamedElement) element, newName);
+        for (UsageInfo usage : usages) {
+            PsiElement usageElement = usage.getElement();
+            if (usageElement == null) continue;
 
-        String newJavaCode = javaPsiFile.getText();
-        System.out.println("newJavaCode = " + newJavaCode);
-
-        String newJPlusCode = newJavaCode;
-
-        PsiFile jplusFile = JPlusContext.getInstance().getJPlusFile();
-        System.err.println("jadexFile = " + jplusFile);
-        if (jplusFile == null) return;
-
-        Document jplusDoc = PsiDocumentManager.getInstance(project).getDocument(jplusFile);
-        if (jplusDoc != null) {
-            ApplicationManager.getApplication().runWriteAction(() -> {
-                jplusDoc.setText(newJPlusCode);
-                PsiDocumentManager.getInstance(project).commitDocument(jplusDoc);
-            });
+            PsiReference ref = usageElement.getReference();
+            if (ref != null) {
+                ref.handleElementRename(newName);
+            }
         }
 
-        if (listener != null) listener.elementRenamed(element);
-    }
+        if (listener != null) {
+            listener.elementRenamed(element);
+        }
 
-    private void performInMemoryRename(Project project,
-                                       PsiJavaFile javaPsiFile,
-                                       PsiNamedElement element,
-                                       String newName) {
-
-        ApplicationManager.getApplication().runWriteAction(() -> {
-            // reference rename
-            Collection<PsiReference> refs = ReferencesSearch.search(element, element.getUseScope()).findAll();
-            for (PsiReference ref : refs) {
-                try {
-                    ref.handleElementRename(newName);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-
-            PsiElement[] psiElements = PsiTreeUtil.collectElements(javaPsiFile, psiElement -> psiElement instanceof PsiReference);
-            for (PsiElement refElement : psiElements) {
-                PsiReference ref = (PsiReference) refElement;
-                PsiElement resolved = ref.resolve();
-                if (resolved != null && resolved.isEquivalentTo(element)) {
-                    try {
-                        ref.handleElementRename(newName);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-            // identifier rename
-            element.setName(newName);
-
-            PsiDocumentManager.getInstance(project).commitAllDocuments();
-        });
-    }
-
-
-    private @Nullable PsiElement findCorrespondingJavaElement(PsiJavaFile javaPsiFile, int offset) {
-        return javaPsiFile.findElementAt(offset);
+        //super.renameElement(element, newName, usages, listener);
     }
 }
