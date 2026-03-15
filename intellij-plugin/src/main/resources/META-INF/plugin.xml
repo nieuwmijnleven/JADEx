@@ -57,8 +57,14 @@
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.java</depends>
 
+    <depends optional="true" config-file="jadex-gradle.xml">org.jetbrains.plugins.gradle</depends>
+
     <projectListeners>
         <listener class="jplus.plugin.intellij.JPlusSaveListener" topic="com.intellij.openapi.fileEditor.FileDocumentManagerListener"/>
+        <listener
+                class="jplus.plugin.intellij.listener.JadexBuildFileListener"
+                topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
+
     </projectListeners>
 
     <actions>
@@ -81,6 +87,15 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
+
+        <postStartupActivity
+                implementation="jplus.plugin.intellij.listener.JadexStartupActivity"/>
+
+        <projectService
+                serviceImplementation="jplus.plugin.intellij.gradle.JadexPathResolver"/>
+        <projectService
+                serviceImplementation="jplus.plugin.intellij.settings.JadexProjectSettings"/>
+
         <fileTypeFactory implementation="jplus.plugin.intellij.JPlusFileTypeFactory"/>
         <lang.syntaxHighlighterFactory language="Jadex" implementationClass="jplus.plugin.intellij.JPlusSyntaxHighlighterFactory"/>
         <completion.contributor language="Jadex" implementationClass="jplus.plugin.intellij.JPlusCompletionContributor"/>

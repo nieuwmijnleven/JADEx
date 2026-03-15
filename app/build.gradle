@@ -27,13 +27,23 @@
 plugins {
     id 'java'
     id 'antlr'
+
+    id 'maven-publish'
 }
 
-group = 'jplus'
-version = 'mvp'
+group = 'jadex'
+version = '0.49'
 
 repositories {
     mavenCentral()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
 }
 
 dependencies {
@@ -80,7 +90,7 @@ task run(type: JavaExec) {
 }
 
 gradle.taskGraph.whenReady { taskGraph ->
-    if (taskGraph.hasTask(':app:build')) {
+    if (taskGraph.hasTask(':app:build') || taskGraph.hasTask(':app:publishToMavenLocal')) {
         tasks.named('generateGrammarSource').configure {
             enabled = false
         }

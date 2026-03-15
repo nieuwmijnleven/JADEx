@@ -51,9 +51,12 @@ dependencies {
 
         // Add necessary plugin dependencies for compilation here, example:
          bundledPlugin("com.intellij.java")
+         bundledPlugin("org.jetbrains.plugins.gradle")
     }
 
     implementation(project(":app"))
+    implementation(project(":gradle-plugin"))
+
     antlr("org.antlr:antlr4:4.12.0") { // use ANTLR version 4
         exclude(group="com.ibm.icu", module="icu4j")
     }
