@@ -5,12 +5,16 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.WriteCommandAction;
+import com.intellij.openapi.externalSystem.ExternalSystemModulePropertyManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import jplus.plugin.intellij.settings.JadexProjectSettings;
+import jplus.plugin.intellij.util.JPlusUtil;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -63,6 +67,8 @@ public class ConvertToJPlusAction extends AnAction {
                 VirtualFile newFile = finalTargetDir.createChildData(this, newFileName);
                 newFile.setBinaryContent(content.getBytes(StandardCharsets.UTF_8));
 
+                if (hasGradleConfig(project, JPlusUtil.getModuleDir(project, file))) file.delete(this);
+
                 ApplicationManager.getApplication().invokeLater(() ->
                         FileEditorManager.getInstance(project).openFile(newFile, true)
                 );
@@ -74,19 +80,27 @@ public class ConvertToJPlusAction extends AnAction {
         });
     }
 
+    private boolean hasGradleConfig(Project project, String moduleDir) {
+
+        JadexProjectSettings settings = JadexProjectSettings.getInstance(project);
+        return settings.hasGradleConfig(moduleDir);
+    }
+
     private VirtualFile resolveTargetDir(Project project, VirtualFile file, String content) {
+
+        String moduleDir = JPlusUtil.getModuleDir(project, file);
+        if (moduleDir == null) return file.getParent();
+
         JadexProjectSettings settings = JadexProjectSettings.getInstance(project);
 
-        if (!settings.hasGradleConfig()) {
-            System.out.println("[ConvertToJPlusAction] settings.hasGradleConfig = " + settings.hasGradleConfig());
-            return file.getParent();
-        }
+        if (!settings.hasGradleConfig(moduleDir)) return file.getParent();
 
-        String outputDir = settings.getOutputDir();
+        String sourceDir = settings.getSourceDir(moduleDir).orElseThrow();
         String packageName = extractPackageName(content);
         String packagePath = packageName.replace('.', '/');
 
-        Path targetPath = Path.of(project.getBasePath(), outputDir, packagePath);
+        Path targetPath = Path.of(moduleDir, sourceDir, packagePath);
+        System.out.println("[resolveTargetDir] targetPath = " + targetPath);
 
         try {
             Files.createDirectories(targetPath);
@@ -94,7 +108,6 @@ public class ConvertToJPlusAction extends AnAction {
             return null;
         }
 
-        // IntelliJ VirtualFile로 변환
         return LocalFileSystem.getInstance()
                 .refreshAndFindFileByIoFile(targetPath.toFile());
     }
@@ -102,8 +115,8 @@ public class ConvertToJPlusAction extends AnAction {
     private String extractPackageName(String content) {
         Matcher matcher = PACKAGE_PATTERN.matcher(content);
         if (matcher.find()) {
-            return matcher.group(1);  // ex) "com.example.service"
+            return matcher.group(1);
         }
-        return "";  // default package
+        return "";
     }
 }

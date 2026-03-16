@@ -28,10 +28,14 @@ package jplus.plugin.intellij.annotator;
 
 import com.intellij.lang.annotation.ExternalAnnotator;
 import com.intellij.lang.annotation.HighlightSeverity;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.event.DocumentEvent;
+import com.intellij.openapi.editor.event.DocumentListener;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressIndicatorProvider;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
@@ -46,9 +50,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class JPlusExternalAnnotator
         extends ExternalAnnotator<JPlusAnnotationInput, JPlusAnnotationResult> {
+
+    private static final ConcurrentHashMap<String, jplus.base.Project> projectCache = new ConcurrentHashMap<>();
 
     @Override
     public @Nullable JPlusAnnotationInput collectInformation(
@@ -56,22 +63,25 @@ public class JPlusExternalAnnotator
     ) {
         if (!(file instanceof JPlusFile)) return null;
 
+        String filePath = file.getVirtualFile().getPath();
+
         Project ideaProject = file.getProject();
-
         Module module = ModuleUtilCore.findModuleForFile(file.getVirtualFile(), ideaProject);
-        jplus.base.Project jplusProject = JPlusIntelliJProjectUtil.buildJPlusProject(ideaProject, module);
 
-        String className = file.getVirtualFile().getNameWithoutExtension();
-
-        String packageName = JPlusIntelliJProjectUtil.resolvePackageName(ideaProject, file);
-
-        return new JPlusAnnotationInput(
-                file,
-                packageName,
-                className,
-                jplusProject
+        String moduleKey = module != null ? module.getName() : ideaProject.getName();
+        jplus.base.Project jplusProject = projectCache.computeIfAbsent(
+                moduleKey,
+                k -> JPlusIntelliJProjectUtil.buildJPlusProject(ideaProject, module)
         );
 
+        String packageName = JPlusIntelliJProjectUtil.resolvePackageName(ideaProject, file);
+        String className = file.getVirtualFile().getNameWithoutExtension();
+
+        return new JPlusAnnotationInput(
+                jplusProject,
+                packageName,
+                className
+        );
     }
 
     @Override
@@ -79,7 +89,7 @@ public class JPlusExternalAnnotator
             JPlusAnnotationInput input
     ) {
 
-        ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
+        ProgressIndicatorProvider.checkCanceled();
 
         try {
 
@@ -90,40 +100,17 @@ public class JPlusExternalAnnotator
                             input.className()
                     );
 
+            ProgressIndicatorProvider.checkCanceled();
             if (!processor.canParse()) return null;
 
-            if (indicator != null) {
-                indicator.checkCanceled();
-                indicator.setText("Jadex: Processing");
-                indicator.setIndeterminate(false);
-                indicator.setFraction(0.1);
-            }
-
+            ProgressIndicatorProvider.checkCanceled();
             var diagnostics = processor.process();
-//            if (!diagnostics.isEmpty()) {
-//                if (indicator != null) indicator.cancel();
-//                return new JPlusAnnotationResult(diagnostics, null);
-//            }
 
-            if (indicator != null) {
-                indicator.checkCanceled();
-                indicator.setText("Jadex: Analyzing symbols");
-                indicator.setFraction(0.4);
-            }
-
+            ProgressIndicatorProvider.checkCanceled();
             processor.analyzeSymbols();
 
-            if (indicator != null) {
-                indicator.checkCanceled();
-                indicator.setText("Jadex: Checking nullability");
-                indicator.setFraction(0.6);
-            }
-
+            ProgressIndicatorProvider.checkCanceled();
             List<NullabilityIssue> issues = processor.checkNullability();
-
-            if (indicator != null) {
-                indicator.setFraction(1.0);
-            }
 
             return new JPlusAnnotationResult(diagnostics, issues);
 
@@ -159,6 +146,10 @@ public class JPlusExternalAnnotator
                     .range(TextRange.create(issue.offset(), issue.offset()))
                     .create();
         }
+    }
+
+    public static void clearProjectCache() {
+        projectCache.clear();
     }
 
     private HighlightSeverity convertSeverity(Severity severity) {

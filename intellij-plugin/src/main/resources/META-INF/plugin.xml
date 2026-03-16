@@ -60,11 +60,17 @@
     <depends optional="true" config-file="jadex-gradle.xml">org.jetbrains.plugins.gradle</depends>
 
     <projectListeners>
-        <listener class="jplus.plugin.intellij.JPlusSaveListener" topic="com.intellij.openapi.fileEditor.FileDocumentManagerListener"/>
+        <listener
+                class="jplus.plugin.intellij.JPlusSaveListener"
+                topic="com.intellij.openapi.fileEditor.FileDocumentManagerListener"/>
+
         <listener
                 class="jplus.plugin.intellij.listener.JadexBuildFileListener"
                 topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
 
+        <listener
+                class="jplus.plugin.intellij.annotator.ModuleChangeListener"
+                topic="com.intellij.openapi.project.ModuleListener"/>
     </projectListeners>
 
     <actions>

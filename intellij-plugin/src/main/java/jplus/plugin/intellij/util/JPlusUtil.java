@@ -27,9 +27,12 @@
 package jplus.plugin.intellij.util;
 
 import com.intellij.ide.highlighter.JavaFileType;
+import com.intellij.openapi.externalSystem.ExternalSystemModulePropertyManager;
+import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.NlsSafe;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
@@ -93,6 +96,16 @@ public class JPlusUtil {
 
         return (PsiJavaFile) PsiFileFactory.getInstance(project)
                 .createFileFromText("Temp.java", JavaFileType.INSTANCE, javaText);
+    }
+
+    public static String getModuleDir(Project project, VirtualFile file) {
+
+        com.intellij.openapi.module.Module module = ModuleUtil.findModuleForFile(file, project);
+        if (module == null) return null;
+
+        return ExternalSystemModulePropertyManager
+                .getInstance(module)
+                .getLinkedProjectPath();
     }
 
     public static int findMapOffset(String oldText, String newText, int oldOffset) {

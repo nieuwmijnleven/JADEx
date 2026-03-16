@@ -28,8 +28,14 @@ package jplus.plugin.intellij.gradle;
 
 import com.intellij.openapi.project.Project;
 import jadex.gradle.JadexModel;
+import org.jetbrains.plugins.gradle.settings.GradleProjectSettings;
+import org.jetbrains.plugins.gradle.settings.GradleSettings;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 
 public class JadexPathResolver {
 
@@ -43,16 +49,78 @@ public class JadexPathResolver {
         gradleResolver.invalidateCache();
     }
 
-    public ResolvedPaths resolve(Project project) {
-        JadexModel model = gradleResolver.resolve(project);
+    private boolean hasBuildGradle(File dir) {
+        return new File(dir, "build.gradle").exists()
+                || new File(dir, "build.gradle.kts").exists();
+    }
 
-        if (model != null) {
-            return new ResolvedPaths(
-                model.getSourceDir(),
-                model.getOutputDir()
-            );
-        }
+    private File findBuildGradle(File dir) {
+        File buildGradle = new File(dir, "build.gradle");
+        if (buildGradle.exists()) return buildGradle;
+
+        File buildGradleKts = new File(dir, "build.gradle.kts");
+        if (buildGradleKts.exists()) return buildGradleKts;
 
         return null;
+    }
+
+    private boolean containsJadexPlugin(File buildGradle) {
+        try {
+            String content = Files.readString(buildGradle.toPath());
+            return content.contains("jadex");
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    private List<File> getbuildGradleDirList(Project project) {
+
+        List<File> result = new ArrayList<>();
+
+        GradleSettings gradleSettings = GradleSettings.getInstance(project);
+        for (GradleProjectSettings projectSettings : gradleSettings.getLinkedProjectsSettings()) {
+
+            File rootProjectDir = new File(projectSettings.getExternalProjectPath());
+            System.out.println("[GradleModelResolver] rootProjectDir = " + rootProjectDir);
+            if (hasBuildGradle(rootProjectDir) && containsJadexPlugin(findBuildGradle(rootProjectDir))) {
+                result.add(rootProjectDir);
+            }
+
+            for (String modulePath : projectSettings.getModules()) {
+                System.out.println("[GradleModelResolver] modulePath = " + modulePath);
+                File moduleDir = new File(modulePath);
+                if (hasBuildGradle(moduleDir) && containsJadexPlugin(findBuildGradle(moduleDir))) {
+                    result.add(moduleDir);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public List<ResolvedPaths> resolve(Project project) {
+
+        var resultList = new ArrayList<ResolvedPaths>();
+
+        var buildGradleDirList = getbuildGradleDirList(project);
+        for (File buildGradleDir : buildGradleDirList) {
+
+            System.out.println("[JadexPathResolver] buildGradleDir = " + buildGradleDir);
+
+            JadexModel model = gradleResolver.resolve(buildGradleDir);
+            if (model != null) {
+
+                resultList.add(
+                        new ResolvedPaths(
+                            buildGradleDir.getAbsolutePath(),
+                            model.getSourceDir(),
+                            model.getOutputDir()
+                        )
+                );
+            }
+
+        }
+
+        return resultList;
     }
 }

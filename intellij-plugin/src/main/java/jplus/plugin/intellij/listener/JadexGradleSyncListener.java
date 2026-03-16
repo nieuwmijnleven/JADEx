@@ -17,7 +17,7 @@ public class JadexGradleSyncListener
 
     @Override
     public void onSuccess(ExternalSystemTaskId id) {
-        // Gradle sync 태스크 완료 시에만 처리
+
         if (!id.getProjectSystemId().equals(GradleConstants.SYSTEM_ID)) return;
         if (!id.getType().equals(ExternalSystemTaskType.RESOLVE_PROJECT)) return;
 

@@ -183,6 +183,8 @@ public class JPlusProcessor {
 
     private void generateRuntime() {
 
+        if(checkAlreadyGeneratedRuntime(project)) return;
+
         Utils.createJavaFile(
                 project.getSourceDirs().get(0).toString(),
                 "jadex.runtime",
@@ -296,6 +298,18 @@ public class JPlusProcessor {
                         }
                         """
         );
+    }
+
+    private boolean checkAlreadyGeneratedRuntime(Project project) {
+
+        List<Path> sourceDirs = project.getSourceDirs();
+        for (var sourceDir : sourceDirs) {
+
+            var runtimePath = sourceDir.resolve(Path.of("jadex", "runtime"));
+            if (runtimePath.toFile().exists()) return true;
+        }
+
+        return false;
     }
 
     // --------------------------------------------------------------

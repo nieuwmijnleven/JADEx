@@ -27,14 +27,29 @@
 package jplus.plugin.intellij.gradle;
 
 public class ResolvedPaths {
+
+    private final String moduleDir;
+
     private final String sourceDir;
+
     private final String outputDir;
 
-    public ResolvedPaths(String sourceDir, String outputDir) {
+    public ResolvedPaths(String moduleDir, String sourceDir, String outputDir) {
+        this.moduleDir = moduleDir;
         this.sourceDir = sourceDir;
         this.outputDir = outputDir;
     }
 
+    public String getModuleDir() { return moduleDir; }
     public String getSourceDir() { return sourceDir; }
     public String getOutputDir() { return outputDir; }
+
+    @Override
+    public String toString() {
+        return "ResolvedPaths{" +
+                "moduleDir='" + moduleDir + '\'' +
+                ", sourceDir='" + sourceDir + '\'' +
+                ", outputDir='" + outputDir + '\'' +
+                '}';
+    }
 }

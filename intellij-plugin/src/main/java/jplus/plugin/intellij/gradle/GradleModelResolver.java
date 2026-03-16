@@ -26,17 +26,11 @@
 
 package jplus.plugin.intellij.gradle;
 
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleManager;
-import com.intellij.openapi.module.ModuleUtil;
-import com.intellij.openapi.project.Project;
 import jadex.gradle.JadexModel;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 
 public class GradleModelResolver {
 
@@ -49,18 +43,13 @@ public class GradleModelResolver {
         cacheTimestamp = 0;
     }
 
-    public JadexModel resolve(Project project) {
+    public JadexModel resolve(File buildGradleDir) {
 
         if (isCacheValid()) {
             return cachedModel;
         }
 
-//        System.out.println("[GradleModelResolver] hasGradlePlugin = " + hasGradlePlugin(project));
-//        if (!hasGradlePlugin(project)) {
-//            return null;
-//        }
-
-        return fetchViaToolingApi(project);
+        return fetchViaToolingApi(buildGradleDir);
     }
 
     private boolean isCacheValid() {
@@ -68,49 +57,10 @@ public class GradleModelResolver {
             && (System.currentTimeMillis() - cacheTimestamp) < CACHE_TTL_MS;
     }
 
-    private boolean hasGradlePlugin(Project project) {
-        ModuleManager moduleManager = ModuleManager.getInstance(project);
-
-        for (Module module : moduleManager.getModules()) {
-            // 모듈의 루트 경로 가져오기
-            String moduleDirPath = ModuleUtil.getModuleDirPath(module);
-            File moduleDir = new File(moduleDirPath);
-
-            File buildGradle = findBuildGradle(moduleDir);
-            if (buildGradle != null && containsJadexPlugin(buildGradle)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private File findBuildGradle(File dir) {
-        File buildGradle = new File(dir, "build.gradle");
-        if (buildGradle.exists()) return buildGradle;
-
-        File buildGradleKts = new File(dir, "build.gradle.kts");
-        if (buildGradleKts.exists()) return buildGradleKts;
-
-        return null;
-    }
-
-    private boolean containsJadexPlugin(File buildGradle) {
-        try {
-            String content = Files.readString(buildGradle.toPath());
-            return content.contains("jadex");
-        } catch (IOException e) {
-            return false;
-        }
-    }
-
-    private JadexModel fetchViaToolingApi(Project project) {
-
-        String basePath = project.getBasePath();
-        System.out.println("[GradleModelResolver] basePath = " + basePath);
-        if (basePath == null) return cachedModel;
+    private JadexModel fetchViaToolingApi(File buildGradleDir) {
 
         GradleConnector connector = GradleConnector.newConnector()
-                .forProjectDirectory(new File(basePath));
+                .forProjectDirectory(buildGradleDir);
 
         try (ProjectConnection connection = connector.connect()) {
 

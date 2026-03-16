@@ -24,26 +24,24 @@
  * a commercial license. See the CLA file in the project root for details.
  */
 
-package jplus.plugin.intellij.gradle;
+package jplus.plugin.intellij.annotator;
 
-import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.project.ModuleListener;
 import com.intellij.openapi.project.Project;
-import jplus.plugin.intellij.settings.JadexProjectSettings;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class JadexPathManager {
+public class ModuleChangeListener implements ModuleListener {
 
-    public static void refresh(Project project) {
-        ApplicationManager.getApplication().executeOnPooledThread(() -> {
-            JadexPathResolver resolver = JadexPathResolver.getInstance(project);
-            resolver.invalidateCache();
+    @Override
+    public void modulesAdded(@NotNull Project project, @NotNull List<? extends Module> modules) {
+        JPlusExternalAnnotator.clearProjectCache();
+    }
 
-            List<ResolvedPaths> paths = resolver.resolve(project);
-            System.out.println("[JadexPathManager] refresh()");
-            paths.forEach(System.out::println);
-
-            JadexProjectSettings.getInstance(project).update(paths);
-        });
+    @Override
+    public void moduleRemoved(@NotNull Project project, @NotNull Module module) {
+        JPlusExternalAnnotator.clearProjectCache();
     }
 }

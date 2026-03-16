@@ -67,6 +67,7 @@ public class JPlusFileService {
             Project ideaProject = file.getProject();
 
             Module module = ModuleUtilCore.findModuleForFile(file.getVirtualFile(), file.getProject());
+            if (module == null) return;
 
             jplus.base.Project jplusProject = ReadAction.compute(() -> JPlusIntelliJProjectUtil.buildJPlusProject(file.getProject(), module));
 

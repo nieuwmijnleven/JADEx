@@ -40,8 +40,11 @@ import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiReferenceBase;
 import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiVariable;
+import com.intellij.psi.util.CachedValueProvider;
+import com.intellij.psi.util.CachedValuesManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
+import jplus.plugin.intellij.annotator.JPlusExternalAnnotator;
 import jplus.plugin.intellij.util.JPlusUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -59,7 +62,10 @@ public class JADExPsiReference extends PsiReferenceBase<PsiElement> {
         Project project = myElement.getProject();
         PsiFile jadexPsiFile = myElement.getContainingFile();
 
-        PsiJavaFile javaFile = JPlusUtil.createJavaPsiFromJPlus(project, jadexPsiFile, true);
+//        PsiJavaFile javaFile = JPlusUtil.createJavaPsiFromJPlus(project, jadexPsiFile, true);
+//        if (javaFile == null) return null;
+
+        PsiJavaFile javaFile = getCachedJavaFile(project, jadexPsiFile);
         if (javaFile == null) return null;
 
         String currentFQN = javaFile.getClasses()[0].getQualifiedName();
@@ -109,6 +115,19 @@ public class JADExPsiReference extends PsiReferenceBase<PsiElement> {
 
         int jadexMapOffset = JPlusUtil.findMapOffset(javaFile.getText(), jadexPsiFile.getText(), resolved.getTextRange().getStartOffset());
         return JPlusUtil.findCorrespondingPsiElement(jadexPsiFile, jadexMapOffset);
+    }
+
+    private PsiJavaFile getCachedJavaFile(Project project, PsiFile jadexPsiFile) {
+        return CachedValuesManager.getCachedValue(
+                jadexPsiFile,
+                () -> {
+                    PsiJavaFile javaFile = JPlusUtil.createJavaPsiFromJPlus(project, jadexPsiFile, true);
+                    return CachedValueProvider.Result.create(
+                            javaFile,
+                            jadexPsiFile
+                    );
+                }
+        );
     }
 
     private String getResolvedFQN(PsiElement resolved) {

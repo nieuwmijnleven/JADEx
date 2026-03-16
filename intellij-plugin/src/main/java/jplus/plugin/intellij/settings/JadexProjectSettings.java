@@ -33,17 +33,23 @@ import com.intellij.openapi.project.Project;
 import jplus.plugin.intellij.gradle.ResolvedPaths;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
 // JadexProjectSettings.java
 @State(
-    name = "JadexProjectSettings",
-    storages = @Storage("jadex.xml")  // .idea/jadex.xml
+        name = "JadexProjectSettings",
+        storages = @Storage("jadex.xml")
 )
 public class JadexProjectSettings
         implements PersistentStateComponent<JadexProjectSettings.State> {
 
     public static class State {
-        public String sourceDir = null;
-        public String outputDir = null;
+        // ResolvedPaths 대신 sourceDir, outputDir을 별도 Map으로 분리
+        public Map<String, String> sourceDirMap = new HashMap<>();
+        public Map<String, String> outputDirMap = new HashMap<>();
     }
 
     private State state = new State();
@@ -62,20 +68,24 @@ public class JadexProjectSettings
         this.state = state;
     }
 
-    public void update(ResolvedPaths paths) {
-        if (paths == null) {
-            state.sourceDir = null;
-            state.outputDir = null;
-        } else {
-            state.sourceDir = paths.getSourceDir();
-            state.outputDir = paths.getOutputDir();
-        }
+    public void update(List<ResolvedPaths> paths) {
+        state.sourceDirMap = new HashMap<>();
+        state.outputDirMap = new HashMap<>();
+        paths.forEach(resolvedPaths -> {
+            state.sourceDirMap.put(resolvedPaths.getModuleDir(), resolvedPaths.getSourceDir());
+            state.outputDirMap.put(resolvedPaths.getModuleDir(), resolvedPaths.getOutputDir());
+        });
     }
 
-    public boolean hasGradleConfig() {
-        return state.sourceDir != null;
+    public boolean hasGradleConfig(String moduleDir) {
+        return moduleDir != null && state.sourceDirMap.containsKey(moduleDir);
     }
 
-    public String getSourceDir() { return state.sourceDir; }
-    public String getOutputDir() { return state.outputDir; }
+    public Optional<String> getSourceDir(String moduleDir) {
+        return Optional.ofNullable(state.sourceDirMap.get(moduleDir));
+    }
+
+    public Optional<String> getOutputDir(String moduleDir) {
+        return Optional.ofNullable(state.outputDirMap.get(moduleDir));
+    }
 }
