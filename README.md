@@ -16,24 +16,24 @@ JADEx (Java Advanced Development Extension) is a practical **Java safety layer**
 
 * JADEx is a **Java safety layer** that strengthens the language’s type system by enforcing **null-safety** and **readonly (final-by-default)** semantics. It brings compile-time guarantees to your existing Java code without requiring a full rewrite, while fully leveraging existing Java libraries and tools.
 
-  			+---------------------------+
-  			|       Existing Java       |
-  			| (potentially unsafe)      |
-  			+------------+--------------+
-  					 	 |
-  					 	 v
-  	+----------------------------------------+
-  	|       JADEx (Java Safety Layer)        |
-  	| (strengthens type system, applies      |
-  	|  null-safety operators & readonly)     |
-  	+------------------+---------------------+
-  						 |
-  						 v
-  		    +---------------------------+
-  		    |   Safe & Robust Java Code |
-  		    | (compile-time enforcement |
-  		    | of null-safety & readonly)|
-  		    +---------------------------+
+    			+---------------------------+
+    			|       Existing Java       |
+    			| (potentially unsafe)      |
+    			+------------+--------------+
+    					 	 |
+    					 	 v
+    	+----------------------------------------+
+    	|       JADEx (Java Safety Layer)        |
+    	| (strengthens type system, applies      |
+    	|  null-safety operators & readonly)     |
+    	+------------------+---------------------+
+    						 |
+    						 v
+    		    +---------------------------+
+    		    |   Safe & Robust Java Code |
+    		    | (compile-time enforcement |
+    		    | of null-safety & readonly)|
+    		    +---------------------------+
 
 > **JADEx is not designed to replace Java. It acts as a practical Java safety layer, strengthening Java’s null-related type system and providing optional readonly semantics, all without leaving the existing Java ecosystem**.
 

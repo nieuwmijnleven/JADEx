@@ -27,8 +27,6 @@
 plugins {
     id 'java'
     id 'antlr'
-
-    id 'maven-publish'
 }
 
 group = 'jadex'
@@ -36,14 +34,6 @@ version = '0.49'
 
 repositories {
     mavenCentral()
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-        }
-    }
 }
 
 dependencies {
