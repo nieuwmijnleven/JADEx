@@ -92,7 +92,7 @@ public class JPlusParserDefinition implements ParserDefinition {
     @Override
     public @NotNull PsiElement createElement(ASTNode node) {
 
-        IElementType iElementType = node.getElementType();
+        /*IElementType iElementType = node.getElementType();
 
         if (iElementType instanceof TokenIElementType tokenElement) {
             return new ANTLRPsiNode(node);
@@ -109,7 +109,9 @@ public class JPlusParserDefinition implements ParserDefinition {
             case JADEx25Parser.RULE_normalClassDeclaration -> new NormalClassDeclarationPsiElement(node);
             case JADEx25Parser.RULE_variableDeclarator -> new VariableDeclaratorPsiElement(node);
             default -> new ANTLRPsiNode(node);
-        };
+        };*/
+
+        return new ANTLRPsiNode(node);
     }
 
     @Override

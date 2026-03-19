@@ -28,7 +28,6 @@ package jplus.plugin.intellij;
 
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
-import jplus.base.JADEx25Parser;
 import jplus.plugin.intellij.adapter.JPlusLexerAdapter;
 import org.antlr.intellij.adaptor.lexer.PSIElementTypeFactory;
 import org.antlr.intellij.adaptor.lexer.RuleIElementType;
@@ -52,81 +51,81 @@ public class JPlusTokenTypes {
     public static final TokenSet COMMENTS =
             PSIElementTypeFactory.createTokenSet(
                     JPlusLanguage.INSTANCE,
-                    JADEx25IntellijLexer.COMMENT,
-                    JADEx25IntellijLexer.LINE_COMMENT);
+                    JADExIntellijLexer.COMMENT,
+                    JADExIntellijLexer.LINE_COMMENT);
 
     public static final TokenSet WHITESPACES =
             PSIElementTypeFactory.createTokenSet(
                     JPlusLanguage.INSTANCE,
-                    JADEx25IntellijLexer.WS);
+                    JADExIntellijLexer.WS);
 
     public static final TokenSet STRING_LITERALS =
             PSIElementTypeFactory.createTokenSet(
                     JPlusLanguage.INSTANCE,
-                    JADEx25IntellijLexer.StringLiteral);
+                    JADExIntellijLexer.STRING_LITERAL);
 
     public static final TokenSet KEYWORDS =
             PSIElementTypeFactory.createTokenSet(
                     JPlusLanguage.INSTANCE,
-                    JADEx25IntellijLexer.ABSTRACT,
-                    JADEx25IntellijLexer.APPLY,
-                    JADEx25IntellijLexer.ASSERT,
-                    JADEx25IntellijLexer.BOOLEAN,
-                    JADEx25IntellijLexer.BREAK,
-                    JADEx25IntellijLexer.BYTE,
-                    JADEx25IntellijLexer.CASE,
-                    JADEx25IntellijLexer.CATCH,
-                    JADEx25IntellijLexer.CHAR,
-                    JADEx25IntellijLexer.CLASS,
-                    JADEx25IntellijLexer.CONST,
-                    JADEx25IntellijLexer.CONTINUE,
-                    JADEx25IntellijLexer.DEFAULT,
-                    JADEx25IntellijLexer.DO,
-                    JADEx25IntellijLexer.DOUBLE,
-                    JADEx25IntellijLexer.ELSE,
-                    JADEx25IntellijLexer.ENUM,
-                    JADEx25IntellijLexer.EXTENDS,
-                    JADEx25IntellijLexer.FINAL,
-                    JADEx25IntellijLexer.FINALLY,
-                    JADEx25IntellijLexer.FLOAT,
-                    JADEx25IntellijLexer.FOR,
-                    JADEx25IntellijLexer.IF,
-                    JADEx25IntellijLexer.GOTO,
-                    JADEx25IntellijLexer.IMPLEMENTS,
-                    JADEx25IntellijLexer.IMPORT,
-                    JADEx25IntellijLexer.INSTANCEOF,
-                    JADEx25IntellijLexer.INT,
-                    JADEx25IntellijLexer.INTERFACE,
-                    JADEx25IntellijLexer.LONG,
-                    JADEx25IntellijLexer.MUTABLE,
-                    JADEx25IntellijLexer.NATIVE,
-                    JADEx25IntellijLexer.NEW,
-                    JADEx25IntellijLexer.PACKAGE,
-                    JADEx25IntellijLexer.PRIVATE,
-                    JADEx25IntellijLexer.PROTECTED,
-                    JADEx25IntellijLexer.PUBLIC,
-                    JADEx25IntellijLexer.RETURN,
-                    JADEx25IntellijLexer.SHORT,
-                    JADEx25IntellijLexer.STATIC,
-                    JADEx25IntellijLexer.STRICTFP,
-                    JADEx25IntellijLexer.SUPER,
-                    JADEx25IntellijLexer.SWITCH,
-                    JADEx25IntellijLexer.SYNCHRONIZED,
-                    JADEx25IntellijLexer.THIS,
-                    JADEx25IntellijLexer.THROW,
-                    JADEx25IntellijLexer.THROWS,
-                    JADEx25IntellijLexer.TRANSIENT,
-                    JADEx25IntellijLexer.TRY,
-                    JADEx25IntellijLexer.VOID,
-                    JADEx25IntellijLexer.VOLATILE,
-                    JADEx25IntellijLexer.WHILE,
-                    JADEx25IntellijLexer.UNDER_SCORE
+                    JADExIntellijLexer.ABSTRACT,
+                    JADExIntellijLexer.APPLY,
+                    JADExIntellijLexer.ASSERT,
+                    JADExIntellijLexer.BOOLEAN,
+                    JADExIntellijLexer.BREAK,
+                    JADExIntellijLexer.BYTE,
+                    JADExIntellijLexer.CASE,
+                    JADExIntellijLexer.CATCH,
+                    JADExIntellijLexer.CHAR,
+                    JADExIntellijLexer.CLASS,
+                    JADExIntellijLexer.CONST,
+                    JADExIntellijLexer.CONTINUE,
+                    JADExIntellijLexer.DEFAULT,
+                    JADExIntellijLexer.DO,
+                    JADExIntellijLexer.DOUBLE,
+                    JADExIntellijLexer.ELSE,
+                    JADExIntellijLexer.ENUM,
+                    JADExIntellijLexer.EXTENDS,
+                    JADExIntellijLexer.FINAL,
+                    JADExIntellijLexer.FINALLY,
+                    JADExIntellijLexer.FLOAT,
+                    JADExIntellijLexer.FOR,
+                    JADExIntellijLexer.IF,
+                    JADExIntellijLexer.GOTO,
+                    JADExIntellijLexer.IMPLEMENTS,
+                    JADExIntellijLexer.IMPORT,
+                    JADExIntellijLexer.INSTANCEOF,
+                    JADExIntellijLexer.INT,
+                    JADExIntellijLexer.INTERFACE,
+                    JADExIntellijLexer.LONG,
+                    JADExIntellijLexer.MUTABLE,
+                    JADExIntellijLexer.NATIVE,
+                    JADExIntellijLexer.NEW,
+                    JADExIntellijLexer.PACKAGE,
+                    JADExIntellijLexer.PRIVATE,
+                    JADExIntellijLexer.PROTECTED,
+                    JADExIntellijLexer.PUBLIC,
+                    JADExIntellijLexer.RETURN,
+                    JADExIntellijLexer.SHORT,
+                    JADExIntellijLexer.STATIC,
+                    JADExIntellijLexer.STRICTFP,
+                    JADExIntellijLexer.SUPER,
+                    JADExIntellijLexer.SWITCH,
+                    JADExIntellijLexer.SYNCHRONIZED,
+                    JADExIntellijLexer.THIS,
+                    JADExIntellijLexer.THROW,
+                    JADExIntellijLexer.THROWS,
+                    JADExIntellijLexer.TRANSIENT,
+                    JADExIntellijLexer.TRY,
+                    JADExIntellijLexer.VOID,
+                    JADExIntellijLexer.VOLATILE,
+                    JADExIntellijLexer.WHILE,
+                    JADExIntellijLexer.UNDER_SCORE
             );
 
-    public static RuleIElementType getRuleElementType(@MagicConstant(valuesFromClass = JADEx25Parser.class)int ruleIndex){
+    public static RuleIElementType getRuleElementType(@MagicConstant(valuesFromClass = JADExIntellijParser.class)int ruleIndex){
         return RULE_ELEMENT_TYPES.get(ruleIndex);
     }
-    public static TokenIElementType getTokenElementType(@MagicConstant(valuesFromClass = JADEx25IntellijLexer.class)int ruleIndex){
+    public static TokenIElementType getTokenElementType(@MagicConstant(valuesFromClass = JADExIntellijLexer.class)int ruleIndex){
         return TOKEN_ELEMENT_TYPES.get(ruleIndex);
     }
 }

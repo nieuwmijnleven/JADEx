@@ -47,7 +47,7 @@ public class JPlusASTFactory extends CoreASTFactory {
 	public LeafElement createLeaf(@NotNull IElementType type, CharSequence text) {
 
         if (type instanceof TokenIElementType tokenIElementType &&
-			 tokenIElementType.getANTLRTokenType() == JADEx25Lexer.Identifier) {
+			 tokenIElementType.getANTLRTokenType() == JADExIntellijLexer.IDENTIFIER) {
 			return new IdentifierPsiElement(type, text);
 		}
 

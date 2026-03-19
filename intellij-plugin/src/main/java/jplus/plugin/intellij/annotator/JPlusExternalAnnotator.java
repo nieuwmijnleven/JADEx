@@ -91,14 +91,18 @@ public class JPlusExternalAnnotator
 
         ProgressIndicatorProvider.checkCanceled();
 
+        JPlusProcessor processor = null;
         try {
-
-            JPlusProcessor processor =
-                    new JPlusProcessor(
+            processor = new JPlusProcessor(
                             input.project(),
                             input.packageName(),
                             input.className()
-                    );
+                        );
+        } catch(Exception e) {
+            return null;
+        }
+
+        try {
 
             ProgressIndicatorProvider.checkCanceled();
             if (!processor.canParse()) return null;

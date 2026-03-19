@@ -31,7 +31,8 @@ import com.intellij.psi.tree.IElementType;
 import com.jetbrains.cef.remote.thrift.annotation.Nullable;
 import jplus.base.JADEx25Lexer;
 import jplus.base.JADEx25Parser;
-import jplus.plugin.intellij.JADEx25IntellijLexer;
+import jplus.plugin.intellij.JADExIntellijLexer;
+import jplus.plugin.intellij.JADExIntellijParser;
 import jplus.plugin.intellij.JPlusLanguage;
 import jplus.plugin.intellij.JPlusTokenTypes;
 import org.antlr.intellij.adaptor.lexer.ANTLRLexerAdaptor;
@@ -50,8 +51,8 @@ public class JPlusLexerAdapter extends ANTLRLexerAdaptor {
         PSIElementTypeFactory.defineLanguageIElementTypes(
                 JPlusLanguage.INSTANCE,
                 //JADEx25Lexer.tokenNames,
-                JADEx25IntellijLexer.VOCABULARY,
-                JADEx25Parser.ruleNames
+                JADExIntellijLexer.VOCABULARY,
+                JADExIntellijParser.ruleNames
         );
     }
 
@@ -64,7 +65,7 @@ public class JPlusLexerAdapter extends ANTLRLexerAdaptor {
      * @param lexer    The underlying ANTLR lexer.
      */
     public JPlusLexerAdapter() {
-        super(JPlusLanguage.INSTANCE, new JADEx25IntellijLexer(CharStreams.fromString("")));
+        super(JPlusLanguage.INSTANCE, new JADExIntellijLexer(CharStreams.fromString("")));
     }
 
     @Override
