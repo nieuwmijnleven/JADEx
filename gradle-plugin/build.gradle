@@ -43,7 +43,7 @@ plugins {
 }
 
 group = "io.github.nieuwmijnleven.jadex"
-version = "0.59"
+version = "0.62"
 
 repositories {
     // Use Maven Central for resolving dependencies.
@@ -91,17 +91,11 @@ tasks.named('jar', Jar) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
-//publishing {
-//    repositories {
-//        mavenLocal()
-//    }
-//}
-
 mavenPublishing {
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
     signAllPublications()
 
-    coordinates("io.github.nieuwmijnleven.jadex", "jadex-gradle-plugin", "0.59")
+    coordinates("io.github.nieuwmijnleven.jadex", "jadex-gradle-plugin", "0.62")
 
     pom {
         name = 'JADEx Gradle Plugin'

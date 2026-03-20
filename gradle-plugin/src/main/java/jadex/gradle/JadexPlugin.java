@@ -66,6 +66,18 @@ public class JadexPlugin implements Plugin<Project> {
         project.getRepositories().mavenCentral();
         project.getDependencies().add("compileOnly", "org.jspecify:jspecify:1.0.0");
 
+        try {
+            project.getDependencies().add(
+                    "implementation",
+                    project.files(getClass().getProtectionDomain()
+                            .getCodeSource()
+                            .getLocation()
+                            .toURI())
+            );
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+
         project.afterEvaluate(p -> {
 
             JavaPluginExtension javaExt =
@@ -81,7 +93,9 @@ public class JadexPlugin implements Plugin<Project> {
 
             javaExt.getSourceSets()
                     .getByName("main")
-                    .getJava().getSrcDirs().stream().forEach(file -> System.out.println("[JadexPluin][JADEx] sourceDirs = " + file.toString()));
+                    .getJava()
+                    .getSrcDirs()
+                    .forEach(file -> System.out.println("[JadexPluin][JADEx] sourceDirs = " + file.toString()));
         });
     }
 }
