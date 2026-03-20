@@ -462,12 +462,16 @@ public class JPlusProcessor {
             if (unresolvedList.isEmpty()) break;
 
             for (var unresolved : unresolvedList) {
+
                 JPlusProcessor dependency = new JPlusProcessor(project, unresolved.packageName, unresolved.className);
                 dependency.process();
-                //String javaCode = dependency.generateJavaCodeForSemanticMode();
-                String javaCode = dependency.getProcessedJavaCode();
-                ////System.err.println("[resolveAllUnresolvedReferences] javaCode = " + javaCode);
-                inMemoryJavaFiles.add(new InMemoryJavaFile(unresolved.getFullyQualifiedName(), javaCode));
+
+                inMemoryJavaFiles.add(
+                        new InMemoryJavaFile(
+                                unresolved.getFullyQualifiedName(),
+                                dependency.getProcessedJavaCode()
+                        )
+                );
             }
 
             javaProcessor = new JavaProcessor(project, inMemoryJavaFiles, globalSymbolTable);
