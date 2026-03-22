@@ -53,7 +53,6 @@ public class JadexPlugin implements Plugin<Project> {
         JadexExtension extension =
                 project.getExtensions().create("jadex", JadexExtension.class);
 
-
         registry.register(new JadexModelBuilder());
 
         project.getTasks().register("compileJadex", JadexCompileTask.class, task -> {
@@ -99,7 +98,7 @@ public class JadexPlugin implements Plugin<Project> {
                     .getByName("main")
                     .getJava()
                     .getSrcDirs()
-                    .forEach(file -> log.debug("[JadexPluin][JADEx] sourceDirs = " + file.toString()));
+                    .forEach(file -> log.debug("sourceDirs = " + file.toString()));
         });
     }
 }

@@ -32,7 +32,7 @@ plugins {
 }
 
 group = "jplus.plugin.intellij"
-version = "0.59"
+version = "0.62"
 
 repositories {
     mavenCentral()
@@ -60,6 +60,9 @@ dependencies {
     antlr("org.antlr:antlr4:4.12.0") { // use ANTLR version 4
         exclude(group="com.ibm.icu", module="icu4j")
     }
+
+    compileOnly("org.slf4j:slf4j-api:2.0.17")
+
     //implementation("org.antlr:antlr4-intellij-adaptor:0.1")
     implementation("com.github.nieuwmijnleven:antlr4-intellij-adaptor:-SNAPSHOT")
     implementation("org.jspecify:jspecify:1.0.0")

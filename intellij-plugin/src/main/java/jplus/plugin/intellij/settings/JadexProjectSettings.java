@@ -30,6 +30,7 @@ import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.project.Project;
+import jadex.gradle.JadexModel;
 import jplus.plugin.intellij.gradle.ResolvedPaths;
 import org.jetbrains.annotations.NotNull;
 
@@ -47,9 +48,15 @@ public class JadexProjectSettings
         implements PersistentStateComponent<JadexProjectSettings.State> {
 
     public static class State {
-        // ResolvedPaths 대신 sourceDir, outputDir을 별도 Map으로 분리
+
         public Map<String, String> sourceDirMap = new HashMap<>();
         public Map<String, String> outputDirMap = new HashMap<>();
+        public Map<String, String> pluginVersionMap = new HashMap<>();
+        public Map<String, String> javaHomeMap = new HashMap<>();
+        public Map<String, String> javaVersionMap = new HashMap<>();
+        public Map<String, List<String>> javaSrcDirsMap = new HashMap<>();
+        public Map<String, List<String>> classPathMap = new HashMap<>();
+
     }
 
     private State state = new State();
@@ -68,13 +75,29 @@ public class JadexProjectSettings
         this.state = state;
     }
 
-    public void update(List<ResolvedPaths> paths) {
+    public void update(List<JadexModel> jadexModelList) {
+
+        clear();
+
+        jadexModelList.forEach(jadexModel -> {
+            state.sourceDirMap.put(jadexModel.getProjectDir(), jadexModel.getSourceDir());
+            state.outputDirMap.put(jadexModel.getProjectDir(), jadexModel.getOutputDir());
+            state.pluginVersionMap.put(jadexModel.getProjectDir(), jadexModel.getPluginVersion());
+            state.javaHomeMap.put(jadexModel.getProjectDir(), jadexModel.getJavaHome());
+            state.javaVersionMap.put(jadexModel.getProjectDir(), jadexModel.getJavaVersion());
+            state.javaSrcDirsMap.put(jadexModel.getProjectDir(), jadexModel.getJavaSrcDirs());
+            state.classPathMap.put(jadexModel.getProjectDir(), jadexModel.getClassPath());
+        });
+    }
+
+    private void clear() {
         state.sourceDirMap = new HashMap<>();
         state.outputDirMap = new HashMap<>();
-        paths.forEach(resolvedPaths -> {
-            state.sourceDirMap.put(resolvedPaths.getModuleDir(), resolvedPaths.getSourceDir());
-            state.outputDirMap.put(resolvedPaths.getModuleDir(), resolvedPaths.getOutputDir());
-        });
+        state.pluginVersionMap = new HashMap();
+        state.javaHomeMap = new HashMap();
+        state.javaVersionMap = new HashMap();
+        state.javaSrcDirsMap = new HashMap();
+        state.classPathMap = new HashMap();
     }
 
     public boolean hasGradleConfig(String moduleDir) {
@@ -88,4 +111,21 @@ public class JadexProjectSettings
     public Optional<String> getOutputDir(String moduleDir) {
         return Optional.ofNullable(state.outputDirMap.get(moduleDir));
     }
+
+    public Optional<String> getJavaHome(String moduleDir) {
+        return Optional.ofNullable(state.javaHomeMap.get(moduleDir));
+    }
+
+    public Optional<String> getJavaVersion(String moduleDir) {
+        return Optional.ofNullable(state.javaVersionMap.get(moduleDir));
+    }
+
+    public List<String> getJavaSrcDirs(String moduleDir) {
+        return state.javaSrcDirsMap.get(moduleDir);
+    }
+
+    public List<String> getClassPath(String moduleDir) {
+        return state.classPathMap.get(moduleDir);
+    }
+
 }

@@ -55,8 +55,8 @@ dependencies {
     compileOnly project(":app")
 
     implementation gradleApi()
+    implementation 'ch.qos.logback:logback-classic:1.5.32'
 
-    // Use JUnit Jupiter for testing.
     testImplementation libs.junit.jupiter
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -87,6 +87,8 @@ tasks.named('jar', Jar) {
     from project(":app").configurations.runtimeClasspath.collect {
         it.isDirectory() ? it : zipTree(it)
     }
+
+    from sourceSets.main.resources
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }

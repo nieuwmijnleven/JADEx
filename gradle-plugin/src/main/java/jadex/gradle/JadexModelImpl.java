@@ -26,17 +26,54 @@
 
 package jadex.gradle;
 
+import java.util.List;
+
 public class JadexModelImpl implements JadexModel {
     private static final long serialVersionUID = 1L;
 
+    private final String projectDir;
+
+    private final String pluginVersion;
     private final String sourceDir;
     private final String outputDir;
 
-    public JadexModelImpl(String sourceDir, String outputDir) {
+    private final String javaHome;
+    private final String javaVersion;
+    private final List<String> javaSrcDirs;
+    private final List<String> classPath;
+
+    public JadexModelImpl(String projectDir, String pluginVersion, String sourceDir, String outputDir, String javaHome, String javaVersion, List<String> javaSrcDirs, List<String> classPath) {
+        this.projectDir = projectDir;
+        this.pluginVersion = pluginVersion;
         this.sourceDir = sourceDir;
         this.outputDir = outputDir;
+        this.javaHome = javaHome;
+        this.javaVersion = javaVersion;
+        this.javaSrcDirs = javaSrcDirs;
+        this.classPath = classPath;
     }
 
-    @Override public String getSourceDir() { return sourceDir; }
-    @Override public String getOutputDir() { return outputDir; }
+    @Override
+    public String getProjectDir() { return projectDir; }
+
+    @Override
+    public String getPluginVersion() { return pluginVersion; }
+
+    @Override
+    public String getSourceDir() { return sourceDir; }
+
+    @Override
+    public String getOutputDir() { return outputDir; }
+
+    @Override
+    public String getJavaHome() { return javaHome; }
+
+    @Override
+    public String getJavaVersion() { return javaVersion; }
+
+    @Override
+    public List<String> getJavaSrcDirs() { return javaSrcDirs; }
+
+    @Override
+    public List<String> getClassPath() { return classPath; }
 }
