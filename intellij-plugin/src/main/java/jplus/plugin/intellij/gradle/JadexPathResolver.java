@@ -30,7 +30,6 @@ import com.intellij.openapi.project.Project;
 import jadex.gradle.JadexModel;
 import org.jetbrains.plugins.gradle.settings.GradleProjectSettings;
 import org.jetbrains.plugins.gradle.settings.GradleSettings;
-import org.jetbrains.uast.java.JavaUDoWhileExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,8 +54,7 @@ public class JadexPathResolver {
     }
 
     private boolean hasBuildGradle(File dir) {
-        return new File(dir, "build.gradle").exists()
-                || new File(dir, "build.gradle.kts").exists();
+        return findBuildGradle(dir) != null;
     }
 
     private File findBuildGradle(File dir) {
@@ -72,7 +70,7 @@ public class JadexPathResolver {
     private boolean containsJadexPlugin(File buildGradle) {
         try {
             String content = Files.readString(buildGradle.toPath());
-            return content.contains("jadex");
+            return content.contains("io.github.nieuwmijnleven.jadex");
         } catch (IOException e) {
             return false;
         }
@@ -111,7 +109,7 @@ public class JadexPathResolver {
         var buildGradleDirList = getbuildGradleDirList(project);
 
         for (File buildGradleDir : buildGradleDirList) {
-            LOG.debug("buildGradleDir = " + buildGradleDir);
+            System.out.println("buildGradleDir = " + buildGradleDir);
 
             JadexModel model = gradleResolver.resolve(buildGradleDir);
             if (model != null) {

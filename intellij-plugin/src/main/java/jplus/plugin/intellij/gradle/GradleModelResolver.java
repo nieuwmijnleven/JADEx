@@ -76,7 +76,7 @@ public class GradleModelResolver {
             return model;
 
         } catch (Exception e) {
-            LOG.debug("fetchViaToolingApi", e);
+            System.out.println("fetchViaToolingApi: " + e);
             return cachedModel;
         }
     }

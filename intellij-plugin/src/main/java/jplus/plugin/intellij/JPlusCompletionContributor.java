@@ -67,7 +67,7 @@ public class JPlusCompletionContributor extends CompletionContributor {
 
                 collectApplyCandidates(psiElement, result);
 
-                if (parameters.getInvocationCount() == 0) {
+                /*if (parameters.getInvocationCount() == 0) {
 
                     result.addElement(
                             LookupElementBuilder.create("Press Ctrl+Space for full JADEx completion")
@@ -82,7 +82,7 @@ public class JPlusCompletionContributor extends CompletionContributor {
                     result.addLookupAdvertisement("Press Ctrl+Space for JADEx code completion");
 
                     return;
-                }
+                }*/
 
                 PsiJavaFile javaPsiFile = JPlusUtil.createJavaPsiFromJADExForCodeCompletion(project, jadexPsiFile, parameters.getOffset(), false);
                 if (javaPsiFile == null) return;

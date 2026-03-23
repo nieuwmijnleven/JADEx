@@ -147,70 +147,27 @@ public class JavaProcessor {
                     "javac not found in JDK home: " + jdkHome + ". Ensure a JDK (not JRE) is installed.");
         }
 
-        // JDK 8: tools.jar
-        Path toolsJar = jdkHome.resolve("lib").resolve("tools.jar");
-        if (Files.exists(toolsJar)) {
-            return loadFromToolsJar(toolsJar);
-        }
-
         // JDK 9+: java modules
-        return loadFromModularJdk(jdkHome);
+        return loadFromModularJdk();
     }
 
-    private JavaCompiler loadFromToolsJar(Path toolsJar) {
-        try {
-            URLClassLoader classLoader = new URLClassLoader(
-                    new URL[]{toolsJar.toUri().toURL()},
-                    ClassLoader.getPlatformClassLoader()
-            );
-            Class<?> javacClass = Class.forName(
-                    "com.sun.tools.javac.api.JavacTool", true, classLoader);
-            return (JavaCompiler) javacClass.getDeclaredConstructor().newInstance();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to load JavaCompiler from tools.jar: " + toolsJar, e);
-        }
-    }
-
-    private JavaCompiler loadFromModularJdk(Path jdkHome) {
-
-        List<Path> candidates = List.of(
-                jdkHome.resolve("lib").resolve("modules"),        // Standard JDK
-                jdkHome.resolve("jmods").resolve("java.compiler.jmod"), // jmod
-                jdkHome.resolve("lib").resolve("tools.jar")
-        );
-
-        List<URL> urls = new ArrayList<>();
-        for (Path candidate : candidates) {
-            if (Files.exists(candidate)) {
-                try {
-                    urls.add(candidate.toUri().toURL());
-                } catch (Exception ignored) {}
-            }
-        }
+    private JavaCompiler loadFromModularJdk() {
 
         try {
-            urls.add(jdkHome.resolve("lib").toUri().toURL());
-        } catch (Exception ignored) {}
+            ClassLoader platformClassLoader = ClassLoader.getPlatformClassLoader();
 
-        try {
-            URLClassLoader classLoader = new URLClassLoader(
-                    urls.toArray(new URL[0]),
-                    ClassLoader.getPlatformClassLoader()
-            );
-
-            JavaCompiler compiler = ServiceLoader.load(JavaCompiler.class, classLoader)
+            JavaCompiler compiler = ServiceLoader.load(JavaCompiler.class, platformClassLoader)
                     .findFirst()
                     .orElse(null);
-
             if (compiler != null) return compiler;
 
             Class<?> javacClass = Class.forName(
-                    "com.sun.tools.javac.api.JavacTool", true, classLoader);
+                    "com.sun.tools.javac.api.JavacTool", true, platformClassLoader);
             return (JavaCompiler) javacClass.getDeclaredConstructor().newInstance();
 
         } catch (Exception e) {
             throw new RuntimeException(
-                    "Failed to load JavaCompiler from JDK home: " + jdkHome, e);
+                    "Failed to load JavaCompiler", e);
         }
     }
 

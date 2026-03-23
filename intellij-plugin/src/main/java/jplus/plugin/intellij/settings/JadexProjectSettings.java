@@ -31,7 +31,6 @@ import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.project.Project;
 import jadex.gradle.JadexModel;
-import jplus.plugin.intellij.gradle.ResolvedPaths;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -93,11 +92,11 @@ public class JadexProjectSettings
     private void clear() {
         state.sourceDirMap = new HashMap<>();
         state.outputDirMap = new HashMap<>();
-        state.pluginVersionMap = new HashMap();
-        state.javaHomeMap = new HashMap();
-        state.javaVersionMap = new HashMap();
-        state.javaSrcDirsMap = new HashMap();
-        state.classPathMap = new HashMap();
+        state.pluginVersionMap = new HashMap<>();
+        state.javaHomeMap = new HashMap<>();
+        state.javaVersionMap = new HashMap<>();
+        state.javaSrcDirsMap = new HashMap<>();
+        state.classPathMap = new HashMap<>();
     }
 
     public boolean hasGradleConfig(String moduleDir) {

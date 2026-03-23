@@ -120,6 +120,7 @@ public class JPlusProcessor {
 
         for (Path srcDir : project.getSourceDirs()) {
             Path candidate = srcDir.resolve(relativePath);
+            //System.out.println("candidate = " + candidate.toAbsolutePath());
             if (Files.exists(candidate)) {
                 return candidate;
             }
