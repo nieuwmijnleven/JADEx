@@ -27,6 +27,7 @@
 package jplus.plugin.intellij.psi;
 
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiDocumentManager;
@@ -45,8 +46,6 @@ import com.intellij.psi.PsiVariable;
 import com.intellij.psi.util.CachedValueProvider;
 import com.intellij.psi.util.CachedValuesManager;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.IncorrectOperationException;
-import jplus.plugin.intellij.annotator.JPlusExternalAnnotator;
 import jplus.plugin.intellij.util.JPlusUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -64,7 +63,12 @@ public class JADExPsiReference extends PsiReferenceBase<PsiElement> {
         Project project = myElement.getProject();
         PsiFile jadexPsiFile = myElement.getContainingFile();
 
-        if (!isCommitted()) return null;
+        if (DumbService.isDumb(project)) return null;
+
+        PsiDocumentManager docManager = PsiDocumentManager.getInstance(project);
+        Document doc = docManager.getCachedDocument(jadexPsiFile);
+
+        if (doc != null && !docManager.isCommitted(doc)) return null;
 
 //        PsiJavaFile javaFile = JPlusUtil.createJavaPsiFromJPlus(project, jadexPsiFile, true);
 //        if (javaFile == null) return null;
@@ -95,16 +99,6 @@ public class JADExPsiReference extends PsiReferenceBase<PsiElement> {
         if (resolved != null) return resolved;
 
         return resolveReferencePsiElement(jadexPsiFile, javaFile, javaPsiElement, currentFQN, PsiJavaCodeReferenceElement.class);
-    }
-
-    private boolean isCommitted() {
-
-        var project = myElement.getProject();
-        var document = PsiDocumentManager
-                .getInstance(project)
-                .getDocument(myElement.getContainingFile());
-
-        return document != null && PsiDocumentManager.getInstance(project).isCommitted(document);
     }
 
     private PsiElement resolveReferencePsiElement(PsiFile jadexPsiFile, PsiJavaFile javaFile, PsiElement javaPsiElement, String currentFQN, Class<? extends PsiElement> psiReferenceClass) {
