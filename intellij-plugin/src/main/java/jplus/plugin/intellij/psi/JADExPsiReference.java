@@ -46,6 +46,7 @@ import com.intellij.psi.PsiVariable;
 import com.intellij.psi.util.CachedValueProvider;
 import com.intellij.psi.util.CachedValuesManager;
 import com.intellij.psi.util.PsiTreeUtil;
+import jplus.plugin.intellij.annotator.JadexAnnotatorState;
 import jplus.plugin.intellij.util.JPlusUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -64,6 +65,10 @@ public class JADExPsiReference extends PsiReferenceBase<PsiElement> {
         PsiFile jadexPsiFile = myElement.getContainingFile();
 
         if (DumbService.isDumb(project)) return null;
+
+        if (!JadexAnnotatorState.getInstance(project).isEnabled()) {
+            return null;
+        }
 
         PsiDocumentManager docManager = PsiDocumentManager.getInstance(project);
         Document doc = docManager.getCachedDocument(jadexPsiFile);

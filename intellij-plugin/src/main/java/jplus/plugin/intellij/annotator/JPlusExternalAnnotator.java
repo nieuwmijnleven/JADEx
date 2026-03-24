@@ -71,6 +71,8 @@ public class JPlusExternalAnnotator
 
         if (DumbService.isDumb(ideaProject)) return null;
 
+        if (!JadexAnnotatorState.getInstance(ideaProject).isEnabled()) return null;
+
         VirtualFile vf = file.getVirtualFile();
         if (vf != null) {
             Document docOnDisk = FileDocumentManager.getInstance().getDocument(vf);
