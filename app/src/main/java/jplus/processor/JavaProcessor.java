@@ -46,8 +46,6 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 import java.io.File;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -61,7 +59,7 @@ public class JavaProcessor {
     private static final Logger log = LoggerFactory.getLogger(JavaProcessor.class);
 
     private static final Object COMPILER_LOCK = new Object();
-    private static JavaCompiler cachedCompilerRef;
+    private static volatile JavaCompiler cachedCompilerRef;
 
     private final Project project;
 
@@ -105,24 +103,22 @@ public class JavaProcessor {
         this(project, Files.readString(filePath, StandardCharsets.UTF_8));
     }
 
-    private JavaCompiler getOrLoadJavaCompiler() {
+    private static JavaCompiler getOrLoadJavaCompiler(Project project) {
 
         if (cachedCompilerRef != null) {
-            JavaCompiler cached = cachedCompilerRef;
-            if (cached != null) return cached;
+            return cachedCompilerRef;
         }
 
         synchronized (COMPILER_LOCK) {
 
             if (cachedCompilerRef != null) {
-                JavaCompiler cached = cachedCompilerRef;
-                if (cached != null) return cached;
+                return cachedCompilerRef;
             }
 
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
             if (compiler == null && project != null && project.getJdkHome() != null) {
-                compiler = loadJavaCompilerFromJdkHome();
+                compiler = loadJavaCompilerFromJdkHome(project);
             }
 
             if (compiler == null) {
@@ -135,7 +131,7 @@ public class JavaProcessor {
         }
     }
 
-    private JavaCompiler loadJavaCompilerFromJdkHome() {
+    private static JavaCompiler loadJavaCompilerFromJdkHome(Project project) {
         Path jdkHome = Path.of(project.getJdkHome());
 
         Path javacBin = jdkHome.resolve("bin").resolve(
@@ -151,7 +147,7 @@ public class JavaProcessor {
         return loadFromModularJdk();
     }
 
-    private JavaCompiler loadFromModularJdk() {
+    private static JavaCompiler loadFromModularJdk() {
 
         try {
             ClassLoader platformClassLoader = ClassLoader.getPlatformClassLoader();
@@ -173,7 +169,7 @@ public class JavaProcessor {
 
     public List<Diagnostic<? extends JavaFileObject>> process() throws Exception {
 
-        JavaCompiler compiler = getOrLoadJavaCompiler();
+        JavaCompiler compiler = getOrLoadJavaCompiler(project);
 
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
 
