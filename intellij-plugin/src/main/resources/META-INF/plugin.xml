@@ -64,6 +64,9 @@
                 class="jplus.plugin.intellij.JPlusSaveListener"
                 topic="com.intellij.openapi.fileEditor.FileDocumentManagerListener"/>
 
+        <listener class="jplus.plugin.intellij.listener.JadexEditorFactoryListener"
+                  topic="com.intellij.openapi.editor.event.EditorFactoryListener"/>
+
         <listener
                 class="jplus.plugin.intellij.listener.JadexBuildFileListener"
                 topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
@@ -99,8 +102,12 @@
 
         <projectService
                 serviceImplementation="jplus.plugin.intellij.gradle.JadexPathResolver"/>
+
         <projectService
                 serviceImplementation="jplus.plugin.intellij.settings.JadexProjectSettings"/>
+
+        <projectService
+                serviceImplementation="jplus.plugin.intellij.annotator.JadexAnnotatorState"/>
 
         <notificationGroup id="JADEx"
                            displayType="BALLOON"
