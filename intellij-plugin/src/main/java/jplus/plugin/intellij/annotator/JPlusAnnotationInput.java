@@ -29,5 +29,6 @@ package jplus.plugin.intellij.annotator;
 public record JPlusAnnotationInput(
         jplus.base.Project project,
         String packageName,
-        String className
+        String className,
+        String contentHash
 ) {}

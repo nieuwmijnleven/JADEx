@@ -60,6 +60,7 @@ public class JPlusExternalAnnotator
     private static final Logger LOG = Logger.getInstance(JPlusExternalAnnotator.class);
 
     private static final ConcurrentHashMap<String, jplus.base.Project> projectCache = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, JPlusAnnotationResult> resultCache = new ConcurrentHashMap<>();
 
     public @Nullable JPlusAnnotationInput collectInformation(@NotNull PsiFile file, @NotNull Editor editor, boolean hasErrors) {
         LOG.debug("collectInformation called: " + file.getName());
@@ -104,11 +105,13 @@ public class JPlusExternalAnnotator
 
         String packageName = JPlusIntelliJProjectUtil.resolvePackageName(ideaProject, file);
         String className = file.getVirtualFile().getNameWithoutExtension();
+        String contentHash = Integer.toHexString(doc.getText().hashCode());
 
         return new JPlusAnnotationInput(
                 jplusProject,
                 packageName,
-                className
+                className,
+                contentHash
         );
     }
 
@@ -117,6 +120,9 @@ public class JPlusExternalAnnotator
             JPlusAnnotationInput input
     ) {
         LOG.debug("doAnnotate called");
+
+        String key = input.packageName() + "." + input.className() + ":" + input.contentHash();
+        if (resultCache.containsKey(key)) return resultCache.get(key);
 
         ProgressIndicatorProvider.checkCanceled();
 
@@ -143,7 +149,10 @@ public class JPlusExternalAnnotator
             List<NullabilityIssue> issues = processor.checkNullability();
             LOG.debug("checkNullability done, issues = " + issues.size());
 
-            return new JPlusAnnotationResult(diagnostics, issues);
+            var result = new JPlusAnnotationResult(diagnostics, issues);
+            resultCache.put(key, result);
+
+            return result;
 
         } catch (ProcessCanceledException pce) {
             LOG.warn("doAnnotate cancelled by PCE");  // ← PCE도 잠깐 찍고 rethrow
