@@ -34,11 +34,16 @@ import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.completion.JavaCompletionContributor;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiJavaFile;
+import com.intellij.psi.util.CachedValue;
+import com.intellij.psi.util.CachedValueProvider;
+import com.intellij.psi.util.CachedValuesManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
+import jplus.plugin.intellij.annotator.JadexAnnotatorState;
 import jplus.plugin.intellij.psi.ApplyBlockPsiElement;
 import jplus.plugin.intellij.psi.ApplyStatementPsiElement;
 import jplus.plugin.intellij.util.JPlusUtil;
@@ -55,36 +60,49 @@ public class JPlusCompletionContributor extends CompletionContributor {
             "readonly", "getter", "setter", "data", "equality", "constructor", "builder", "tostring", "equals", "hashcode"
     );
 
+    private static final @NotNull Key<CachedValue<PsiJavaFile>> JPLUS_COMPLETION_CACHE = Key.create("JPLUS_COMPLETION_CACHE");
+
     public JPlusCompletionContributor() {
         extend(CompletionType.BASIC, JPlusPatterns.psiElement(), new CompletionProvider<>() {
             @Override
             protected void addCompletions(@NotNull CompletionParameters parameters,
                                           @NotNull ProcessingContext context,
                                           @NotNull CompletionResultSet result) {
+
+                if (parameters.getInvocationCount() == 0) {
+                    result.addElement(
+                            LookupElementBuilder.create("")
+                                    .withPresentableText("⏎ Press Ctrl+Space for JADEx completion")
+                                    .withBoldness(true)
+                                    .withTypeText("JADEx")
+                                    .withInsertHandler((ctx, item) -> {})
+                    );
+                    return;
+                }
+
                 Project project = parameters.getPosition().getProject();
                 PsiElement psiElement = parameters.getPosition();
                 PsiFile jadexPsiFile = psiElement.getContainingFile();
 
-                collectApplyCandidates(psiElement, result);
+                //collectApplyCandidates(psiElement, result);
 
-                /*if (parameters.getInvocationCount() == 0) {
+                PsiJavaFile javaPsiFile =
+                        CachedValuesManager.getCachedValue(
+                            jadexPsiFile,
+                            JPLUS_COMPLETION_CACHE,
+                            () -> {
+                                PsiJavaFile generated =
+                                        JPlusUtil.createJavaPsiFromJADExForCodeCompletion(
+                                                project,
+                                                jadexPsiFile,
+                                                parameters.getOffset(),
+                                                false
+                                        );
 
-                    result.addElement(
-                            LookupElementBuilder.create("Press Ctrl+Space for full JADEx completion")
-                                    .withBoldness(true)
-                                    .withTypeText("JADEx")
-                                    //.withIcon(JPlusIcons.FILE)
-                                    .withInsertHandler((ctx, item) -> {
-                                        ctx.getDocument().deleteString(
-                                                ctx.getStartOffset(), ctx.getTailOffset());
-                                    })
-                    );
-                    result.addLookupAdvertisement("Press Ctrl+Space for JADEx code completion");
+                                return CachedValueProvider.Result.create(generated, jadexPsiFile);
+                            }
+                        );
 
-                    return;
-                }*/
-
-                PsiJavaFile javaPsiFile = JPlusUtil.createJavaPsiFromJADExForCodeCompletion(project, jadexPsiFile, parameters.getOffset(), false);
                 if (javaPsiFile == null) return;
 
                 invokeJavaCompletion(jadexPsiFile, javaPsiFile, parameters, result);
@@ -123,7 +141,10 @@ public class JPlusCompletionContributor extends CompletionContributor {
         PsiElement javaElementAtCursor = javaPsiFile.findElementAt(mapOffset);
 
         CompletionParameters javaParams =
-                originalParameters.withPosition(javaElementAtCursor, mapOffset);
+                originalParameters.withPosition(
+                        javaElementAtCursor,
+                        mapOffset
+                );
 
         JavaCompletionContributor javaContributor = new JavaCompletionContributor();
         javaContributor.fillCompletionVariants(javaParams, result);
