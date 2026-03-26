@@ -38,6 +38,7 @@ import jplus.base.SymbolTable;
 import jplus.editor.FragmentedText;
 import jplus.generator.BoilerplateCodeGenerator;
 import jplus.generator.CodeGenContext;
+import jplus.generator.JADExBasicCodeGenerator;
 import jplus.generator.JADExParserRuleContext;
 import jplus.generator.SourceMappingEntry;
 import jplus.parser.JADExParserFactory;
@@ -49,7 +50,7 @@ import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -170,6 +171,23 @@ public class JPlusProcessor {
         parser.removeErrorListeners();
 
         parseTree = parser.start_();
+    }
+
+    private JADExParser createOptimizeParser() {
+
+        CharStream input = CharStreams.fromString(originalText);
+        JADExLexer lexer = new JADExLexer(input);
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+
+        return new JADExParser(tokens);
+    }
+
+    private ParserRuleContext optimizeBuildParserTree(JADExParser parser) {
+
+        parser.setBuildParseTree(true);
+        parser.removeErrorListeners();
+
+        return parser.compilationUnit();
     }
 
     public List<Issue> process() throws Exception {
@@ -348,6 +366,7 @@ public class JPlusProcessor {
 
     private String generateJavaCodeForSemanticMode() {
         assertProcessed();
+
         CodeGenContext ctx = CodeGenContext.current();
         if (ctx != null) ctx.setFragmentedText(new FragmentedText(originalText));
         ctx.setSemanticMode(true);
@@ -357,6 +376,14 @@ public class JPlusProcessor {
         } finally {
             ctx.setSemanticMode(false);
         }
+
+        /*var parser = createOptimizeParser();
+        var parserTree = optimizeBuildParserTree(parser);
+
+        var codeGenerator = new JADExSemanticCodeGenerator(parser.getTokenStream());
+
+        codeGenerator.visit(parserTree);
+        return codeGenerator.getText();*/
     }
 
     private List<Issue> runInitialJavaProcessing() throws Exception {
@@ -496,19 +523,12 @@ public class JPlusProcessor {
 
     public String transformJADExToJava() {
 
-        if (parseTree == null) buildParseTree();
+        var parser = createOptimizeParser();
+        var parseTree = optimizeBuildParserTree(parser);
+        var codeGenerator = new JADExBasicCodeGenerator(parser.getTokenStream());
 
-        CodeGenContext.push();
-        try {
-
-            CodeGenContext.current().setParser(parser);
-            CodeGenContext.current().setSemanticMode(false);
-            CodeGenContext.current().setFragmentedText(new FragmentedText(originalText));
-
-            return parseTree.getText();
-        } finally {
-            CodeGenContext.pop();
-        }
+        codeGenerator.visit(parseTree);
+        return codeGenerator.getText();
     }
 
     public String generateJavaCode() {
