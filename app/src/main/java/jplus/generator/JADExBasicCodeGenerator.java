@@ -31,8 +31,6 @@ import jplus.base.JADExParser.TypeTypeContext;
 import jplus.base.JADExParserBaseVisitor;
 import jplus.generator.context.adapter.TypeContextAdapter;
 import jplus.util.Utils;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.TokenStream;
 import org.antlr.v4.runtime.TokenStreamRewriter;
 import org.antlr.v4.runtime.tree.RuleNode;
@@ -41,14 +39,21 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class JADExBasicCodeGenerator extends JADExParserBaseVisitor<Void> {
 
-    private static final Logger log = LoggerFactory.getLogger(JADExBasicCodeGenerator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JADExBasicCodeGenerator.class);
 
-    private static final Void NOTHING = null;
+    private static final String SAFE_ACCESS_FQCN = "jadex.runtime.SafeAccess"; // Fully Qualified Class Name
 
-    private final TokenStreamRewriter rewriter;
+    protected static final Void NOTHING = null;
+
+    protected final TokenStreamRewriter rewriter;
+
+    private boolean isReadOnlyMode;
+
+    private int varIdx = 0;
 
     public JADExBasicCodeGenerator(TokenStream tokens) {
         this.rewriter = new TokenStreamRewriter(tokens);
@@ -91,8 +96,12 @@ public class JADExBasicCodeGenerator extends JADExParserBaseVisitor<Void> {
 
         rewriter.delete(ctx.QUESTION().getSymbol());
 
-        if (!hasNullableAnnotation) {
-            rewriter.insertBefore(ctx.classOrInterfaceType().start, "@org.jspecify.annotations.Nullable ");
+        if (!hasNullableAnnotation || ctx.classOrInterfaceType() != null) {
+
+            rewriter.insertBefore(
+                    ctx.classOrInterfaceType().start,
+                    "@org.jspecify.annotations.Nullable "
+            );
         }
     }
 
@@ -104,9 +113,9 @@ public class JADExBasicCodeGenerator extends JADExParserBaseVisitor<Void> {
 
         if (isChainRoot(ctx)) {
             if (containsSafeAccess(ctx)) {
-                System.out.println("containsSafeAccess  = " + Utils.getTokenString(ctx));
+                LOG.debug("containsSafeAccess  = " + Utils.getTokenString(ctx));
                 String transformed = transformToSafeAccess(ctx, ".orElse(null)");
-                System.out.println("transformed  = " + transformed);
+                LOG.debug("transformed  = " + transformed);
                 rewriter.replace(ctx.start, ctx.stop, transformed);
                 return NOTHING;
             }
@@ -121,19 +130,16 @@ public class JADExBasicCodeGenerator extends JADExParserBaseVisitor<Void> {
 
     private boolean containsSafeAccess(JADExParser.ExpressionContext ctx) {
 
-        int startIndex = ctx.start.getTokenIndex();
-        int stopIndex = ctx.stop.getTokenIndex();
+        var current = ctx;
+        while (current instanceof JADExParser.MemberReferenceExpressionContext mref) {
 
-        for (int i = startIndex; i <= stopIndex; i++) {
-            Token token = rewriter.getTokenStream().get(i);
-            if (token.getType() == JADExParser.NULLSAFE) {
-                return true;
-            }
+            if (Objects.equals("?.", mref.bop.getText())) return true;
+
+            current = mref.expression();
         }
+
         return false;
     }
-
-
 
     private String transformToSafeAccess(JADExParser.MemberReferenceExpressionContext ctx, String terminalOp) {
         List<AccessPart> parts = new ArrayList<>();
@@ -150,12 +156,12 @@ public class JADExBasicCodeGenerator extends JADExParserBaseVisitor<Void> {
         }
 
         String rootText = rewriter.getText(current.getSourceInterval());
-        System.out.println("rootText = " + rootText);
+        LOG.debug("rootText = " + rootText);
 
         StringBuilder sb = new StringBuilder();
-        sb.append("jadex.runtime.SafeAccess.ofNullable(").append(rootText).append(")");
+        sb.append(SAFE_ACCESS_FQCN).append(".ofNullable(").append(rootText).append(")");
 
-        int varIdx = 0;
+        //int varIdx = 0;
         for (int i = 0; i < parts.size(); i++) {
             AccessPart part = parts.get(i);
 
@@ -186,54 +192,188 @@ public class JADExBasicCodeGenerator extends JADExParserBaseVisitor<Void> {
 
     @Override
     public Void visitElvisExpression(JADExParser.ElvisExpressionContext ctx) {
-
+        // 1. 자식(LHS)을 먼저 방문하여 s1?.length()를 SafeAccess...orElse(null)로 변환시킴
         super.visitChildren(ctx);
 
         JADExParser.ExpressionContext lhs = ctx.expression(0);
         JADExParser.ExpressionContext rhs = ctx.expression(1);
 
-        // 1. 오른쪽(fallback) 텍스트 추출
+        // 2. 이미 변환된(하위 방문 완료된) 텍스트를 가져옴
+        String conditionText = rewriter.getText(lhs.getSourceInterval());
         String fallbackText = rewriter.getText(rhs.getSourceInterval());
+
         String replacement;
-
-        JADExParser.MemberReferenceExpressionContext topMRef = findTopMemberRef(lhs);
-
-        if (topMRef != null && containsSafeAccess(lhs)) {
-            /* Case 1: LHS에 ?. 연산자가 포함된 경우 */
-            // MemberReferenceExpression 방문자에게 맡기되,
-            // 마지막 .orElse(null) 대신 .orElseGet(() -> fallback)을 쓰도록 유도해야 함.
-            // 이를 위해 transformToSafeAccess 메서드를 수정하거나, 결과 문자열의 끝을 치환합니다.
-
-            replacement = transformToSafeAccess(topMRef, String.format(".orElseGet(() -> %s)", fallbackText));
-
+        // 3. 만약 LHS가 이미 SafeAccess로 변환되어 ".orElse(null)"로 끝난다면
+        // 중복 래핑하지 않고 해당 부분만 .orElseGet(...)으로 교체
+        if (conditionText.contains(SAFE_ACCESS_FQCN) && conditionText.endsWith(".orElse(null)")) {
+            replacement = conditionText.substring(0, conditionText.length() - ".orElse(null)".length())
+                    + String.format(".orElseGet(() -> %s)", fallbackText);
         } else {
-            /* Case 2: 일반적인 식인 경우 */
-            String lhsText = rewriter.getText(lhs.getSourceInterval());
-            replacement = String.format("SafeAccess.ofNullable(%s).orElseGet(() -> %s)",
-                    lhsText, fallbackText);
+            // 일반적인 식인 경우에만 전체를 감쌈
+            replacement = String.format(
+                    "%s.ofNullable(%s).orElseGet(() -> %s)",
+                    SAFE_ACCESS_FQCN,
+                    conditionText,
+                    fallbackText
+            );
         }
 
-        // 2. 전체 엘비스 식을 변환된 코드로 치환
         rewriter.replace(ctx.start, ctx.stop, replacement);
-
-        return NOTHING; // 자식 노드 개별 방문 방지
+        return NOTHING;
     }
 
-    /**
-     * LHS 내부에서 가장 바깥쪽 MemberReferenceExpression을 찾음
-     */
-    private JADExParser.MemberReferenceExpressionContext findTopMemberRef(ParserRuleContext ctx) {
-        if (ctx instanceof JADExParser.MemberReferenceExpressionContext mref) {
-            return mref;
-        }
-        // 괄호 (expression) 같은 경우 자식 노드 중 Expression을 따라 내려감
-        for (int i = 0; i < ctx.getChildCount(); i++) {
-            if (ctx.getChild(i) instanceof JADExParser.ExpressionContext child) {
-                JADExParser.MemberReferenceExpressionContext found = findTopMemberRef(child);
-                if (found != null) return found;
+    // apply
+
+    @Override
+    public Void visitApplyDeclaration(JADExParser.ApplyDeclarationContext ctx) {
+
+        checkIfReadonlyMode(ctx);
+        replaceApplyStatementWithComment(ctx);
+
+        return NOTHING;
+    }
+
+    protected void checkIfReadonlyMode(JADExParser.ApplyDeclarationContext applyDeclarationCtx) {
+
+        if (!(applyDeclarationCtx.applyStatement() instanceof JADExParser.ApplyStatementContext applyStmtCtx)) return;
+
+        for (var applyFeatureContext : applyStmtCtx.applyFeatureList().applyFeature()) {
+
+            if (
+                    "readonly".equalsIgnoreCase(
+                            Utils.getTokenString(applyFeatureContext.identifier())
+                    )
+            ) {
+
+                isReadOnlyMode = true;
+
+                LOG.debug("readonly feature detected.");
+                break;
             }
         }
-        return null;
+    }
+
+    private Void replaceApplyStatementWithComment(JADExParser.ApplyDeclarationContext ctx) {
+
+        String replacement =
+                rewriter.getText(ctx.getSourceInterval())
+                        .transform(s -> s.replaceFirst("^", "//"))
+                        .transform(s -> s.replaceAll("\n", "\n//"));
+
+        rewriter.replace(ctx.start, ctx.stop, replacement);
+
+        return NOTHING;
+    }
+
+    @Override
+    public Void visitClassBodyDeclaration(JADExParser.ClassBodyDeclarationContext ctx) {
+
+        super.visitChildren(ctx);
+
+        if (!isReadOnlyMode
+            || ctx.memberDeclaration().fieldDeclaration() == null
+        ) {
+            return NOTHING;
+        }
+
+        var hasMutable = false;
+        var hasFinal = false;
+
+        for (var modifierContext : ctx.modifier()) {
+
+            var ciModifier = modifierContext.classOrInterfaceModifier();
+            if (ciModifier == null) continue;
+
+            if (ciModifier.MUTABLE() != null) {
+
+                hasMutable = true;
+
+                var mutableTokenIndex = ciModifier.MUTABLE().getSymbol().getTokenIndex();
+                rewriter.delete(mutableTokenIndex, mutableTokenIndex + 1);
+            }
+
+            if (ciModifier.FINAL() != null) {
+                hasFinal = true;
+            }
+        }
+
+        if (!hasMutable && !hasFinal) {
+            rewriter.insertBefore(ctx.memberDeclaration().start, "final ");
+        }
+
+        return NOTHING;
+    }
+
+    @Override
+    public Void visitLocalVariableDeclaration(JADExParser.LocalVariableDeclarationContext ctx) {
+
+        super.visitChildren(ctx);
+
+        if (!isReadOnlyMode) return NOTHING;
+
+        var hasMutable = false;
+        var hasFinal = false;
+
+        for (var modifier : ctx.variableModifier()) {
+
+                if (modifier.MUTABLE() != null) {
+
+                    hasMutable = true;
+
+                    var mutableTokenIndex = modifier.MUTABLE().getSymbol().getTokenIndex();
+                    rewriter.delete(mutableTokenIndex, mutableTokenIndex + 1);
+                }
+
+                if (modifier.FINAL() != null) {
+                    hasFinal = true;
+                }
+        }
+
+        if (!hasMutable && !hasFinal) {
+
+            rewriter.insertBefore(
+                    ctx.VAR() != null ? ctx.VAR().getSymbol() : ctx.typeType().start,
+                    "final "
+            );
+        }
+
+        return NOTHING;
+    }
+
+    @Override
+    public Void visitFormalParameter(JADExParser.FormalParameterContext ctx) {
+
+        super.visitChildren(ctx);
+
+        if (!isReadOnlyMode) return NOTHING;
+
+        var hasMutable = false;
+        var hasFinal = false;
+
+        for (var modifier : ctx.variableModifier()) {
+
+            if (modifier.MUTABLE() != null) {
+
+                hasMutable = true;
+
+                var mutableTokenIndex = modifier.MUTABLE().getSymbol().getTokenIndex();
+                rewriter.delete(mutableTokenIndex, mutableTokenIndex + 1);
+            }
+
+            if (modifier.FINAL() != null) {
+                hasFinal = true;
+            }
+        }
+
+        if (!hasMutable && !hasFinal) {
+
+            rewriter.insertBefore(
+                    ctx.typeType().start,
+                    "final "
+            );
+        }
+
+        return NOTHING;
     }
 
     public String getText() {
