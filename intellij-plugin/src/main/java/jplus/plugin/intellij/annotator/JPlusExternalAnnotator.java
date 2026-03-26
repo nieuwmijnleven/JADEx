@@ -71,7 +71,7 @@ public class JPlusExternalAnnotator
 
         if (DumbService.isDumb(ideaProject)) return null;
 
-        if (!JadexAnnotatorState.getInstance(ideaProject).isEnabled()) return null;
+        //if (!JadexAnnotatorState.getInstance(ideaProject).isEnabled()) return null;
 
         VirtualFile vf = file.getVirtualFile();
         if (vf != null) {
@@ -98,10 +98,12 @@ public class JPlusExternalAnnotator
         Module module = ModuleUtilCore.findModuleForFile(file.getVirtualFile(), ideaProject);
 
         String moduleKey = module != null ? module.getName() : ideaProject.getName();
-        jplus.base.Project jplusProject = projectCache.computeIfAbsent(
+        jplus.base.Project jplusProject = JPlusUtil.buildJadexProject(ideaProject, module);
+
+        /*jplus.base.Project jplusProject = projectCache.computeIfAbsent(
                 moduleKey,
                 k -> JPlusUtil.buildJadexProject(ideaProject, module)
-        );
+        );*/
 
         if (jplusProject == null) return null;
 
@@ -157,7 +159,7 @@ public class JPlusExternalAnnotator
             return result;
 
         } catch (ProcessCanceledException pce) {
-            LOG.warn("doAnnotate cancelled by PCE");  // ← PCE도 잠깐 찍고 rethrow
+            LOG.warn("doAnnotate cancelled by PCE");
             throw pce;
         } catch (Exception e) {
             LOG.warn("doAnnotate failed", e);

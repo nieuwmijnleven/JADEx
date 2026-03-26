@@ -66,9 +66,9 @@ public class JADExPsiReference extends PsiReferenceBase<PsiElement> {
 
         if (DumbService.isDumb(project)) return null;
 
-        if (!JadexAnnotatorState.getInstance(project).isEnabled()) {
-            return null;
-        }
+//        if (!JadexAnnotatorState.getInstance(project).isEnabled()) {
+//            return null;
+//        }
 
         PsiDocumentManager docManager = PsiDocumentManager.getInstance(project);
         Document doc = docManager.getCachedDocument(jadexPsiFile);
