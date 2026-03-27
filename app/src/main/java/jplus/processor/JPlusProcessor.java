@@ -40,6 +40,7 @@ import jplus.generator.BoilerplateCodeGenerator;
 import jplus.generator.CodeGenContext;
 import jplus.generator.JADExBasicCodeGenerator;
 import jplus.generator.JADExParserRuleContext;
+import jplus.generator.JADExSemanticCodeGenerator;
 import jplus.generator.SourceMappingEntry;
 import jplus.parser.JADExParserFactory;
 import jplus.processor.issue.Issue;
@@ -367,7 +368,7 @@ public class JPlusProcessor {
     private String generateJavaCodeForSemanticMode() {
         assertProcessed();
 
-        CodeGenContext ctx = CodeGenContext.current();
+        /*CodeGenContext ctx = CodeGenContext.current();
         if (ctx != null) ctx.setFragmentedText(new FragmentedText(originalText));
         ctx.setSemanticMode(true);
 
@@ -375,15 +376,15 @@ public class JPlusProcessor {
             return parseTree.getText();
         } finally {
             ctx.setSemanticMode(false);
-        }
+        }*/
 
-        /*var parser = createOptimizeParser();
+        var parser = createOptimizeParser();
         var parserTree = optimizeBuildParserTree(parser);
 
         var codeGenerator = new JADExSemanticCodeGenerator(parser.getTokenStream());
 
         codeGenerator.visit(parserTree);
-        return codeGenerator.getText();*/
+        return codeGenerator.getText();
     }
 
     private List<Issue> runInitialJavaProcessing() throws Exception {
@@ -391,8 +392,8 @@ public class JPlusProcessor {
         String javaCode = generateJavaCodeForSemanticMode();
         log.debug("[JPlusProcessor][runInitialJavaProcessing] javaCode = " + javaCode);
 
-        CodeGenContext ctx = CodeGenContext.current();
-        sourceMappingEntrySet = ctx.getFragmentedText().buildSourceMap();
+        //CodeGenContext ctx = CodeGenContext.current();
+        //sourceMappingEntrySet = ctx.getFragmentedText().buildSourceMap();
 
         String jextUtilsClass = "package jext.util;\n" +
                 "\n" +
