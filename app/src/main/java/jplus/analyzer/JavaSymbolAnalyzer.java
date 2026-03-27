@@ -58,8 +58,11 @@ import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Set;
 
 public class JavaSymbolAnalyzer extends TreePathScanner<Void, Void> {
 
@@ -79,6 +82,12 @@ public class JavaSymbolAnalyzer extends TreePathScanner<Void, Void> {
 
     private final JavaMethodInvocationManager javaMethodInvocationManager;
     private final JavaSymbolResolver resolver;
+
+    private final ExpressionChainBuilder chainBuilder;
+
+//    private final Set<Tree> processedNodes = Collections.newSetFromMap(
+//            new IdentityHashMap<>()
+//    );
 
     final class ExpressionChainBuilder {
 
@@ -482,14 +491,15 @@ public class JavaSymbolAnalyzer extends TreePathScanner<Void, Void> {
     }
 
     private void buildChain(ExpressionTree expr) {
-        ExpressionChainBuilder chainBuilder = new ExpressionChainBuilder(
-                trees, types, resolver, ast, source, javaMethodInvocationManager
-        );
+
+        //if (!processedNodes.add(expr)) return;
+
         ResolvedChain chain = chainBuilder.build(expr);
         currentSymbolTable.addResolvedChain(chain);
     }
 
     public JavaSymbolAnalyzer(String source, CompilationUnitTree ast, Trees trees, SymbolTable globalSymbolTable, Elements elements, Types types) {
+
         this.source = source;
         this.ast = ast;
         this.trees = trees;
@@ -498,8 +508,13 @@ public class JavaSymbolAnalyzer extends TreePathScanner<Void, Void> {
         this.globalSymbolTable = globalSymbolTable;
         this.topLevelSymbolTable = new SymbolTable(globalSymbolTable);
         this.currentSymbolTable = topLevelSymbolTable;
+
         this.javaMethodInvocationManager = new JavaMethodInvocationManager(source);
         this.resolver = new JavaSymbolResolver(globalSymbolTable, elements, types);
+
+        this.chainBuilder = new ExpressionChainBuilder(
+                trees, types, resolver, ast, source, javaMethodInvocationManager
+        );
     }
 
     public SymbolTable getTopLevelSymbolTable() {
@@ -754,7 +769,6 @@ public class JavaSymbolAnalyzer extends TreePathScanner<Void, Void> {
 
         String qualifiedName = getQualifiedName(node);
 
-        JavaSymbolResolver resolver = new JavaSymbolResolver(globalSymbolTable, elements, types);
         SymbolInfo symbolInfo = resolver.resolveClass(qualifiedName);
         //log.debug("[NewClass] symbolInfo = " + symbolInfo);
 
