@@ -63,6 +63,7 @@ import jplus.util.Utils;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,6 +95,11 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     private SymbolTable currentSymbolTable;
     private final Set<TextChangeRange> consumedExpressions = new HashSet<>();
 
+    private final DiffMatchPatch dmp = new DiffMatchPatch();
+    private List<DiffMatchPatch.Diff> diffs;
+
+    //private final Map<TextChangeRange, TextChangeRange> sourceMappingIndex;
+
     private final Deque<Context> contextStack = new ArrayDeque<>();
     private final Deque<ClassContext> classContextStack = new ArrayDeque<>();
 
@@ -111,6 +117,13 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         this.javaCode = javaCode;
         this.methodInvocationManager = methodInvocationManager;
         this.currentSymbolTable = globalSymbolTable;
+
+//        this.sourceMappingIndex = sourceMappingEntrySet.stream()
+//                .collect(Collectors.toMap(
+//                        SourceMappingEntry::getOriginalRange,
+//                        SourceMappingEntry::getTransformedRange,
+//                        (a, b) -> a
+//                ));
     }
 
     private final Set<NullabilityIssue> issues = new HashSet<>();
@@ -137,7 +150,10 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
 
     @Override
     public Void visitStart_(Start_Context ctx) {
+
         this.originalText = ctx.start.getInputStream().toString();
+        this.diffs = dmp.diffMain(originalText, javaCode);
+
         return super.visitStart_(ctx);
     }
 
@@ -699,11 +715,43 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     private Optional<TextChangeRange> findTransformedRange(TextChangeRange instanceRange) {
-        return sourceMappingEntrySet.stream()
+
+        var originalTextRange =
+                Utils.computeTextChangeRange(
+                        originalText,
+                        0,
+                        originalText.length() - 1
+                );
+
+        int startOffset =
+                getMapOffset(
+                        Utils.getIndexFromLineColumn(
+                                originalText,
+                                originalTextRange,
+                                instanceRange.startLine(),
+                                instanceRange.startIndex()
+                        )
+                );
+
+        int endOffset =
+               getMapOffset(
+                        Utils.getIndexFromLineColumn(
+                                originalText,
+                                originalTextRange,
+                                instanceRange.endLine(),
+                                instanceRange.inclusiveEndIndex()
+                        )
+                );
+
+        return Optional.of(Utils.computeTextChangeRange(javaCode, startOffset, endOffset));
+
+        //return Optional.ofNullable(sourceMappingIndex.get(instanceRange));
+
+        /*return sourceMappingEntrySet.stream()
                 .filter(entry -> Objects.equals(instanceRange, entry.getOriginalRange()))
                 //.peek(entry -> log("[findTransformedRange] originalRange = " + entry.getOriginalRange() + ", transformedRange = " + entry.getTransformedRange()))
                 .map(SourceMappingEntry::getTransformedRange)
-                .findFirst();
+                .findFirst();*/
     }
 
     private Optional<SymbolInfo> resolveClassSymbol(MethodInvocationInfo info) {
@@ -2791,7 +2839,8 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     }
 
     private int getMapOffset(int offset) {
-        return CodeGenUtils.getMapOffset(javaCode, originalText, offset);
+        return dmp.diffXIndex(diffs, offset);
+        //return CodeGenUtils.getMapOffset(javaCode, originalText, offset);
     }
 
     private List<ExpressionNameContext> getExpressionNameList(ExpressionNameContext ctx) {
