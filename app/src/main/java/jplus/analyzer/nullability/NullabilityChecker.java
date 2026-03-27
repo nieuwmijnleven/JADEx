@@ -1617,6 +1617,7 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
 
             String blockName = "^block$" + switchBlkStmtGrpCtx.switchLabel().stream().map(Utils::getTokenString).map(tokenStr -> tokenStr.replaceAll("case\\s+", "").replace(" ", "")).collect(Collectors.joining(""));
 
+            log.debug("blockName = " + blockName);
             enterSymbolTable(blockName);
 
             //log.debug("[SwitchStatement] enclosing = " + blockName);
@@ -1673,7 +1674,13 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         for (var switchRuleCtx : switchRuleList) {
 
             currentSymbolTable = entry.copy();
-            enterSymbolTable("^block$" + Utils.getTokenString(switchRuleCtx.switchLabel()).replaceAll("case\\s+", "").replace(" ", ""));
+
+            String scopeName = "^block$" + Utils.getTokenString(switchRuleCtx.switchLabel())
+                    .replaceAll("case\\s+", "")
+                    .replace(",", "")
+                    .replace(" ", "");
+
+            enterSymbolTable(scopeName);
             //log.debug("[SwitchStatement] enclosing = " + "^block$" + Utils.getTokenString(switchRuleCtx.switchLabel()).replaceAll("case\\s+", "").replace(" ", ""));
 
             var casePatternList = switchRuleCtx.switchLabel().casePattern();

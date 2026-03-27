@@ -63,6 +63,7 @@ import java.util.EnumSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class JavaSymbolAnalyzer extends TreePathScanner<Void, Void> {
 
@@ -139,12 +140,30 @@ public class JavaSymbolAnalyzer extends TreePathScanner<Void, Void> {
             }
 
             //if (expr instanceof BinaryTree bt && bt.getKind() == Tree.Kind.PLUS) {
-            if (expr instanceof BinaryTree bt && (bt.getKind() != Tree.Kind.EQUAL_TO && bt.getKind() != Tree.Kind.NOT_EQUAL_TO && bt.getKind() != Tree.Kind.GREATER_THAN && bt.getKind() != Tree.Kind.GREATER_THAN_EQUAL && bt.getKind() != Tree.Kind.LESS_THAN && bt.getKind() != Tree.Kind.LESS_THAN_EQUAL)) {
+            if (expr instanceof BinaryTree bt
+                    && (bt.getKind() != Tree.Kind.EQUAL_TO && bt.getKind() != Tree.Kind.NOT_EQUAL_TO
+                    && bt.getKind() != Tree.Kind.GREATER_THAN && bt.getKind() != Tree.Kind.GREATER_THAN_EQUAL
+                    && bt.getKind() != Tree.Kind.LESS_THAN && bt.getKind() != Tree.Kind.LESS_THAN_EQUAL))
+            {
 
                 visit(bt.getLeftOperand(), chain);
-
                 visit(bt.getRightOperand(), chain);
 
+                TreePath path = TreePath.getPath(ast, bt);
+                TypeMirror tm = trees.getTypeMirror(path);
+                Element e = trees.getElement(path);
+                TypeInfo ti = TypeUtils.fromTypeMirror(tm, e);
+
+                chain.addStep(new ResolvedChain.Step(
+                        ResolvedChain.Kind.EXPRESSION, // 또는 OPERATOR
+                        bt.toString(),
+                        ti,
+                        ti.isNullable(), // Primitive라면 자동으로 false가 됨
+                        false,
+                        computeRange(bt),
+                        null,
+                        null
+                ));
                 return;
             }
 
@@ -159,6 +178,51 @@ public class JavaSymbolAnalyzer extends TreePathScanner<Void, Void> {
                 } else {
                     break;
                 }
+            }
+
+            // 2. TypeCastTree 처리 수정: 캐스팅 결과도 Step으로 등록해야 함
+            if (expr instanceof TypeCastTree c) {
+                // 내부 식 먼저 방문
+                visit(c.getExpression(), chain);
+
+                // [추가] 캐스팅 결과에 대한 Step 추가 (예: (int) 결과는 NON_NULL)
+                TreePath path = TreePath.getPath(ast, c);
+                TypeMirror tm = trees.getTypeMirror(path);
+                Element e = trees.getElement(path);
+                TypeInfo ti = TypeUtils.fromTypeMirror(tm, e);
+
+                chain.addStep(new ResolvedChain.Step(
+                        ResolvedChain.Kind.EXPRESSION,
+                        c.toString(),
+                        ti,
+                        ti.isNullable(),
+                        false,
+                        computeRange(c),
+                        null,
+                        null
+                ));
+                return;
+            }
+
+            // 3. UnaryTree 처리 (-, ~, ! 등)
+            if (expr instanceof UnaryTree u) {
+                visit(u.getExpression(), chain);
+
+                TreePath path = TreePath.getPath(ast, u);
+                TypeMirror tm = trees.getTypeMirror(path);
+                TypeInfo ti = TypeUtils.fromTypeMirror(tm, null);
+
+                chain.addStep(new ResolvedChain.Step(
+                        ResolvedChain.Kind.EXPRESSION,
+                        u.toString(),
+                        ti,
+                        ti.isNullable(),
+                        false,
+                        computeRange(u),
+                        null,
+                        null
+                ));
+                return;
             }
 
             if (expr instanceof ArrayAccessTree aa) {
@@ -186,6 +250,27 @@ public class JavaSymbolAnalyzer extends TreePathScanner<Void, Void> {
                 visit(ct.getFalseExpression(), chain);
                 return;
             }*/
+
+            if (expr instanceof CompoundAssignmentTree cat) {
+                visit(cat.getExpression(), chain);
+
+                TreePath path = TreePath.getPath(ast, cat);
+                TypeMirror tm = trees.getTypeMirror(path);
+                Element e = trees.getElement(path);
+                TypeInfo ti = TypeUtils.fromTypeMirror(tm, e);
+
+                chain.addStep(new ResolvedChain.Step(
+                        ResolvedChain.Kind.EXPRESSION,
+                        cat.toString(),
+                        ti,
+                        ti.isNullable(),
+                        false,
+                        computeRange(cat),
+                        null,
+                        null
+                ));
+                return;
+            }
 
             if (expr instanceof AssignmentTree at) {
                 visit(at.getExpression(), chain);
@@ -324,8 +409,10 @@ public class JavaSymbolAnalyzer extends TreePathScanner<Void, Void> {
 
             if (select instanceof MemberSelectTree ms) {
                 // obj.method()
+                log.debug("MemberSelect = " + ms.toString());
                 visit(ms.getExpression(), chain);
                 addMethodStep(ms, mi, chain);
+
             } else if (select instanceof IdentifierTree id) {
                 Element e = trees.getElement(TreePath.getPath(ast, id));
                 if (!(e instanceof ExecutableElement method)) return;
@@ -342,6 +429,7 @@ public class JavaSymbolAnalyzer extends TreePathScanner<Void, Void> {
             }
 
             for (var argument : mi.getArguments()) {
+                //visit(argument, chain);
                 buildChain(argument);
             }
         }
@@ -471,6 +559,8 @@ public class JavaSymbolAnalyzer extends TreePathScanner<Void, Void> {
                     buildMethodInvocationInfo(mi, resolveReceiverType(chain), method.getSimpleName().toString()),
                     null
             ));
+
+            log.debug("step = " + chain.first());
         }
 
         private String resolveReceiverType(ResolvedChain chain) {
@@ -972,85 +1062,74 @@ public class JavaSymbolAnalyzer extends TreePathScanner<Void, Void> {
 
     @Override
     public Void visitSwitch(SwitchTree node, Void unused) {
-
         buildChain(node.getExpression());
 
-        //SymbolTable switchSymbolTable = new SymbolTable(currentSymbolTable);
-        //currentSymbolTable = currentSymbolTable.getEnclosingSymbolTable("^block$");
-
+        // Switch 전체 블록 진입
         enterSymbolTable("^block$" + computeRange(node).startLine());
 
-        for (CaseTree _case : node.getCases()) {
+        List<? extends CaseTree> cases = node.getCases();
+        for (int i = 0; i < cases.size(); i++) {
+            CaseTree currentCase = cases.get(i);
 
-            if (_case.getBody() != null) {
+            // 1. 현재 케이스부터 실행문(Statement)이 있는 케이스까지의 모든 라벨을 수집
+            List<CaseTree> caseGroup = new ArrayList<>();
+            caseGroup.add(currentCase);
 
-                enterSymbolTable("^block$" + _case.getLabels().toString().replace(" ", ""));
+            // 실행문이 없고 다음 케이스가 있다면 그룹화 (Fall-through 그룹 수집)
+            while (currentCase.getStatements() != null && currentCase.getStatements().isEmpty()
+                    && currentCase.getBody() == null && (i + 1) < cases.size()) {
+                i++;
+                currentCase = cases.get(i);
+                caseGroup.add(currentCase);
+            }
 
-                for (var label : _case.getLabels()) {
-                    //log.debug("label = " + label + ", " + label.getClass().getSimpleName());
-                    if (label instanceof PatternCaseLabelTree patternLabel) {
+            // 2. 그룹화된 라벨들을 합쳐서 SymbolTable 이름 생성 (일관성 유지)
+            String combinedLabels = caseGroup.stream()
+                    .flatMap(c -> c.getLabels().stream())
+                    .map(Object::toString)
+                    .map(s -> s.replaceAll("case\\s+", "").replace(" ", ""))
+                    .collect(Collectors.joining(""));
 
-                        if (patternLabel.getPattern() instanceof BindingPatternTree binding) {
-                            VariableTree var = binding.getVariable();
-                            visitVariable(var, unused);
-                        }
+            String scopeName = "^block$" + (combinedLabels.isEmpty() ? "default" : combinedLabels);
 
-                        var guard = _case.getGuard();
-                        if (guard != null) buildChain(guard);
+            log.debug("[JavaSymbol][Switch] Entering Group Scope: " + scopeName);
+            enterSymbolTable(scopeName);
 
-                        //TreePath path = trees.getPath(ast, guard);
-                        //scan(path, null);
+            // 3. 그룹 내 모든 라벨의 패턴 변수 및 식 분석
+            for (CaseTree c : caseGroup) {
+                analyzeLabels(c, unused); // 라벨 분석 로직 분리 (아래 참고)
+            }
 
-                    } else if (label instanceof DefaultCaseLabelTree defaultLabel) {
-
-                    } else if (label instanceof ConstantCaseLabelTree constantLabel) {
-                        buildChain(constantLabel.getConstantExpression());
-                    }
-                }
-
-                Tree body = _case.getBody();
-                if (body != null) {
-                    //log.debug("body = " + body + ", " + body.getClass().getSimpleName());
-
-                    //TreePath path = trees.getPath(ast, body);
-                    //scan(path, null);
-
-                    if (body instanceof BlockTree block) {
-                        visitBlock(block, null);
-                    }
-
-                    if (body instanceof ExpressionTree expr) {
-                        buildChain(expr);
-                    }
-
-                    if (body instanceof ExpressionStatementTree exprStmt) {
-                        visitExpressionStatement(exprStmt, null);
-                    }
-                }
+            // 4. 실제 실행부(Body 또는 Statements) 분석
+            // 그룹의 마지막 케이스가 실행문을 가지고 있음
+            CaseTree lastCase = caseGroup.get(caseGroup.size() - 1);
+            if (lastCase.getBody() != null) {
+                scan(lastCase.getBody(), unused);
             } else {
-                var scopeName = "^block$" + (_case.getExpressions().isEmpty() ? "default" : _case.getExpressions().toString().replace(" ", ""));
-
-                //log.debug("[JavaSymbol][Switch] expressions = " + scopeName);
-
-                enterSymbolTable(scopeName);
-
-                _case.getExpressions().forEach(this::buildChain);
-
-                for (var statement : _case.getStatements()) {
-                    //log.debug("[JavaSymbol][Switch] statememt = " + statement.getClass().getSimpleName());
-//                    if (statement instanceof ExpressionStatementTree exprStmt) {
-//                        buildChain(exprStmt.getExpression());
-//                    }
-                    TreePath path = trees.getPath(ast, statement);
-                    scan(path, null);
+                for (StatementTree stmt : lastCase.getStatements()) {
+                    scan(stmt, unused);
                 }
             }
 
-            exitSymbolTable();
+            exitSymbolTable(); // 그룹에 대한 스코프 탈출
         }
 
-        exitSymbolTable();
+        exitSymbolTable(); // Switch 전체 스코프 탈출
         return null;
+    }
+
+    // 라벨 분석을 위한 헬퍼 메서드
+    private void analyzeLabels(CaseTree _case, Void unused) {
+        for (var label : _case.getLabels()) {
+            if (label instanceof PatternCaseLabelTree patternLabel) {
+                if (patternLabel.getPattern() instanceof BindingPatternTree binding) {
+                    visitVariable(binding.getVariable(), unused);
+                }
+                if (_case.getGuard() != null) buildChain(_case.getGuard());
+            } else if (label instanceof ConstantCaseLabelTree constantLabel) {
+                buildChain(constantLabel.getConstantExpression());
+            }
+        }
     }
 
     @Override
