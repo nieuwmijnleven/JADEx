@@ -395,13 +395,12 @@ public class JPlusProcessor {
         //CodeGenContext ctx = CodeGenContext.current();
         //sourceMappingEntrySet = ctx.getFragmentedText().buildSourceMap();
 
-        String jextUtilsClass = "package jext.util;\n" +
+        String jextUtilsClass =
+                "public final class JadexUtil {\n" +
                 "\n" +
-                "public final class JextUtils {\n" +
+                "    private JadexUtil() {}\n" +
                 "\n" +
-                "    private JextUtils() {}\n" +
-                "\n" +
-                "    public static <T> T __elvis(T... args) { return null; }\n" +
+                "    public static <T> T _elvis(T... args) { return null; }\n" +
                 "}";
 
         List<InMemoryJavaFile> inMemoryJavaFiles = new ArrayList<>();
@@ -412,7 +411,7 @@ public class JPlusProcessor {
             inMemoryJavaFiles.add(new InMemoryJavaFile("source", javaCode));
         }
 
-        inMemoryJavaFiles.add(new InMemoryJavaFile("JextUtils", jextUtilsClass));
+        inMemoryJavaFiles.add(new InMemoryJavaFile("JadexUtil", jextUtilsClass));
 
         javaProcessor = new JavaProcessor(project, inMemoryJavaFiles, globalSymbolTable);
         var diagnositics = javaProcessor.process();
