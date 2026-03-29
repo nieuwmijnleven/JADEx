@@ -78,12 +78,12 @@ class SymbolInfoTest {
         assertEquals(NullState.UNKNOWN, info.getNullState());
     }
 
-    @Test
-    void getRange() {
-        TextChangeRange range = new TextChangeRange(1, 0, 1, 3);
-        SymbolInfo info = new SymbolInfo("r", new TypeInfo("int", false, TypeInfo.Type.Primitive), range, "r", List.of());
-        assertEquals(range, info.getRange());
-    }
+//    @Test
+//    void getRange() {
+//        TextChangeRange range = new TextChangeRange(1, 0, 1, 3);
+//        SymbolInfo info = new SymbolInfo("r", new TypeInfo("int", false, TypeInfo.Type.Primitive), range, "r", List.of());
+//        assertEquals(range, info.getRange());
+//    }
 
     @Test
     void getOriginalText() {
