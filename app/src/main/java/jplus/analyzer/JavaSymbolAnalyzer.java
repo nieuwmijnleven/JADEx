@@ -26,11 +26,48 @@
 
 package jplus.analyzer;
 
-import com.sun.source.tree.*;
+import com.sun.source.tree.ArrayAccessTree;
+import com.sun.source.tree.AssignmentTree;
+import com.sun.source.tree.BinaryTree;
+import com.sun.source.tree.BindingPatternTree;
+import com.sun.source.tree.BlockTree;
+import com.sun.source.tree.CaseTree;
+import com.sun.source.tree.ClassTree;
+import com.sun.source.tree.CompilationUnitTree;
+import com.sun.source.tree.CompoundAssignmentTree;
+import com.sun.source.tree.ConditionalExpressionTree;
+import com.sun.source.tree.ConstantCaseLabelTree;
+import com.sun.source.tree.DefaultCaseLabelTree;
+import com.sun.source.tree.ExpressionStatementTree;
+import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.IdentifierTree;
+import com.sun.source.tree.IfTree;
+import com.sun.source.tree.InstanceOfTree;
+import com.sun.source.tree.LambdaExpressionTree;
+import com.sun.source.tree.LiteralTree;
+import com.sun.source.tree.MemberSelectTree;
+import com.sun.source.tree.MethodInvocationTree;
+import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.NewArrayTree;
+import com.sun.source.tree.NewClassTree;
+import com.sun.source.tree.PackageTree;
+import com.sun.source.tree.ParenthesizedTree;
+import com.sun.source.tree.PatternCaseLabelTree;
+import com.sun.source.tree.ReturnTree;
+import com.sun.source.tree.StatementTree;
+import com.sun.source.tree.SwitchExpressionTree;
+import com.sun.source.tree.SwitchTree;
+import com.sun.source.tree.Tree;
+import com.sun.source.tree.TryTree;
+import com.sun.source.tree.TypeCastTree;
+import com.sun.source.tree.UnaryTree;
+import com.sun.source.tree.VariableTree;
+import com.sun.source.tree.YieldTree;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
 import jplus.analyzer.nullability.dataflow.NullState;
+import jplus.analyzer.util.LineMap;
 import jplus.base.JavaMethodInvocationManager;
 import jplus.base.MethodInvocationInfo;
 import jplus.base.SymbolInfo;
@@ -58,11 +95,8 @@ import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumSet;
-import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class JavaSymbolAnalyzer extends TreePathScanner<Void, Void> {
@@ -85,6 +119,8 @@ public class JavaSymbolAnalyzer extends TreePathScanner<Void, Void> {
     private final JavaSymbolResolver resolver;
 
     private final ExpressionChainBuilder chainBuilder;
+
+    private LineMap sourceLineMap;
 
 //    private final Set<Tree> processedNodes = Collections.newSetFromMap(
 //            new IdentityHashMap<>()
@@ -383,7 +419,7 @@ public class JavaSymbolAnalyzer extends TreePathScanner<Void, Void> {
             ));
         }
 
-        private void handleMemberSelect(MemberSelectTree ms, ResolvedChain chain) {
+        /*private void handleMemberSelect(MemberSelectTree ms, ResolvedChain chain) {
             Element e = trees.getElement(TreePath.getPath(ast, ms));
             if (e == null) return;
 
@@ -399,6 +435,37 @@ public class JavaSymbolAnalyzer extends TreePathScanner<Void, Void> {
                     ti.isNullable(),
                     false,
                     computeRange(ms),
+                    null,
+                    null
+            ));
+        }*/
+
+        private void handleMemberSelect(MemberSelectTree ms, ResolvedChain chain) {
+            Element e = trees.getElement(TreePath.getPath(ast, ms));
+            if (e == null) return;
+
+            TypeInfo ti = TypeUtils.fromTypeMirror(e.asType(), e);
+
+            // ms 전체: "address.city"
+            // identifier만: end - identifier.length() ~ end
+            int end = getSourceEndPosition(ms) - 1;  // inclusive
+            int identifierLength = ms.getIdentifier().toString().length();
+            int identifierStart = end - identifierLength + 1;
+
+            TextChangeRange identifierRange;
+            try {
+                identifierRange = Utils.computeTextChangeRange(source, identifierStart, end);
+            } catch (IllegalArgumentException iae) {
+                identifierRange = TextChangeRange.EMPTY;
+            }
+
+            chain.addStep(new ResolvedChain.Step(
+                    ResolvedChain.Kind.FIELD,
+                    ms.getIdentifier().toString(),
+                    ti,
+                    ti.isNullable(),
+                    false,
+                    identifierRange,  // "city" 부분만
                     null,
                     null
             ));
@@ -605,6 +672,9 @@ public class JavaSymbolAnalyzer extends TreePathScanner<Void, Void> {
         this.chainBuilder = new ExpressionChainBuilder(
                 trees, types, resolver, ast, source, javaMethodInvocationManager
         );
+
+        this.sourceLineMap = new LineMap(this.source);
+
     }
 
     public SymbolTable getTopLevelSymbolTable() {
@@ -791,16 +861,22 @@ public class JavaSymbolAnalyzer extends TreePathScanner<Void, Void> {
         return new SymbolInfo(name, typeInfo, computeRange(node), computeRangeText(node), convertModifiers(modifiers), table);
     }
 
-    private TextChangeRange computeRange(Tree node) {
-        int start = getSourceStartPosition(node);
-        int end = getSourceEndPosition(node);
+    public TextChangeRange computeRange(Tree node) {
 
-        try {
-            return Utils.computeTextChangeRange(source, start, end - 1);
-        } catch(IllegalArgumentException iae) {
-            //log.debug(iae.getMessage());
+        int startOffset = getSourceStartPosition(node);
+        int endOffset = getSourceEndPosition(node) - 1;
+
+        if (startOffset < 0 || endOffset < startOffset || endOffset >= this.source.length()) {
             return TextChangeRange.EMPTY;
         }
+
+        LineMap.TextPosition startPos = sourceLineMap.getPosition(startOffset);
+        LineMap.TextPosition endPos = sourceLineMap.getPosition(endOffset);
+
+        return new TextChangeRange(
+                startPos.line(), startPos.column(), startOffset,
+                endPos.line(), endPos.column(), endOffset
+        );
     }
 
     private String computeRangeText(Tree node) {

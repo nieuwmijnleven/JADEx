@@ -54,9 +54,8 @@ import jplus.base.MethodInvocationInfo;
 import jplus.base.SymbolInfo;
 import jplus.base.SymbolTable;
 import jplus.base.TypeInfo;
-import jplus.generator.SourceMappingEntry;
 import jplus.editor.TextChangeRange;
-import jplus.util.CodeGenUtils;
+import jplus.generator.SourceMappingEntry;
 import jplus.util.CodeUtils;
 import jplus.util.MethodUtils;
 import jplus.util.Utils;
@@ -75,6 +74,7 @@ import java.util.Deque;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -98,7 +98,12 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
     private final Set<TextChangeRange> consumedExpressions = new HashSet<>();
 
     private final DiffMatchPatch dmp = new DiffMatchPatch();
-    private List<DiffMatchPatch.Diff> diffs;
+    private LinkedList<DiffMatchPatch.Diff> diffs;
+
+    private int[] originalBoundaries;  // diff 청크별 original 누적 길이
+    private int[] transformedBoundaries; // diff 청크별 transformed 누적 길이
+
+    private final Map<TextChangeRange, TextChangeRange> transformedRangeCache = new HashMap<>();
 
     //private final Map<TextChangeRange, TextChangeRange> sourceMappingIndex;
 
@@ -156,7 +161,100 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         this.originalText = ctx.start.getInputStream().toString();
         this.diffs = dmp.diffMain(originalText, javaCode);
 
+        precomputeDiffIndex();
+
         return super.visitStart_(ctx);
+    }
+
+    private void precomputeDiffIndex() {
+        int size = diffs.size();
+        originalBoundaries = new int[size + 1];
+        transformedBoundaries = new int[size + 1];
+
+        int orig = 0, trans = 0;
+        for (int i = 0; i < size; i++) {
+            DiffMatchPatch.Diff d = diffs.get(i);
+            originalBoundaries[i] = orig;
+            transformedBoundaries[i] = trans;
+            if (d.operation != DiffMatchPatch.Operation.INSERT) orig += d.text.length();
+            if (d.operation != DiffMatchPatch.Operation.DELETE) trans += d.text.length();
+        }
+        originalBoundaries[size] = orig;
+        transformedBoundaries[size] = trans;
+    }
+
+    /*private int getMapOffset(int loc) {
+        // 이진탐색으로 loc이 속한 diff 청크 찾기
+        int lo = 0, hi = diffs.size() - 1, idx = diffs.size();
+        while (lo <= hi) {
+            int mid = (lo + hi) >>> 1;
+            if (originalBoundaries[mid] <= loc) {
+                idx = mid;
+                lo = mid + 1;
+            } else {
+                hi = mid - 1;
+            }
+        }
+
+        if (idx >= diffs.size()) return transformedBoundaries[diffs.size()];
+
+        DiffMatchPatch.Diff d = diffs.get(idx);
+        if (d.operation == DiffMatchPatch.Operation.INSERT) {
+            // INSERT는 original에 길이가 없으므로 이전 청크 끝으로
+            return transformedBoundaries[idx];
+        }
+        // EQUAL 또는 DELETE
+        int delta = loc - originalBoundaries[idx];
+        if (d.operation == DiffMatchPatch.Operation.DELETE) {
+            // DELETE된 범위는 transformed에서 사라짐
+            return transformedBoundaries[idx];
+        }
+        // EQUAL: 1:1 대응
+        return transformedBoundaries[idx] + delta;
+    }*/
+
+    private int getMapOffset(int loc) {
+        if (diffs == null || diffs.isEmpty()) return loc;
+
+        int lo = 0;
+        int hi = diffs.size() - 1;
+        int idx = 0;
+
+        // 1. loc이 포함된 마지막 가능한 청크 인덱스 찾기
+        while (lo <= hi) {
+            int mid = (lo + hi) >>> 1;
+            if (originalBoundaries[mid] <= loc) {
+                idx = mid;
+                lo = mid + 1;
+            } else {
+                hi = mid - 1;
+            }
+        }
+
+        if (idx >= diffs.size()) return transformedBoundaries[diffs.size()];
+
+        DiffMatchPatch.Diff d = diffs.get(idx);
+        int delta = loc - originalBoundaries[idx];
+
+        // 2. 연산별 정밀 매핑
+        switch (d.operation) {
+            case INSERT:
+                // INSERT 청크는 원본 길이를 차지하지 않으므로,
+                // 이론적으로 originalBoundaries[idx] == originalBoundaries[idx+1]인 상황에서만 들어옴
+                return transformedBoundaries[idx];
+
+            case DELETE:
+                // 삭제된 구간 내의 오프셋은 변환 후 코드에서 해당 삭제가 시작된 지점으로 고정
+                return transformedBoundaries[idx];
+
+            case EQUAL:
+                // 1:1 매핑 구간 내에서는 상대적 거리(delta)를 유지하되,
+                // 혹시 모를 오버런 방지를 위해 실제 텍스트 길이를 넘지 않도록 제한
+                return transformedBoundaries[idx] + Math.min(delta, d.text.length());
+
+            default:
+                return transformedBoundaries[idx];
+        }
     }
 
     @Override
@@ -724,42 +822,25 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
 
     private Optional<TextChangeRange> findTransformedRange(TextChangeRange instanceRange) {
 
-        var originalTextRange =
-                Utils.computeTextChangeRange(
-                        originalText,
-                        0,
-                        originalText.length() - 1
-                );
+        return Optional.of(
 
-        int startOffset =
-                getMapOffset(
-                        Utils.getIndexFromLineColumn(
-                                originalText,
-                                originalTextRange,
-                                instanceRange.startLine(),
-                                instanceRange.startIndex()
-                        )
-                );
+                transformedRangeCache.computeIfAbsent(instanceRange, key -> {
 
-        int endOffset =
-               getMapOffset(
-                        Utils.getIndexFromLineColumn(
-                                originalText,
-                                originalTextRange,
-                                instanceRange.endLine(),
-                                instanceRange.inclusiveEndIndex()
-                        )
-                );
+                    int startOffset = getMapOffset(
+                            instanceRange.startOffset()
+                    );
 
-        return Optional.of(Utils.computeTextChangeRange(javaCode, startOffset, endOffset));
+                    int endOffset = getMapOffset(
+                            instanceRange.endOffset()
+                    );
 
-        //return Optional.ofNullable(sourceMappingIndex.get(instanceRange));
-
-        /*return sourceMappingEntrySet.stream()
-                .filter(entry -> Objects.equals(instanceRange, entry.getOriginalRange()))
-                //.peek(entry -> log("[findTransformedRange] originalRange = " + entry.getOriginalRange() + ", transformedRange = " + entry.getTransformedRange()))
-                .map(SourceMappingEntry::getTransformedRange)
-                .findFirst();*/
+                    return Utils.computeTextChangeRange(
+                            javaCode,
+                            startOffset,
+                            endOffset
+                    );
+                })
+        );
     }
 
     private Optional<SymbolInfo> resolveClassSymbol(MethodInvocationInfo info) {
@@ -2112,8 +2193,10 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
                                 new TextChangeRange(
                                         range.startLine(),
                                         range.startIndex(),
+                                        range.startOffset(),
                                         range.endLine(),
-                                        range.inclusiveEndIndex() - 1)
+                                        range.inclusiveEndIndex() - 1,
+                                        range.endOffset() - 1)
                         )
                 )
                 .ifPresent(chain -> {
@@ -2249,7 +2332,16 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
             //log.debug("[PostfixExpression] chaining = " + currentSymbolTable.getResolvedChains());
             //log.debug("[PostfixExpression] findResolvedChain = " + currentSymbolTable.findResolvedChain(Utils.getTextChangeRange(originalText, ctx)));
 
-            currentSymbolTable.findResolvedChain(Utils.getTextChangeRange(originalText, ctx)).ifPresent(chain -> processExpressionNameContext(getExpressionNameList(ctx.expressionName()), chain.stepCursor()));
+            findTransformedRange(Utils.getTextChangeRange(originalText, ctx)).ifPresent(range -> {
+                currentSymbolTable.findResolvedChain(range)
+                        .ifPresent(chain ->
+                                processExpressionNameContext(
+                                        getExpressionNameList(ctx.expressionName()),
+                                        chain.stepCursor()
+                                )
+                        );
+            });
+
             return null;
         }
 
@@ -2892,10 +2984,9 @@ public class NullabilityChecker extends JADEx25ParserBaseVisitor<Void> {
         }
     }
 
-    private int getMapOffset(int offset) {
-        return dmp.diffXIndex(diffs, offset);
-        //return CodeGenUtils.getMapOffset(javaCode, originalText, offset);
-    }
+//    private int getMapOffset(int offset) {
+//        return dmp.diffXIndex(diffs, offset);
+//    }
 
     private List<ExpressionNameContext> getExpressionNameList(ExpressionNameContext ctx) {
         Deque<ExpressionNameContext> expressionNameContextDeque = new ArrayDeque<>();

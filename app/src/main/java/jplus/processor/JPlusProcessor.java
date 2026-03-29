@@ -396,6 +396,7 @@ public class JPlusProcessor {
         //sourceMappingEntrySet = ctx.getFragmentedText().buildSourceMap();
 
         String jextUtilsClass =
+                "package jadex.runtime;\n" +
                 "public final class JadexUtil {\n" +
                 "\n" +
                 "    private JadexUtil() {}\n" +
