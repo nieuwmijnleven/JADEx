@@ -66,6 +66,7 @@ dependencies {
     //implementation("org.antlr:antlr4-intellij-adaptor:0.1")
     implementation("com.github.nieuwmijnleven:antlr4-intellij-adaptor:-SNAPSHOT")
     implementation("org.jspecify:jspecify:1.0.0")
+    implementation("org.projectlombok:lombok:1.18.42")
     implementation("org.bitbucket.cowwoc:diff-match-patch:1.2")
 }
 
