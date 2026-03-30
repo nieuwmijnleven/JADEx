@@ -52,6 +52,7 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +60,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -68,7 +70,10 @@ public class JPlusProcessor {
     private static final Logger log = LoggerFactory.getLogger(JPlusProcessor.class);
 
     private final Project project;
-    private final String originalText;
+    private String originalText;
+
+    private String jadexText;
+    private String jadexToJavaText;
 
     private JADEx25Parser parser;
     private JADExParserRuleContext parseTree;
@@ -84,6 +89,12 @@ public class JPlusProcessor {
     private boolean processed = false;
     private boolean nullabilityChecked = false;
     private boolean symbolsAnalyzed = false;
+    private Path lombokJarPath;
+
+    private DiffMatchPatch dmp;
+    private LinkedList<DiffMatchPatch.Diff> diffs;
+    private LinkedList<DiffMatchPatch.Diff> lombokDiffs;
+    private boolean isLombokUsed;
 
     public JPlusProcessor(Project project, String packageName, String className, String originalText, SymbolTable globalSymbolTable) {
         this.project = project;
@@ -109,6 +120,10 @@ public class JPlusProcessor {
 
     public JPlusProcessor(Project project, String originalText) {
         this(project, null, null, originalText, new SymbolTable(null));
+    }
+
+    public void setLombokJarPath(Path lombokJarPath) {
+        this.lombokJarPath = lombokJarPath;
     }
 
     private static Path resolveSourceFile(Project project, String packageName, String className) {
@@ -197,7 +212,7 @@ public class JPlusProcessor {
         CodeGenContext.push();
         try {
 
-            buildParseTree();
+            //buildParseTree();
             processed = true;
 
             generateRuntime();
@@ -392,6 +407,27 @@ public class JPlusProcessor {
         String javaCode = generateJavaCodeForSemanticMode();
         log.debug("[JPlusProcessor][runInitialJavaProcessing] javaCode = " + javaCode);
 
+        this.diffs = generateDiffTable(javaCode, originalText);
+
+        isLombokUsed = checkIfLombokUse(javaCode);
+        if (isLombokUsed) {
+
+            var delombokCode = applyDelombok(javaCode);
+            System.err.println("delombokCode = " + delombokCode);
+
+            this.lombokDiffs = generateDiffTable(delombokCode, javaCode);
+
+            jadexText = originalText;
+            jadexToJavaText = javaCode;
+
+            originalText = delombokCode;
+            javaCode = delombokCode;
+        }
+
+        buildParseTree();
+        //processed = true;
+
+
         //CodeGenContext ctx = CodeGenContext.current();
         //sourceMappingEntrySet = ctx.getFragmentedText().buildSourceMap();
 
@@ -420,7 +456,7 @@ public class JPlusProcessor {
         var issueList = new ArrayList<Issue>();
         for (var diagnositic : diagnositics) {
 
-            var issue =
+            /*var issue =
                     new Issue(
                             Severity.ERROR,
                             CodeGenUtils.getMapOffset(
@@ -432,12 +468,52 @@ public class JPlusProcessor {
                                     javaCode,
                                     (int)diagnositic.getEndPosition()),
                             diagnositic.getMessage(Locale.getDefault())
+                    );*/
+
+            var issue =
+                    new Issue(
+                            Severity.ERROR,
+                            getMapOffset((int)diagnositic.getStartPosition()),
+                            getMapOffset((int)diagnositic.getEndPosition()),
+                            diagnositic.getMessage(Locale.getDefault())
                     );
 
             issueList.add(issue);
         }
 
         return issueList;
+    }
+
+    private int getMapOffset(int offset) {
+
+        int offs = offset;
+        if (isLombokUsed) {
+            offs = dmp.diffXIndex(lombokDiffs, offs);
+        }
+
+        return dmp.diffXIndex(diffs, offs);
+    }
+
+    private String applyDelombok(String javaCode) {
+        DelombokRunner delombokRunner = new DelombokRunner(lombokJarPath);
+        try {
+            return delombokRunner.run(javaCode, className);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private boolean checkIfLombokUse(String javaCode) {
+
+        if (lombokJarPath == null) return false;
+
+        return javaCode.lines()
+                .anyMatch(line -> line.startsWith("import lombok."));
+    }
+
+    private LinkedList<DiffMatchPatch.Diff> generateDiffTable(String originalText, String newText) {
+        this.dmp = new DiffMatchPatch();
+        return this.dmp.diffMain(originalText, newText);
     }
 
     public String getProcessedJavaCode() {
@@ -517,9 +593,35 @@ public class JPlusProcessor {
         assertAnalyzed();
 
         NullabilityChecker nullabilityChecker = new NullabilityChecker(globalSymbolTable, sourceMappingEntrySet, javaProcessor.getSource(), javaProcessor.getMethodInvocationManager().getFirst());
+
         nullabilityChecker.visit(parseTree);
         nullabilityChecked = true;
-        return nullabilityChecker.getIssues().stream().sorted().toList();
+
+        if (isLombokUsed) {
+
+            return nullabilityChecker.getIssues().stream()
+                    .sorted()
+                    .map(issue -> {
+
+                        var mapOffset = getMapOffset(issue.offset());
+                        var range = Utils.computeTextChangeRange(jadexText, mapOffset, mapOffset);
+
+                        return new NullabilityIssue(
+                                issue.issueCode(),
+                                issue.severity(),
+                                range.startLine(),
+                                range.startIndex(),
+                                getMapOffset(issue.offset()),
+                                issue.message()
+                        );
+                    })
+                    .toList();
+        }
+
+        return nullabilityChecker.getIssues().stream()
+                .sorted()
+                .toList();
+
     }
 
     public String transformJADExToJava() {
@@ -532,22 +634,31 @@ public class JPlusProcessor {
         return codeGenerator.getText();
     }
 
-    public String generateJavaCode() {
+    public String generateJavaCode() throws Exception {
         //if (!symbolsAnalyzed || !nullabilityChecked) {
         if (!symbolsAnalyzed) {
             //throw new IllegalStateException("Must perform nullability check and symbol analysis first.");
             throw new IllegalStateException("Must perform symbol analysis first.");
         }
 
+        if (isLombokUsed) {
+            this.originalText = this.jadexText;
+            buildParseTree();
+            //return transformJADExToJava();
+        }
+
         String generated = transformJADExToJava();
         //log.debug("[generateJavaCode] javaCode = " + generated);
 
-        int startIndex = parseTree.start.getStartIndex();
+        /*int startIndex = parseTree.start.getStartIndex();
         String startWhiteSpace = originalText.substring(0, startIndex);
         String fullyGenerated = startWhiteSpace + generated;
+        System.err.println("startWhiteSpace = " + startWhiteSpace);*/
         ////log.debug("fullyGenerated = " + fullyGenerated);
 
-        FragmentedText fragmentedText = new FragmentedText(fullyGenerated);
+        //FragmentedText fragmentedText = new FragmentedText(fullyGenerated);
+
+        FragmentedText fragmentedText = new FragmentedText(generated);
         BoilerplateCodeGenerator generator = new BoilerplateCodeGenerator(symbolTable, fragmentedText);
         generator.visit(parseTree);
         return generator.generate();
