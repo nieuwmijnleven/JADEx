@@ -111,6 +111,7 @@ public class UnresolvedReferenceScanner {
     private boolean checkUnresolvedSymbol(@NonNull SymbolInfo symbolInfo) {
         if ("<error>".equals(symbolInfo.getSymbol())) return false;
         if ("<any>".equals(symbolInfo.getTypeInfo().getName())) return false;
+        if ("unknown".equals(symbolInfo.getTypeInfo().getName())) return false;
         return symbolInfo.getTypeInfo().getType() == TypeInfo.Type.Unknown;
     }
 }

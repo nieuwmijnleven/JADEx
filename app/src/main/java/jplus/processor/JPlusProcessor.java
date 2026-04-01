@@ -56,6 +56,8 @@ import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -63,9 +65,11 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 public class JPlusProcessor {
 
@@ -557,6 +561,38 @@ public class JPlusProcessor {
         return allUnresolvedReferenceInfoList;
     }
 
+    private String resolveFqcnFromJadex(Project project, String className) {
+        for (Path sourceDir : project.getSourceDirs()) {
+            Optional<Path> found = findJadexFile(sourceDir, className);
+            if (found.isPresent()) {
+                return extractFqcn(sourceDir, found.get(), className);
+            }
+        }
+        throw new RuntimeException("Cannot resolve FQCN: " + className + ".jadex not found in source dirs");
+    }
+
+    private Optional<Path> findJadexFile(Path sourceDir, String className) {
+        String fileName = className + ".jadex";
+        try (Stream<Path> stream = Files.walk(sourceDir)) {
+            return stream
+                    .filter(p -> p.getFileName().toString().equals(fileName))
+                    .findFirst();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to walk source dir: " + sourceDir, e);
+        }
+    }
+
+    private String extractFqcn(Path sourceDir, Path jadexFile, String className) {
+        Path relative = sourceDir.relativize(jadexFile);
+        // com/example/foo/Bar.jadex -> com.example.foo
+        Path packagePath = relative.getParent();
+        if (packagePath == null) {
+            return className; // default package
+        }
+        String packageName = packagePath.toString().replace(File.separatorChar, '.');
+        return packageName + "." + className;
+    }
+
     private void resolveAllUnresolvedReferences() throws Exception {
         List<InMemoryJavaFile> inMemoryJavaFiles = new ArrayList<>();
         inMemoryJavaFiles.add(new InMemoryJavaFile(getFullyQualifiedName(), javaProcessor.getSource()));
@@ -568,12 +604,19 @@ public class JPlusProcessor {
 
             for (var unresolved : unresolvedList) {
 
-                JPlusProcessor dependency = new JPlusProcessor(project, unresolved.packageName, unresolved.className);
+                String fqcn = resolveFqcnFromJadex(project, unresolved.className);
+                int lastDot = fqcn.lastIndexOf('.');
+                String packageName = lastDot != -1 ? fqcn.substring(0, lastDot) : "";
+
+                //JPlusProcessor dependency = new JPlusProcessor(project, unresolved.packageName, unresolved.className);
+
+                var dependency = new JPlusProcessor(project, packageName, unresolved.className);
                 dependency.process();
 
                 inMemoryJavaFiles.add(
                         new InMemoryJavaFile(
-                                unresolved.getFullyQualifiedName(),
+                                //unresolved.getFullyQualifiedName(),
+                                fqcn,
                                 dependency.getProcessedJavaCode()
                         )
                 );
@@ -640,13 +683,19 @@ public class JPlusProcessor {
             throw new IllegalStateException("Must perform symbol analysis first.");
         }
 
-//        if (isLombokUsed) {
-//            this.originalText = this.jadexText;
-//            buildParseTree();
-//            //return transformJADExToJava();
-//        }
+        String generated = null;
 
-        String generated = transformJADExToJava();
+        if (isLombokUsed) {
+            this.originalText = this.jadexText;
+
+            generated = applyDelombok(transformJADExToJava());
+            buildParseTree();
+            //return transformJADExToJava();
+        } else {
+            generated = transformJADExToJava();
+        }
+
+        //String generated = transformJADExToJava();
         //log.debug("[generateJavaCode] javaCode = " + generated);
 
         /*int startIndex = parseTree.start.getStartIndex();
