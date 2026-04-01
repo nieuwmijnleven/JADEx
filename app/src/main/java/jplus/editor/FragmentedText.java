@@ -186,11 +186,15 @@ public class FragmentedText {
                 continue;
             }
 
-            int fragmentStart = toIndex(f.range.startLine(), f.range.startIndex());
-            int fragmentEnd = toIndex(f.range.endLine(), f.range.inclusiveEndIndex());
+//            int fragmentStart = toIndex(f.range.startLine(), f.range.startIndex());
+//            int fragmentEnd = toIndex(f.range.endLine(), f.range.inclusiveEndIndex());
+//            int rangeStart = toIndex(target.startLine(), target.startIndex());
+//            int rangeEnd = toIndex(target.endLine(), target.inclusiveEndIndex());
 
-            int rangeStart = toIndex(target.startLine(), target.startIndex());
-            int rangeEnd = toIndex(target.endLine(), target.inclusiveEndIndex());
+            int fragmentStart = f.range.startOffset();
+            int fragmentEnd   = f.range.endOffset();
+            int rangeStart    = target.startOffset();
+            int rangeEnd      = target.endOffset();
 
             int overlapStart = Math.max(rangeStart, fragmentStart);
             int overlapEnd = Math.min(rangeEnd, fragmentEnd);
