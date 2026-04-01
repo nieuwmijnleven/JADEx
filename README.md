@@ -119,14 +119,14 @@ The JADEx Gradle plugin allows you to compile `.jadex` files into standard Java 
 Add the plugin to your `build.gradle`:
 ```groovy
 plugins {
-    id 'io.github.nieuwmijnleven.jadex' version '0.59'
+    id 'io.github.nieuwmijnleven.jadex' version '0.628'
 }
 ```
 
 Or in `build.gradle.kts`:
 ```kotlin
 plugins {
-    id("io.github.nieuwmijnleven.jadex") version "0.59"
+    id("io.github.nieuwmijnleven.jadex") version "0.628"
 }
 ```
 
